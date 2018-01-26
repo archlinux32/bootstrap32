@@ -1,0 +1,2424 @@
+Archlinux ARM method
+--------------------
+
+mission
+-------
+
+Build a crosstool-ng toolchain for i486.
+
+Use makepkg with patched PKGBUILDs for cross-compilation.
+
+We cannot run tests this way, as we don't assume the i486
+is running on x64_64 (which it does, but for the sake
+of the general usage of the approach we MUST assume it
+doesn't!).
+
+Packages built for the chroot must be also accessible to
+the cross-compiler (for header files, tools and libraries).
+For this we unpack all generated chroot packages in the sysroot
+of the toolchain.
+
+x-tools and sysroot: the cross-compiler (cross-ng) and
+the installed packages (using bsdtar) in the sysroot
+of the toolchain.
+
+i486-root destination root, being the boot image of the
+temporary system for i486.
+
+The goal is to get to a self-contained system with as
+few packages as possible which allows a basic i486 to
+be built. This requires at least some development tools,
+pacman and some base system to be cross-compiled.
+
+We also want basic network connetivity, so we can use
+the i486 VMs or real i486 as build slaves. Also, having
+a minimal bootable ISO for the i486 system (or even a
+set of floppies or PXE boot via a boot floppy would
+be very useful). We cannot have kernel modules in a 
+ramdisk or systemd for this basic system because they
+interfere heavily with memory constains on a 486! So,
+we build up to an openssh server.
+
+On top, the full Archlinux i486 universe can then be
+built (either with a i486 chroot or via a i486 master/
+distcc slaves setup or a distributed i486 cluster setup).
+
+There is another caveat: we are patching the PKGBUILDs
+to do proper cross-compilation (--with-host, --with-target).
+Still we try to stay close to the original PKGBUILDs.
+
+references
+----------
+
+https://archlinuxarm.org/wiki/Distcc_Cross-Compiling
+https://wiki.archlinux.org/index.php/Cross-compiling_tools_package_guidelines
+http://mgalgs.github.io/2011/12/08/creating-arch-linux-packages-by-hand.html
+http://clfs.org/view/svn/ppc/chroot/before-chroot.html
+http://www.linuxfromscratch.org/clfs/
+https://www.dotslashlinux.com/2017/04/29/booting-the-linux-kernel-without-an-initrd-initramfs/
+https://rubenerd.com/sata-on-qemu/
+https://archlinuxarm.org/forum/viewtopic.php?f=57&t=6163
+https://dustymabe.com/2012/12/15/mounting-a-partition-within-a-disk-image/
+http://preshing.com/20141119/how-to-build-a-gcc-cross-compiler/
+http://wiki.osdev.org/GCC_Cross-Compiler
+http://www.linuxfromscratch.org/lfs/view/6.2/chapter05/adjusting.html
+https://wiki.debian.org/FakeRoot
+https://archlinuxarm.org/forum/viewtopic.php?f=57&t=6163
+https://www.phenix.bnl.gov/~purschke/RescueCD/
+https://github.com/ivandavidov/minimal-linux-script
+https://askubuntu.com/questions/109413/how-do-i-use-overlayfs
+https://how-to-build-for-arm.wikispaces.com/
+https://arsv.github.io/perl-cross/
+http://www.ibb.net/~anne/keyboard.html
+
+recipes
+-------
+
+#########
+# PHASE 0
+#########
+
+# Prepare the host. We use Archlinux 64-bit as we don't fully trust the
+# 32-bit toolchain in Archlinux32 (yet). And a 64-bit based toolchain is
+# more usable anyway nowadays.
+
+# Archlinux with base and base-devel (2018.01.01-x86_64.iso).
+# OpenSSH and editor (joe), grub.
+
+# Install necessary tools
+
+./prep_env.sh
+
+# Prepare the cross-compiler for the destination platform, in our
+# case i486.
+#
+# configuration of crosstools-ng:
+#
+# Target architecture i486
+# Bitness 32-bit
+# Architecture level i486
+# Emit assembly for CPU i486
+# Toolchain bug URL: https://bugs.archlinux32.org
+# Type: Cross
+# Build System: empty (was: x86_64-pc-linux-gnu)
+# No NLS
+# Target OS linux
+# version of linux 4.13.9
+# binutils 2.29.1
+# select ld, gold as linkers
+# C-library: glibc
+# gcc 7.2.0
+# no libmpx
+# Don't forget to enable C++!
+
+ct-ng menuconfig
+cp .config ct-ng.config
+
+# build the toolchain, results in a 486 toolchain in /home/cross/x-tools
+
+./build_cross.sh
+
+# TODO FROM HERE:
+
+# get the Archlinux32 diffs
+###########################
+
+cd $HOME
+git clone git@github.com:archlinux32/packages.git packages32
+
+# prepare the i486-chroot
+#########################
+
+# create and initialize a new i486 chroot in $HOME/i486-root
+mkdir $HOME/i486-root
+
+# prepare pacman in i486-chroot
+###############################
+
+# prepare directories for a new pacman root
+mkdir -p $HOME/i486-root/etc/pacman.d $HOME/i486-root/var/lib/pacman \
+	$HOME/i486-root/var/cache/pacman/pkg \
+	$HOME/i486-root/var/log $HOME/i486-root/etc/pacman.d/gnupg/ \
+	$HOME/i486-root/etc/pacman.d/hooks/
+
+# adapt configuration to work from outside the chroot to write artifacts
+# into the chroot
+
+cp /etc/pacman.conf $HOME/i486-root/etc/.
+
+sed -i 's@^Architecture.*@Architecture = i486@g' $HOME/i486-root/etc/pacman.conf
+
+sed -i 's@#RootDir.*@RootDir = /home/cross/i486-root@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@#DBPath.*@DBPath = /home/cross/i486-root/var/lib/pacman/@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@#CacheDir.*@CacheDir = /home/cross/i486-root/var/cache/pacman/pkg/@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@#LogFile.*@LogFile = /home/cross/i486-root/var/log/pacman.log@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@#GPGDir.*@GPGDir = /home/cross/i486-root/etc/pacman.d/gnupg/@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@#HookDir.*@HookDir = /home/cross/i486-root/etc/pacman.d/hooks/@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@^HoldPkg@#HoldPkg@g' $HOME/i486-root/etc/pacman.conf
+
+# disable all standard repos
+sed -i 's@\(^Include = /etc/pacman.d/mirrorlist\)@#\1@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@\[core\]@#[core]@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@\[extra\]@#[extra]@g' $HOME/i486-root/etc/pacman.conf
+sed -i 's@\[community\]@#[community]@g' $HOME/i486-root/etc/pacman.conf
+
+# add a temporary package repo in the filesystem
+cat >>$HOME/i486-root/etc/pacman.conf <<EOF
+[temp]
+SigLevel = Never
+Server = file:///home/cross/i486-root/packages/\$arch
+EOF
+
+# create a local package directory
+mkdir -p $HOME/i486-root/packages $HOME/i486-root/packages/i486
+repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*
+
+# finally, test and initialize ALPM library
+sudo pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syyu
+pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q
+
+# prepare makepkg for building into the i486-chroot
+###################################################
+
+# prepare the build enviroment
+mkdir $HOME/build
+cd $HOME/build
+
+cp /usr/bin/makepkg $HOME/build/makepkg-i486
+
+# patch run_pacman in makepkg, we cannot pass the pacman root to it as parameter ATM
+sed -i 's/"$PACMAN_PATH"/"$PACMAN_PATH" --config \/home\/cross\/i486-root\/etc\/pacman.conf -r \/home\/cross\/i486-root/' makepkg-i486
+
+cp /etc/makepkg.conf makepkg-i486.conf
+sed -i 's@^CARCH=.*@CARCH="i486"@' makepkg-i486.conf
+sed -i 's@^CHOST=.*@CHOST="i486-unknown-linux-gnu"@' makepkg-i486.conf
+sed -i 's@^#MAKEFLAGS=.*@MAKEFLAGS="-j20"@' makepkg-i486.conf
+sed -i 's@-march=x86-64 -mtune=generic @@' makepkg-i486.conf
+
+#########
+# PHASE 1
+#########
+
+# package shims
+################
+
+# we cannot build the glibc or the compilers, we create phantom packages by hand without
+# makepkg with files from the toolchain's sysroot
+
+# so we build gcc-libs for compiler libraries (C and C++) and the glibc
+# we will NOT build them using the cross-compiler as packages but later
+# at the end of phase 1. This ensures glibc and gcc-libs are around as
+# dependency for makepkg all the time, if not the original one, so close
+# ones fitting to the crosstoolchain.
+
+# the gcc-lib shim
+##################
+
+cd $HOME/build
+mkdir gcc-libs
+cd gcc-libs
+mkdir -p pkg/gcc-libs/usr/lib
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libgcc_s.so pkg/gcc-libs/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libgcc_s.so.1 pkg/gcc-libs/usr/lib/.
+cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/.
+ln -s libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/libatomic.so.1
+ln -s libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/libatomic.so
+cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libatomic.a pkg/gcc-libs/usr/lib/.
+cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/.
+ln -s libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/libstdc++.so.6
+ln -s libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/libstdc++.so
+
+BUILDDATE=`date '+%s'`
+size=`du -sk --apparent-size pkg/`
+size="$(( ${size%%[^0-9]*} * 1024 ))"
+cat > pkg/gcc-libs/.PKGINFO <<EOF
+pkgname = gcc-libs
+pkgver = 4.9.4-1
+pkgdesc = Runtime libraries shipped by GCC (from crosstool-ng sysroot)
+url = http://gcc.gnu.org
+builddate = $BUILDDATE
+size = $size
+arch = i486
+EOF
+
+cd pkg/gcc-libs
+tar cJvf - .PKGINFO * | xz > ../../gcc-libs-7.2.0-1-i486.pkg.tar.xz
+cd ../..
+
+cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
+rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
+rm -rf  $HOME/i486-root/packages/i486/temp.db*
+rm -rf  $HOME/i486-root/packages/i486/temp.files*
+repo-add -R $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy gcc-libs
+cd ..
+
+# the glibc shim
+################
+
+cd $HOME/build
+mkdir glibc
+cd glibc
+mkdir -p pkg/glibc/usr/include
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/include/* pkg/glibc/usr/include
+sudo rm -rf pkg/glibc/usr/include/{linux,misc,mtd,rdma,scsi,sound,video,xen,asm,asm-generic}
+mkdir -p pkg/glibc/etc
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/etc/rpc pkg/glibc/etc/.
+mkdir -p pkg/glibc/usr/bin
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/* pkg/glibc/usr/bin/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/sbin/* pkg/glibc/usr/bin/.
+mkdir -p pkg/glibc/usr/lib
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.o pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.a pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/ld-linux.so.2 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/ld-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libc.so.6 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libc-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libpthread.so.0 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libpthread-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/gconv pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libutil.so* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libutil-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libanl.so.1 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libanl-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libBrokenLocale.so.1 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libBrokenLocale-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libcrypt.so.1 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libcrypt-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libdl.so.2 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libdl-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libm.so.6 pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libm-2.26.so pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libnsl* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libnss* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libresolv* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/librt* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libthread_db* pkg/glibc/usr/lib/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/audit pkg/glibc/usr/lib/.
+mkdir -p pkg/glibc/usr/share
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/share/i18n pkg/glibc/usr/share/.
+cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/share/locale pkg/glibc/usr/share/.
+
+BUILDDATE=`date '+%s'`
+size=`du -sk --apparent-size pkg/`
+size="$(( ${size%%[^0-9]*} * 1024 ))"
+cat > pkg/glibc/.PKGINFO <<EOF
+pkgname = glibc
+pkgver = 2.26-1
+pkgdesc = GNU C Library (from crosstool-ng sysroot)
+url = http://www.gnu.org/software/libc
+builddate = $BUILDDATE
+size = $size
+arch = i486
+EOF
+
+cd pkg/glibc
+tar cJvf - .PKGINFO * | xz > ../../glibc-2.26-1-i486.pkg.tar.xz
+cd ../..
+
+cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
+rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
+rm -rf  $HOME/i486-root/packages/i486/temp.db*
+rm -rf  $HOME/i486-root/packages/i486/temp.files*
+repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+sudo pacman --force --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy glibc
+
+# the ca-certificates-utils shim
+################################
+
+# take pre-computed cert stores from an existing machine
+
+cd $HOME/build
+mkdir ca-certificates-utils
+cd ca-certificates-utils
+mkdir -p pkg/ca-certificates-utils/etc/ssl/certs/
+cp /etc/ssl/certs/ca-certificates.crt pkg/ca-certificates-utils/etc/ssl/certs/.
+
+BUILDDATE=`date '+%s'`
+size=`du -sk --apparent-size pkg/`
+size="$(( ${size%%[^0-9]*} * 1024 ))"
+cat > pkg/ca-certificates-utils/.PKGINFO <<EOF
+pkgname = ca-certificates-utils
+pkgver = 20170307-1
+pkgdesc = Common CA certificates (utilities)
+url = http://pkgs.fedoraproject.org/cgit/rpms/ca-certificates.git
+builddate = $BUILDDATE
+size = $size
+arch = any
+EOF
+
+cd pkg/ca-certificates-utils
+tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-20170307-1-any.pkg.tar.xz
+cd ../..
+
+cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
+rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
+rm -rf  $HOME/i486-root/packages/i486/temp.db*
+rm -rf  $HOME/i486-root/packages/i486/temp.files*
+repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+sudo pacman --force --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy ca-certificates-utils
+
+cd ..
+
+# build packages for the i486-chroot
+####################################
+
+All packages we built here are installed with pacman into i486-chroot
+and with bsdtar in the toolchains sysroot
+
+# the package list
+##################
+
+export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/bin:${PATH}
+
+# basic packages 
+PACKAGES="iana-etc filesystem linux-api-headers tzdata ncurses readline bash \
+joe \
+attr acl gmp gdbm db perl openssl pambase zlib cracklib libtirpc pam libcap coreutils
+util-linux e2fsprogs \
+expat bzip2 lz4 xz pcre less gzip tar libarchive curl ca-certificates-utils \
+archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
+sed fakeroot texinfo grep findutils file diffutils ed patch \
+make mpfr gawk libmpc binutils gcc \
+kbd linux procps-ng shadow uinit \
+glibc \
+net-tools libmnl elfutils libnfnetlink iptables iproute2 \
+libedit openssh \
+sysfsutils libidn nettle iputils"
+# libunwind
+# TODO: sort out name clash glibc and glibc-real
+
+# for ncurses, readline for bash
+# attr for acl
+# gdbm, db for perl
+# libtirpc for pam
+# zlib for cracklib
+# cracklib, pam for libcap
+# gmp, openssl, libcap for coreutils
+# zlib for cracklib
+# libutil-linux and util-linux for e2fsprogs
+# expat, bzip2, lz4, xz for libarchive
+# libarchive, curl for pacman
+# file (libmagic) for ...
+# gmp, mpfr for gawk, gcc
+# libnfnetlink for iptables
+# libmnl, libelf, iptables for iproute2
+# libedit for openssh
+# sysfsutils and libidn, nettle for iputils
+SYSROOT_PACKAGES="ncurses readline attr acl gmp gdbm db zlib cracklib libtirpc pam libcap openssl \
+libutil-linux util-linux \
+expat bzip2 lz4 xz pcre gzip libarchive curl \
+file libmpc mpfr libmnl libelf libnfnetlink iptables \
+libedit sysfsutils libidn"
+
+# cross-compiling perl doesn't work in parallel
+NOPARALLEL_PACKAGE="perl"
+
+for p in $PACKAGES; do
+	# TODO: for some packages, uinit
+	# yaourt -G $p
+	asp export $p
+	cd $p
+
+	# TODO: if exists packages32 diff-PKGBUILD, attach at the end
+
+	sed -i '/^arch=[^#]*any/!{/^arch=(/s/(/(i486 /}' PKGBUILD
+	if test $p in $NOPARALLEL_PACKAGE; then
+		$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486-noparallel.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
+	else
+		$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
+	fi
+		
+	tail $p.log
+
+	rm -f *debug*.pkg.tar.xz
+	cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
+
+	# redo the whole cache
+	rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
+	rm -rf  $HOME/i486-root/packages/i486/temp.db*
+	rm -rf  $HOME/i486-root/packages/i486/temp.files*
+	repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+	
+	# incrementall add of new package (works once!)
+	repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+
+	# for util-linux also libutil-linux
+	sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy $p
+	pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q
+
+	if test $p in $SYSROOT_PACKAGES; then
+		pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
+		sudo bsdtar xvf $HOME/i486-root/packages/i486/$p-*.pkg.tar.xz
+		popd
+	fi
+	
+	cd ..
+done
+
+# special patches for some packages
+###################################
+
+# linux-api-headers
+sed -i 's@make@make ARCH=i386 CROSS_COMPILE=$HOME/x-tools/i486-unknown-linux-gnu/bin/i486-unknown-linux-gnu-@g' linux-api-headers/PKGBUILD
+
+# ncurses
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' ncurses/PKGBUILD
+
+# readline
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' readline/PKGBUILD
+
+# bash
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' bash/PKGBUILD
+
+# joe
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' joe/PKGBUILD
+
+# gmp
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gmp/PKGBUILD
+# remove explicit CHOST for build host
+sed -i 's@--build=${CHOST}@@g' gmp/PKGBUILD
+
+# libcap
+sed -i 's@KERNEL_HEADERS=/usr/include@BUILD_CC=gcc CC=i486-unknown-linux-gnu-gcc AR=i486-unknown-linux-gnu-ar RANLIB=i486-unknown-linux-gnu-ranlib KERNEL_HEADERS=/usr/include@' libcap/PKGBUILD
+# https://bugs.gentoo.org/604802
+#  gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
+#  gperf output is somehow broken for cross-compilation
+# https://bugs.gentoo.org/attachment.cgi?id=462080
+# TODO: https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
+# wget -O libcap-2.25-gperf.patch 'https://604802.bugs.gentoo.org/attachment.cgi?id=462080'
+# copy libcap-2.25-gperf.patch from i486 folder
+sed -i 's@source=(@source=(libcap-2.25-gperf.patch @' libcap/PKGBUILD
+sed -i "s@md5sums=(@md5sums=('SKIP' @" libcap/PKGBUILD
+sed -i '2!N; /prepare() *{ *\n *cd/ a \  patch -Np1 < ${srcdir}/libcap-2.25-gperf.patch' libcap/PKGBUILD
+# TODO: mail this to https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
+# libcap needs pam just when building a test (which we cannot execute anyway)
+# test.c:3:10: fatal error: security/pam_modules.h: No such file or directory
+# #include <security/pam_modules.h>
+# => add pam as dependency and build it
+
+# attr
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' attr/PKGBUILD
+# no gettext
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' attr/PKGBUILD
+
+# acl
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' acl/PKGBUILD
+
+# gdbm
+#??? https://how-to-build-for-arm.wikispaces.com/gdbm: really needed? we should have configure support 
+# let's try configure:
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gdbm/PKGBUILD
+
+# db
+sed -i 's@\.\./dist/configure@../dist/configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' db/PKGBUILD
+
+# perl
+# the official cross-compilation support in Perl is weird and needs a
+# running remote SSH access to the real machine:
+# https://stackoverflow.com/questions/5464538/cross-compile-perl-for-arm
+#
+# we go with https://arsv.github.io/perl-cross/
+sed -i '/source=/ a\        https://github.com/arsv/perl-cross/releases/download/1.1.8/perl-cross-1.1.8.tar.gz' perl/PKGBUILD
+sed -i "/md5sums=/ a\         'SKIP'" perl/PKGBUILD
+sed -i '1!N; /prepare() *{\n *cd/ a \  tar --strip-components=1 -zxf ${srcdir}/perl-cross-1.1.8.tar.gz' perl/PKGBUILD
+sed -i 's@./Configure -des@./configure --target=i486-unknown-linux-gnu@' perl/PKGBUILD
+#rm: cannot remove '/home/cross/build/perl/pkg/perl/usr/bin/perl5.26.1': No such file or directory
+sed -i 's@\(rm "$pkgdir/usr/bin/perl$pkgver\)@#\1@g' perl/PKGBUILD
+# the hook fails as we lack some findtools and sed
+# pacman does not have a --no-execute-hooks mode
+#Can't open /dev/null: No such file or directory
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 8: find: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: pacman: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: wc: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 25: wc: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 13: sed: command not found
+
+# openssl
+sed -i "s@'i686'@'i486'@g" openssl/PKGBUILD
+# https://how-to-build-for-arm.wikispaces.com/openssl
+sed -i "s@'linux-elf'@'linux-generic32'@g" openssl/PKGBUILD
+sed -i 's@shared no-ssl3-method ${optflags}@shared ${optflags}@' openssl/PKGBUILD
+sed -i "s@make@make TARGETMACH=i486-unknown-linux-gnu BUILDMACH=x86_64-pc-linux-gnu CROSS=i486-unknown-linux-gnu CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld AS=i486-unknown-linux-gnu-as@g" openssl/PKGBUILD
+# TODO: bc is needed in the chroot to rebuild bc later, either build bc
+# inside chroot or cross-compile here
+
+# zlib
+sed -i '1!N; /autoreconf.*\n/ s@./configure@./configure -host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@' zlib/PKGBUILD
+sed -i "s@make@make TARGETMACH=i486-unknown-linux-gnu BUILDMACH=x86_64-pc-linux-gnu CROSS=i486-unknown-linux-gnu CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld AS=i486-unknown-linux-gnu-as@g" zlib/PKGBUILD
+
+# cracklib
+sed -i 's@./configure@./configure -host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@' cracklib/PKGBUILD
+# the dictionary cannot be created while packaging by calling the cross-compiled tool!
+# we are not interested in an actually running cracklib doing some security checks, just in the library
+#./util/cracklib-packer: line 117: /home/cross/build/cracklib/src/cracklib-2.9.6/util/.libs/lt-cracklib-packer: No such file or directory
+sed -i 's/\(  \+sh\)/#\1/g' cracklib/PKGBUILD
+sed -i 's/\(  \+ | sh\)/#\1/g' cracklib/PKGBUILD
+
+# libtirpc
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libtirpc/PKGBUILD
+# disable Kerberos
+sed -i "/depends=/s/'krb5'//" libtirpc/PKGBUILD
+# gssapi seems also to be a dependency, not in PKBUILD, disable it
+sed -i 's@./configure@./configure --disable-gssapi@g' libtirpc/PKGBUILD
+# doens't really like to be cross-compiled..
+# xdr_sizeof.c:93:13: error: 'uintptr_t' undeclared (first use in this function); did you mean '__intptr_t'?
+# => https://bugzilla.redhat.com/show_bug.cgi?id=1482063
+# => libtirpc-1.0.2-stdint.patch
+sed -i 's@source=(@source=(libtirpc-1.0.2-stdint.patch @' libtirpc/PKGBUILD
+sed -i "s@sha1sums=(@sha1sums=('0322752c231884c5434b4e56a3c376d7bfedf9d9' @" libtirpc/PKGBUILD
+sed -i '/build()/ i \  prepare() { \n\  cd ${pkgname}-${pkgver}\n\ patch -Np1 < ${srcdir}/libtirpc-1.0.2-stdint.patch \n }' libtirpc/PKGBUILD
+
+# pam
+# no flex, w3m, docboox-xml/xsl (no docu and take flex from the host)
+sed -i "s@makedepends=@#makedepends=@" pam/PKGBUILD
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pam/PKGBUILD
+# disable NIS/YP
+sed -i 's@./configure@./configure --disable-nis@g' pam/PKGBUILD
+# no help, still errors:
+# unix_passwd.c:56:10: fatal error: rpcsvc/yp_prot.h: No such file or directory
+# #include <rpcsvc/yp_prot.h>
+# => pam-1.3.0-unix-passwd-no-yp.patch
+sed -i 's@source=(@source=(pam-1.3.0-unix-passwd-no-yp.patch @' pam/PKGBUILD
+sed -i "s@md5sums=(@md5sums=('3f5edd685cdd2c0a2ca44bc6e75320d8' @" pam/PKGBUILD
+sed -i '/patch -Np/ a \  patch -Np1 -i "${srcdir}/pam-1.3.0-unix-passwd-no-yp.patch"' pam/PKGBUILD
+# disable docu rebuilding
+sed -i 's@./configure@./configure --disable-regenerate-docu@' pam/PKGBUILD
+# no documentation built, so nothing to remove
+sed -i '2!N; /# FS #40749\n \+rm/ s/rm/#rm/g' pam/PKGBUILD
+
+# tons of tools needed to build documentation, we ommit the documentation right now
+sed -i "s@makedepends@#makedepends@" pam/PKGBUILD
+
+# coreutils  
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' coreutils/PKGBUILD
+# apply man generation patch (one has to wonder, is it maintained at all?)
+# help2man errors: help2man: can't get `--help' info from man/chmod.td/chmod
+# http://ftp.lfs-matrix.net/pub/clfs/conglomeration/coreutils/coreutils-8.28-noman.patch
+# based on a patch by William Harrington (kb0iic at cross-lfs dot org) 2014-10-30 for coreutils 8.23
+sed -i 's@source=(@source=(coreutils-8.28-noman.patch @' coreutils/PKGBUILD
+sed -i "s@md5sums=(@md5sums=('SKIP' @" coreutils/PKGBUILD
+
+# util-linux
+# disable some dependencies on systemd, python, libcap-ng
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' util-linux/PKGBUILD
+sed -i 's@ \+depends\(.*\)@#depends\1@g' util-linux/PKGBUILD
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' util-linux/PKGBUILD
+# no python
+sed -i 's@--with-python=3@--without-python \\@g' util-linux/PKGBUILD
+# no systemd
+sed -i '/--without-python/ a \ --without-systemd --without-systemdsystemunitdir' util-linux/PKGBUILD
+# sed -i '/ListenStream/ aRuntimeDirectory=uuidd' "$pkgdir/usr/lib/systemd/system/uuidd.socket"
+sed -i "s@\(sed.*\)@#\1@" util-linux/PKGBUILD
+
+# e2fsprogs
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' e2fsprogs/PKGBUILD
+# remove superflous 'bc' make dependency
+sed -i "/makedepends/s/'bc'//g" e2fsprogs/PKGBUILD
+
+# expat
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' expat/PKGBUILD
+
+# bzip2
+sed -i "s@\( \+\)make@\1make CC=i486-unknown-linux-gnu-cc RANLIB=i486-unknown-linux-gnu-ranlib AR=i486-unknown-linux-gnu-ar@g" bzip2/PKGBUILD
+
+# lz4
+sed -i "s@\( \+\)make@\1make CC=i486-unknown-linux-gnu-cc RANLIB=i486-unknown-linux-gnu-ranlib AR=i486-unknown-linux-gnu-ar@g" lz4/PKGBUILD
+# lz4 has a git makedepends, diffutils for unit tests
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' lz4/PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' lz4/PKGBUILD
+
+# xz
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' xz/PKGBUILD
+# with gcc 7.2 we get new errors
+sed -i 's@--enable-werror@--disable-werror@g' xz/PKGBUILD
+
+# pcre
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pcre/PKGBUILD
+
+# less
+sed -i 's@sh configure@sh configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' less/PKGBUILD
+
+# gzip
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gzip/PKGBUILD
+
+# tar
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' tar/PKGBUILD
+# checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
+# configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
+# See `config.log' for more details
+sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
+
+# libarchive
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libarchive/PKGBUILD
+
+# curl
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' curl/PKGBUILD
+# build with minimal features, we don't need some libraries
+sed -i "/depends=/s/'krb5'//" curl/PKGBUILD
+sed -i "/depends=/s/'libssh2'//" curl/PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-libssh2 \\' curl/PKGBUILD
+sed -i "/depends=/s/'libpsl'//" curl/PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-libpsl \\' curl/PKGBUILD
+sed -i "/depends=/s/'libnghttp2'//" curl/PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-nghttp2 \\' curl/PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-gssapi \\' curl/PKGBUILD
+# no ca-certificates, needs tons of tools to build (like p11-kit), so we 
+# create a fake one with certificates from the host (is this LE/BE-safe?)
+# can we actually simply ommit them for now?
+sed -i "/depends=/s/'ca-certificates'//" curl/PKGBUILD
+# zsh, perl is used to create a completion file for curl and zsh
+sed -i '/--prefix=\/usr/ a \      --without-zsh-functions-dir \\' curl/PKGBUILD
+
+# pacman-mirrorlist
+cp $HOME/packages32/core/pacman-mirrorlist/mirrorlist pacman-mirrorlist/.
+./update-list
+cat > pacman-mirrorlist/mirrorlist >> pacman-mirrorlist/mirrorlist <<EOF
+## Switzerland
+Server = https://archlinux32.andreasbaumann.cc/$arch/$repo
+EOF
+
+# archlinux-keyring
+
+# archlinux32-keyring
+cp -R $HOME/packages32/core/archlinux32-keyring .
+
+# pacman
+# append archlinux32 keyring
+cat ~/packages32/core/pacman/PKGBUILD >> pacman/PKGBUILD 
+# craft a temporary i486 pacman.conf (no gpg and hard-coded architecture)
+cp pacman.conf.i686 pacman.conf.i486
+sed -i 's@^\(SigLevel\)@#\1@' pacman.conf.i486
+sed -i 's@^\(LocalFileSigLevel\)@#\1@' pacman.conf.i486
+# TODO: ADAPT sed -i 's@i686@i486@' pacman/PKGBUILD
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pacman/PKGBUILD
+# asciidoc is a makedepend, we can use the one on the host (this means
+# also we can pacman only rebuild on i486 itself after the whole python
+# zoo is installed)
+sed -i "/makedepends=/s/'asciidoc'//" pacman/PKGBUILD
+# minimal dependencies, we don't sign anything yet, gpgme and gnupg have
+# far too many dependencies which cannot be easily cross-compiled
+sed -i "s/'gpgme'//" pacman/PKGBUILD
+sed -i 's@./configure@./configure --without-gpgme@' pacman/PKGBUILD
+# use 486 config and not 686 one
+sed -i 's@pacman.conf.i686@pacman.conf.i486@' pacman/PKGBUILD
+# some more architecture patching
+sed -i 's@i686@i486@g' pacman/PKGBUILD
+
+# sed
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' sed/PKGBUILD
+# gettext: take the one from the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' sed/PKGBUILD
+
+# fakeroot
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' fakeroot/PKGBUILD
+# disable makedepends and take out po4a
+sed -i 's@\(cd doc\)@#\1@g' fakeroot/PKGBUILD
+sed -i 's@\(po4a\)@#\1@g' fakeroot/PKGBUILD
+# we have no ld.so.conf, so we can ignore this:
+#/tmp/alpm_va2bmk/.INSTALL: line 2: usr/bin/ldconfig: No such file or directory
+#error: command failed to execute correctly
+
+# texinfo
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' texinfo/PKGBUILD
+
+# grep
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' grep/PKGBUILD
+
+# findutils
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' findutils/PKGBUILD
+
+# file
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' file/PKGBUILD
+
+# diffutils
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' diffutils/PKGBUILD
+# http://lists.busybox.net/pipermail/buildroot/2017-September/203435.html
+sed -i '/.\/configure/ i \  echo "gl_cv_func_getopt_gnu=yes" > config.cache' diffutils/PKGBUILD
+sed -i 's@./configure@./configure --cache-file=config.cache@g' diffutils/PKGBUILD
+
+# ed
+sed -i 's@./configure@./configure CC=i486-unknown-linux-gnu-gcc@g' ed/PKGBUILD
+
+# patch
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' patch/PKGBUILD
+
+# make
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' make/PKGBUILD
+# no guile
+sed -i "/depends=/s/'guile'//" make/PKGBUILD
+sed -i 's@./configure@./configure --without-guile@g' make/PKGBUILD
+
+# mpfr
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' mpfr/PKGBUILD
+
+# gawk
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gawk/PKGBUILD
+# we don't have a valid locale yet, disable NLS
+sed -i 's@./configure@./configure --disable-nls@g' gawk/PKGBUILD
+
+# libmpc
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libmpc/PKGBUILD
+
+# binutils
+sed -i '/--prefix=\/usr/ a \     --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu \\' binutils/PKGBUILD
+# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
+sed -i "/makedepends/s/git//g" binutils/PKGBUILD
+
+# libunwind
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libunwind/PKGBUILD
+# no TeX, no docu
+sed -i "/makedepends=/s/'texlive-core'//g" libunwind/PKGBUILD
+
+# strace
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' strace/PKGBUILD
+
+# gcc
+sed -i '/--prefix=\/usr/ a \     --target=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu \\' gcc/PKGBUILD
+# no doxygen documentation
+sed -i "/makedepends=/s/doxygen//" gcc/PKGBUILD
+# no ADA
+sed -i "/makedepends=/s/gcc-ada//" gcc/PKGBUILD
+sed -i '/pkgname/ s/gcc-ada//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/ada//g' gcc/PKGBUILD
+# do not build git versions or from git!
+sed -i 's/pkgver=7.2.1/pkgver=7.2.0/' gcc/PKGBUILD
+sed -i "/makedepends=/s/git//" gcc/PKGBUILD
+sed -i 's@git+https://gcc.gnu.org/git/gcc.git#commit=${_commit}@https://ftp.gnu.org/gnu/${pkgname}/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz@g' gcc/PKGBUILD
+sed -i 's@cd gcc$@cd ${pkgname}-${pkgver}@g' gcc/PKGBUILD
+sed -i 's@$srcdir/gcc/configure@$srcdir/${pkgname}-${pkgver}/configure@g' gcc/PKGBUILD
+# send bugs to the right place
+sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' gcc/PKGBUILD
+# no LTO and plugins, they break and we don't need them
+sed -i 's@--enable-plugin@--disable-plugin@' gcc/PKGBUILD
+sed -i 's@--enable-lto@--disable-lto@' gcc/PKGBUILD
+sed -i '/enable-languages/ s/lto,//g' gcc/PKGBUILD
+# no other languages (Fortran, go, objc, etc)
+sed -i '/pkgname/ s/gcc-fortran//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/,fortran//g' gcc/PKGBUILD
+sed -i '/pkgname/ s/gcc-go//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/go,//g' gcc/PKGBUILD
+sed -i '/pkgname/ s/gcc-objc//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/objc,//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/,obj-c++//g' gcc/PKGBUILD
+# disable some libraries (libgomp doesn't cross compile, NLS we don't need)
+sed -i "/--disable-libssp/ a \      --disable-libgomp \\" gcc/PKGBUILD
+sed -i "/--disable-libssp/ a \      --disable-nls \\" gcc/PKGBUILD
+# disable threads
+sed -i 's@--enable-threads=posix@--disable-threads@' gcc/PKGBUILD
+=> current use PKGBUILD-gcc-cross, sorry, too many changes!
+# disable all languages but C and C++
+use gcc-cross-PKGBUILD
+
+# kbd
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' kbd/PKGBUILD
+# no unit testing (using C 'check')
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' kbd/PKGBUILD
+
+# procps-ng
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' procps-ng/PKGBUILD
+# no systemd for now
+sed -i "/makedepends=/s/'systemd'//" procps-ng/PKGBUILD
+sed -i "/depends=/s/'libsystemd'//" procps-ng/PKGBUILD
+sed -i 's@--with-systemd@--without-systemd@' procps-ng/PKGBUILD
+# do not use the stub rpl_malloc/rpl_realloc functions (they don't cross-compile
+# and we know that glibc fixed those problems long time ago)
+sed -i '2!N; /prepare()/ a \        sed -i "s/AC_FUNC_MALLOC/dnl AC_FUNC_MALLOC/" configure.ac \
+	sed -i "s/AC_FUNC_REALLOC/dnl AC_FUNC_RELLOC/" configure.ac \
+	autoconf
+' PKGBUILD
+
+# shadow
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' shadow/PKGBUILD
+# remove docu and git dependencies
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' shadow/PKGBUILD
+# needs xml2po
+sed -i 's@--enable-man@--disable-man@g' shadow/PKGBUILD
+sed -i '/find/,/-delete/{s/\(.*\)/#\1/g}' shadow/PKGBUILD
+sed -i '/rmdir/,/man8/{s/\(.*\)/#\1/g}' shadow/PKGBUILD
+sed -i 's/^#}/}/' shadow/PKGBUILD
+sed -i '2!N; /prepare()/ a \  sed -i "/SUBDIRS/s/man//g" Makefile.am' shadow/PKGBUILD
+
+# uinit
+sed -i 's/make /make CC=i486-unknown-linux-gnu-gcc /g' uinit/PKGBUILD
+# remove git dependency
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' uinit/PKGBUILD
+
+# linux
+sed -i 's@make@make ARCH=i386 CROSS_COMPILE=$HOME/x-tools/i486-unknown-linux-gnu/bin/i486-unknown-linux-gnu-@g' linux/PKGBUILD
+# remove make dependencies, currently we build without module support
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' linux/PKGBUILD
+# remove dependencies from kernel package, we don't have modules or a ramdisk right now
+sed -i 's/ \+\(depends=\)/#\1/' PKGBUILD
+# ignore failing hooks on installation, it's just depmod and mkinitcpio which we both don't need
+
+# glibc
+sed -i 's@/configure"@/configure" --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
+# change bug reporting
+sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' PKGBUILD
+# disable multilib, we are on 32-bit only
+sed -i 's@--enable-multi-arch@--disable-multi-arch@g' PKGBUILD
+# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
+sed -i "/makedepends/s/git//g" PKGBUILD
+# gd for memory profiles, no please
+sed -i "/makedepends/s/gd//g" PKGBUILD
+cat ~/packages32/core/glibc/PKGBUILD >> PKGBUILD
+sed -i "/makedepends/s/lib32-gcc-libs//g" PKGBUILD
+sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
+
+# net-tools
+sed -i "s@make @make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld@g" net-tools/PKGBUILD
+sed -i "s@make\$@make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld @g" net-tools/PKGBUILD
+# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
+sed -i "/makedepends/s/git//g" net-tools/PKGBUILD
+# apply patch for double definitons in ip.h
+sed -i 's@source=(@source=(net-tools-1.60-if_tunnel.patch @' net-tools/PKGBUILD
+sed -i "s@sha1sums=(@sha1sums=('SKIP' @" net-tools/PKGBUILD
+sed -i '2!N; /prepare() {/ a \  pushd ${srcdir}/${pkgname}; patch -Np1 < ${srcdir}/net-tools-1.60-if_tunnel.patch; popd' PKGBUILD
+
+# libmnl
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libmnl/PKGBUILD
+
+# libelf
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libelf/PKGBUILD
+
+# libnfnetlink
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libnfnetlink/PKGBUILD
+
+# iptables
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' iptables/PKGBUILD
+sed -i 's@--enable-bpf-compiler@--disable-bpf-compiler@g' iptables/PKGBUILD
+# disable nftable support, draws in more libraries, we need the xtables depevelopment mainly now for iproute2
+sed -i 's@./configure@./configure --disable-nftables@' iptables/PKGBUILD
+# disable connection tracking
+sed -i 's@./configure@./configure --disable-connlabel@' iptables/PKGBUILD
+
+# iproute2
+# cross-compilation and verbosity flags
+sed -i "s@make\$@make V=1 CC=i486-unknown-linux-gnu-cc AR=i486-unknown-linux-gnu-ar@g" iproute2/PKGBUILD
+# disabled iptables (too many dependencies)
+# disable linux-atm (unlikely we have such a hardware for i486)
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iproute2/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' iproute2/PKGBUILD
+
+# libedit
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libedit/PKGBUILD
+
+# openssh
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' openssh/PKGBUILD
+# package suffers from featuritis
+# remove ldns and kerberos5 support, keep libedit (as it's easy to build)
+# ssh => not good, openssl <> unbound <> openssl cycle and mess
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' openssh/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' openssh/PKGBUILD
+sed -i 's@--with-ldns@--without-ldns@g' openssh/PKGBUILD
+sed -i 's@--with-kerberos5=/usr@--without-kerberos5@g' openssh/PKGBUILD
+#ln: failed to create symbolic link '/build/openssh/pkg/openssh/usr/share/man/man1/slogin.1.gz': No such file or directory
+sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD
+
+# libidn
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libidn/PKGBUILD
+
+# sysfsutils
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' sysfsutils/PKGBUILD
+
+# nettle
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
+
+# iputils
+# no documentation and use git from host
+sed -i 's@\(make doc man\)@#\1@' iputils/PKGBUILD
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iputils/PKGBUILD
+sed -i 's@make @make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld@g' iputils/PKGBUILD
+sed -i 's@\(install -m644 doc\)@#\1@' iputils/PKGBUILD
+sed -i 's@\("${pkgdir}"/usr/share\)@#\1@' iputils/PKGBUILD
+
+
+# special operations
+####################
+
+# archlinux32-keyring
+cd $HOME/build
+cp -a $HOME/packages32/core/archlinux32-keyring .
+cd archlinux32-keyring
+$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
+
+# aftermatch for gcc/binutils
+#collect2: unable to find ld
+=> this is the cross compiled gcc for i486 inside the chroot, it expects
+   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
+=> we can temporarily fix this:
+sudo ln -s /usr/bin/ld $HOME/i486-root/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
+
+
+#######################################
+##### TODO FROM HERE
+#######################################
+
+# TODO: m4. autoconf, automake, libtool are not really bootstrappable in x-tools
+# basic packages, non-virtual one from above: kernel, shell, pacman, editor, coreutils, development
+# tools (some of them can be bootstrapped inside like the autotools, perl; and they also should!)
+
+# linux-headers is important so we can build kmod inside the chroot
+# linux itself is tricky. For now we will boot with direct kernel parameters and binary in libvirt/qemu
+
+PACKAGES=          \
+     \
+ \
+libffi glib2 libunistring gettext"
+
+# some binaries in the cross tools (also known as perl) have really
+# weird library pathes (and no rpath it seems)
+export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/perl5/5.26/core_perl/CORE
+export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/bin:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin:${PATH}
+
+###
+TODO FROM HERE
+
+	# TODO:
+	# openssl for linux
+	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)\
+	# libunistring for gettext
+	# libffi for glib2
+	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
+	bsdtar xf $HOME/i486-root/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
+	popd
+
+	cd ..
+done
+
+
+# special patches for some packages
+###################################
+
+# linux
+# proto-kernel without ramdisk and modules if possible, just enough to boot into
+# a virtual machine (we take qemu/kvm/libvirt)
+# libelf is only needed for loadable modules, we disable that for now
+# careful about AMD and Intel DRM modules, they simply segfault in the 
+# kernel when they don't have proper access to their firmware
+sed -i 's@config.i686@config.i486@g' linux/PKGBUILD
+
+# circular reference in getext (needed by attr, which needs also gettext)
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' attr/PKGBUILD
+
+# autoconf needs help2man, checks need fortan (wow. that package is old!)
+# depends contains base-devel stuff?! diffutils
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' autoconf/PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' autoconf/PKGBUILD
+sed -i 's@depends\(.*\)@#depends=\1@g' autoconf/PKGBUILD
+
+# automake needs dejagnu for testing, not now, disabling checks
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' automake/PKGBUILD
+
+# libool: trusting the toolchain here, no silly checks :-)
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' libtool/PKGBUILD
+
+# afterpatching; autreconf has a hard-coded #! /bin/perl -w bang,
+# seriously!
+chmod u+w /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
+sed -i 's@^#/bin/perl@/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/perl@g' \
+	/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
+
+# libarchive calls autoreconf, this is quite annoying as perl in crosstool-nt or
+# build for the x-tools is hard to get running properly
+# do the autoreconf -fi outside, create a package libarchive-3.3.2-retooled.tgz
+# libarchive has trouble with wchar_t (and has quite some other trouble around autoconf it seems)
+# remove the wchar_t and wchar_t sizeof test in configure.ac manutally before retooling
+# and of course tests fail!
+sed -i "s@^source=.*@source=('libarchive-3.3.2-retooled.tgz')@g" libarchive/PKGBUILD
+sed -i "s@^sha256sums=.*@sha256sums=('1f856e6f5cc0e1479f381e381a031ba19d09f80b51ac88e74b2c140fc78606e8')@g" libarchive/PKGBUILD
+sed -i 's@autoreconf@#autoreconf@g' libarchive/PKGBUILD
+
+#depends=(ca-certificates-{mozilla,cacert})
+sed -i 's@depends=(ca-certificates-{mozilla,cacert})@##depends=(ca-certificates-{mozilla,cacert})\1@g' ca-certificates/PKGBUILD
+
+# curl
+######
+# curl needs asciidoc and p11-kit, don't build them, use them from the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' curl/PKGBUILD
+# build with minimal features, enough to make pacman download packages
+sed -i 's@depends\(.*\)@depends=('ca-certificates' 'openssl' 'zlib')@g' curl/PKGBUILD
+# zsh, perl is used to create a completion file for curl and zsh?
+sed -i 's@--with-gssapi@--with-gssapi --without-zsh-functions-dir@g' curl/PKGBUILD
+
+# pacman
+########
+# pacman's tests mostly fail on non-Archlinux, so skip them
+# asciidoc is a makedepend, we can use the one on the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' pacman/PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' pacman/PKGBUILD
+# minimal dependencies, we don't sign anything yet
+sed -i "s/'gpgme'//g" pacman/PKGBUILD
+# we need pkg-config, otherwise pacman find libarchive in the wrong
+# place, but pkg-config needs glib2 and glib2 is built using meson (urgh!)
+# when we take the host version, lets patch the host pkgconfig file to
+# use the sysroot of the toolchain
+sed -i 's/exit 1 # \$E_USER_ABORT/# exit 1 # $E_USER_ABORT/g' /home/cross/i486-root/usr/bin/makepkg
+
+# libarchive/libtool fuckups:
+# for expat and lzma: /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/
+
+
+
+# pcre
+######
+# no C++
+sed -i 's@./configure@./configure --disable-cpp@g' pcre/PKGBUILD
+# --nocheck as we have trouble to find shared libraries
+
+# findutils
+###########
+# --nockeck: FAIL: test-mbrtowc1.sh     
+#FAIL: test-mbrtowc2.sh
+#FAIL: test-mbrtowc3.sh
+#FAIL: test-mbrtowc4.sh
+
+# mpfr
+######
+# builds against host gmp, we want it to build against our version!
+sed -i 's@./configure@./configure --with-gmp=/home/cross/i486-root/usr/@g' mpfr/PKGBUILD
+# disable checks for cross-compilation
+# hack libmpfr.la otherwise libmpc links against the host gmp!:
+# dependency_libs=' -L/home/cross/i486-root/usr/lib /usr/lib/libgmp.la'
+# to dependency_libs='/home/cross/i486-root/usr/lib/libgmp.la'
+
+# libmpc
+########
+# builds against host gmp and mpfr, we want it to build against our version!
+sed -i 's@./configure@./configure --with-gmp=/home/cross/i486-root/usr/@g' libmpc/PKGBUILD
+sed -i 's@./configure@./configure --with-mpfr=/home/cross/i486-root/usr/@g' libmpc/PKGBUILD
+# hack libmpc.la (libtool generates a disaster!):
+# dependency_libs=' -L/home/cross/i486-root/usr//lib /usr/lib/libmpfr.la /usr/lib/libgmp.la /usr/lib/libgmp.la -lm'
+# dependency_libs='/home/cross/i486-root/usr/lib/libmpfr.la /home/cross/i486-root/usr/lib/libgmp.la -lm'
+
+# binutils
+##########
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' binutils/PKGBUILD
+sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' binutils/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' binutils/PKGBUILD
+#configure: error: in `/home/cross/build/binutils/src/binutils-build/gold':
+#configure: error: C++ preprocessor "/lib/cpp" fails sanity check
+#See `config.log' for more details.
+#make: *** [Makefile:5995: configure-gold] Error 1
+# this is in gold, so let's disable gold! We don't have C++ (yet), so this should not matter..
+;ln -s ~/x-tools/i486-unknown-linux-gnu/bin/cpp ~/x-tools/i486-unknown-linux-gnu/lib/cpp
+export CPP=/home/cross/x-tools/i486-unknown-linux-gnu/lib/cpp
+sed -i 's@--enable-gold@--disable-gold@g' binutils/PKGBUILD
+
+# glibc
+#######
+# building glibc, again, we get the 'glibc/csu install operand' bug, really annoying 
+# remove the git download hack, use vanilla tarball
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' glibc/PKGBUILD
+=> breaks, use the shim created out of crosstool-ng in the meantime
+dl-sysdep.c:(.text+0x9c): undefined reference to `__memcmp_ia32'
+dl-sysdep.c:(.text+0xc0): undefined reference to `__memcmp_ia32'
+dl-sysdep.c:(.text+0xe1): undefined reference to `__memcmp_ia32'
+dl-sysdep.c:(.text+0x105): undefined reference to `__memcmp_ia32'
+dl-sysdep.c:(.text+0x130): undefined reference to `__memcmp_ia32'
+/home/cross/build/glibc/src/glibc-build/libc.a(dl-sysdep.o):dl-sysdep.c:(.text+0x15f): more undefined references to `__memcmp_ia32' follow
+collect2: error: ld returned 1 exit status
+make[2]: *** [../Rules:224: /home/cross/build/glibc/src/glibc-build/elf/sln] Error 1
+make[2]: Leaving directory '/home/cross/build/glibc/src/glibc-2.26/elf'
+=> again, sounds familiar, this sound like a missing libgcc_s stub for memcmp
+
+# gcc
+#####
+# needs tons of fixes, most importantly, don't download the who git repo!!
+--disable-multilib --disable-bootstrap \
+ --with-gmp=/home/cross/i486-root/usr \
+      --with-mpfr=/home/cross/i486-root/usr \
+      --with-mpc=/home/cross/i486-root/usr \
+git -> tarball
+only c language
+no checkdepdns, makedepnds
+
+why the hell, I switched off c++, so wy are still cpp probes being done!?
+/lib/cpp hardcoded, seriosly!!
+# in prepare()
+ln -s ../bin/cpp /home/cross/x-tools/i486-unknown-linux-gnu/lib/cpp
+find . -name configure -exec sed -i 's@/lib/cpp@/home/cross/x-tools/i486-unknown-linux-gnu/bin/cpp@g' {} \;
+
+since 4.8 gcc is written in C++, fine. so we have to have a crosstool-ng C++ or
+we must bootstrap gcc
+=> we add C++ to the crosstool-ng toolchain, easier and more secure
+
+ included from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:0:
+/home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:540:34: error: declaration of C function ‘const cha
+r* strsignal(int)’ conflicts with
+ extern const char *strsignal (int);
+                                  ^
+In file included from /usr/include/c++/4.8.2/cstring:42:0,
+                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:235,
+                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:
+/usr/include/string.h:562:14: error: previous declaration ‘char* strsignal(int)’ here
+ extern char *strsignal (int __sig) __THROW;             ^
+In file included from ./bconfig.h:5:0,
+=> so, we get to an end here, c++ is taken from the host while cross-compiling?!
+-> remove glibc-devel on the host!
+-> draw the g++ link, autoconf fails in gcc in funny ways (not finding uint64_t)
+-> carefull, we build a gcc over a crossng-gcc, not sure, this is supported..
+-> aha. if mpfr, mpc and gmp are not installed and taken from sysroot but from i486-root
+   some pathes get messed up.
+
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82590
+https://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg550065.html
+https://gcc.gnu.org/bugzilla/show_bug.cgi?format=multiple&id=54692
+
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65863
+-> huh?
+https://gcc.gnu.org/ml/gcc-help/2016-06/msg00016.html
+- > yes, this is the inicatition I needed, mpfr, gmp and mpc point to a weird location
+
+The stage one compiler doesn't find the shared library, o well:
+/home/cross/build/gcc/src/gcc-build/./gcc/cc1: error while loading shared libraries: libmpc.so.3: cannot open shared object file: No such file or directory
+-> export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib
+
+And it never ends:
+In file included from /home/cross/build/gcc/src/gcc-7.2.0/libgcc/libgcc2.c:27:0:
+/home/cross/build/gcc/src/gcc-7.2.0/libgcc/../gcc/tsystem.h:87:10: fatal error: stdio.h: No such file or directory
+ #include <stdio.h>
+          ^~~~~~~~~
+compilation terminated.
+make[2]: *** [Makefile:491: _muldi3.o] Error 1
+-> https://gcc.gnu.org/ml/gcc-help/2012-04/msg00088.html
+-> so, let's try giving it a --with-sysroot to the crosstool-ng dirs
+-> and this means also it got past stage 1 compilers :-)
+
+/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: error loading plugin: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: wrong ELF class: ELFCLASS32
+collect2: error: ld returned 1 exit status
+make[2]: *** [Makefile:982: libgcc_s.so] Error 1
+=> for now, remove LTO stuff in PKGBUILD
+
+make: *** i486-unknown-linux-gnu/libstdc++-v3/doc: No such file or directory.  Stop.
+==> ERROR: A failure occurred in build().
+    Aborting...
+=> remove the PKGBUILD line #  make -C $CHOST/libstdc++-v3/doc DESTDIR="$pkgdir" doc-install-man
+libstdc++-v3/
+=> # make documentation
+  #make -C $CHOST/libstdc++-v3/doc doc-man-doxygen
+
+install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
+=> gcc auto-probed itself into i486-pc-linux-gnu, so the installed files are there
+CHOST="i486-pc-linux-gnu"    
+make: Leaving directory '/home/cross/build/gcc/src/gcc-build/gcc'
+install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
+=> sweet, let's try a symlink
+
+_libdir=usr/lib/gcc/$CHOST/$pkgver
+=> hard-code: to _libdir=usr/lib/gcc/i486-pc-linux-gnu/$pkgver
+=> nope, now others break
+this is hardly the ArchLinux way: vanilla and upstream
+
+again CHOST set to  i486-pc-linux-gnu
+=> this package is a disaster!
+=> we have a mess with two CHOSTS, one for crosstool-ng (unknown) and
+   one for our chroot
+
+# remove traces of ADA
+  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+
+# rm: cannot remove ‘/home/cross/build/gcc/pkg/gcc/usr/share/info/gccgo’: No such file or directory
+#  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+
+/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: cannot find -lquadmath
+collect2: error: ld returned 1 exit status
+libtool: install: error: relink `libgfortran.la' with the above command before installing it
+make: *** [Makefile:1331: install-toolexeclibLTLIBRARIES] Error 1
+make: Leaving directory '/home/cross/build/gcc/src/gcc-build/i486-unknown-linux-gnu/libgfortran'
+==> ERROR: A failure occurred in package_gcc-libs().
+    Aborting...
+=> libquadmath must be retooled before libfortran
+=> nope libfortran simply fails to relink => remove it
+
+install: cannot stat ‘/home/cross/build/gcc/src/gcc/COPYING.RUNTIME’: No such file or directory
+=> sweet, remove it
+
+error: failed to commit transaction (conflicting files)
+gcc: /home/cross/i486-root/usr/lib/libstdc++.a exists in filesystem (owned by gcc-libs)
+gcc: /home/cross/i486-root/usr/lib/libstdc++.la exists in filesystem (owned by gcc-libs)
+Errors occurred, no packages were upgraded.
+=> well, force the package
+
+test.c:1:10: fatal error: stdio.h: No such file or directory
+
+# sed
+#####
+# gettext: take the one from the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' sed/PKGBUILD
+
+# fakeroot
+##########
+# disable makedepends and take out po4a
+# checkdepends use shareutils
+
+# make
+######
+# no guile
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' make/PKGBUILD
+# remove guile, guile patching as it needs autotools!
+
+# libffi
+#######
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' libffi/PKGBUILD
+
+# glib2
+#######
+# take gettext from host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' glib2/PKGBUILD
+# get arch-meson wrapper, doens't build without it!
+# ok, forget meson, completly broken, resorting to autotools.
+# autoreconf: running: /home/cross/x-tools/i486-unknown-linux-gnu/bin/autoconf --force
+# configure.ac:88: error: possibly undefined macro: AC_DEFINE
+# huh?
+# retooling seems to be near impossible! ok, autoconf broken, meson unusable.. sweet
+Found pkg-config: /bin/pkg-config (0.27.1)
+Dependency libpcre found: NO
+Library m found: YES
+Not looking for a fallback subproject for the dependency libffi because:
+Automatic wrap-based fallback dependency downloading is disabled.
+
+Meson encountered an error in file meson.build, line 1439, column 0:
+Native dependency 'libffi' not found
+==> ERROR: A failure occurred in build().
+    Aborting...
+=> this is all very wrong!
+
+# gettext
+#########
+# remove glib2 from depends, not needed (why the hell is there anyway then?!?! just for fun?)
+
+# libarchive calls autoreconf, this is quite annoying as perl in crosstool-nt or
+###
+# stil in phase two, no proper autotools, let's apply the out-of-chroot trick once more..
+# do the autoreconf -fi outside, create a package libarchive-3.3.2-retooled.tgz
+# libarchive has trouble with wchar_t (and has quite some other trouble around autoconf it seems)
+# remove the wchar_t and wchar_t sizeof test in configure.ac manutally before retooling
+# and of course tests fail!
+# no checks again
+sed -i "s@^source=.*@source=('libarchive-3.3.2-retooled.tgz')@g" libarchive/PKGBUILD
+sed -i "s@^sha256sums=.*@sha256sums=('1f856e6f5cc0e1479f381e381a031ba19d09f80b51ac88e74b2c140fc78606e8')@g" libarchive/PKGBUILD
+sed -i 's@autoreconf@#autoreconf@g' libarchive/PKGBUILD
+
+# generic build
+###############
+
+# some binaries in the cross tools (also known as perl) have really
+# weird library pathes (and no rpath it seems)
+export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/perl5/5.26/core_perl/CORE
+export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/bin:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin:${PATH}
+for p in $PACKAGES
+	cd $p
+	sed -i "s/^arch=.*/arch=('i486')/" PKGBUILD
+
+	# for some packages we cannot execute tests (because the dependencies to install in
+	# the toolchain environment would be too much)
+	# perl: --nocheck
+	# openssl: --nocheck
+	# expat: --nocheck
+	# lz4: --nocheck
+	# autoconf: --nocheck
+	# automake: --nockeck
+	# libarchive: --nocheck
+	# pacman: --nocheck
+	# util-linux: --nocheck
+	# pcre: --nocheck
+	# findutils: --nocheck
+	# mpfr: --nocheck
+
+	# some package break in parallel builds or produce really funky
+	# error messages or/and results
+	# binutils: use makepkg-noparallel.conf
+        # gcc: use makepkg-noparallel.conf for debuging, the real build works fine in parallel
+
+	makepkg -C --config $HOME/i486-root/etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
+	
+	cp -v *.pkg.tar.gz $HOME/i486-root/packages/i486/.
+
+# if things are messed up
+#	rm -rf $HOME/i486-root/packages/i486/temp* $HOME/i486-root/var/cache/pacman/pkg/*
+#	repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.gz
+
+	repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.gz
+
+	sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy $p
+
+	pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q | grep $p
+
+	# for ncurses, readline for bash
+	# gdbm and db for perl
+	# openssl for linux
+	# attr for acl
+	# libarchive, autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)\
+	# libcap for coreutils
+	# bzip2 for pcre
+	# pcre for grep
+	# libunistring for gettext
+	# libffi for glib2
+	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
+	bsdtar xf $HOME/i486-root/packages/i486/ncurses-6.0+20170902-3-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/readline-7.0.003-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/gdbm-1.13-1-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/db-5.3.28-3-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/perl-5.26.1-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/openssl-1.1.0.g-1-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/expat-2.2.5-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/lz4-1\:1.8.0-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/xz-5.2.3-1-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/zlib-1\:1.2.11-2-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/gmp-6.1.2-1-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/mpfr-3.1.6.p1-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libmpc-1.0.3-2-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/gawk-4.1.4-2-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libarchive-3.3.2-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libcap-2.25-1-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/bzip2-1.0.6-6-i486.pkg.tar.gz
+	bsdtar xf $HOME/i486-root/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
+	bsdtar xf $HOME/i486-root/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
+	popd
+
+	cd ..
+done
+
+testing:
+
+# common issues
+###############
+
+bash, backspace and cursor keys are not working:
+=> tty erase '^?'
+
+# create CD ROM
+###############
+
+# no ramdisk, no modules, no fancy startup, just a shell script
+
+sudo rm -rf isolinux
+mkdir isolinux
+sudo cp -a i486-root/* isolinux/.
+sudo chown -R cross:cross isolinux/.
+cd isolinux
+mkdir boot/isolinux
+# hda for K5
+# hdb for virsh arch486
+sudo chown cross:cross boot/isolinux/isolinux.cfg
+cat >boot/isolinux/isolinux.cfg <<EOF
+UI menu.c32
+TIMEOUT 300
+PROMPT 1
+LABEL hda
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/hda init=/sbin/init console=ttyS0 console=tty0'
+LABEL hdb
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/hdb init=/sbin/init console=ttyS0 console=tty0'
+LABEL hdc
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/hdc init=/sbin/init console=ttyS0 console=tty0'
+LABEL hdd
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/hdd init=/sbin/init console=ttyS0 console=tty0'
+LABEL sr0
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/sr0 init=/sbin/init console=ttyS0 console=tty0'
+LABEL sr1
+	KERNEL /boot/vmlinuz-linux
+	APPEND root=/dev/sr1 init=/sbin/init console=ttyS0 console=tty0'
+EOF
+mkdir -p etc/init
+cat >etc/init/boot <<EOF
+#!/bin/sh
+mount -t proc proc /proc
+ln -s /proc/self/fd /dev/fd
+mount -t sysfs sys /sys
+mount -t tmpfs nodev,nosuid,size=4M /tmp
+exec /usr/bin/bash
+EOF
+sudo chown -R root:root .
+sudo chmod 0775 etc/init/boot
+sudo cp /usr/lib/syslinux/bios/ldlinux.c32 boot/isolinux/.
+sudo cp /usr/lib/syslinux/bios/menu.c32 boot/isolinux/.
+sudo cp /usr/lib/syslinux/bios/libutil.c32 boot/isolinux/.
+sudo cp /usr/lib/syslinux/bios/isolinux.bin boot/isolinux/.
+sudo genisoimage -J -r -o ../arch486.iso -b boot/isolinux/isolinux.bin \
+	-c boot/isolinux/boot.cat -input-charset UTF-8 -no-emul-boot \
+	-boot-load-size 4 -boot-info-table -joliet-long .
+cd ..
+
+# create virtual HD
+###################
+
+rm -f arch486.img
+qemu-img create arch486.img 4g
+chmod 666 arch486.img
+sudo /sbin/losetup /dev/loop2 arch486.img
+sudo dd if=/dev/zero of=/dev/loop2 bs=512 count=32130
+echo ';' | sudo /sbin/sfdisk --no-reread /dev/loop2
+sudo sfdisk -A /dev/loop2 1
+sudo partx --show /dev/loop2
+sudo partx -v --add /dev/loop2
+sudo mkfs.ext4 -O ^64bit /dev/loop2p1
+sudo mount /dev/loop2p1 mnt
+sudo cp -a i486-root/* mnt/.
+sudo chown -R cross:cross mnt/.
+cd mnt
+mkdir boot/syslinux
+echo 'default /boot/vmlinuz-linux root=/dev/hda1 init=/sbin/init console=ttyS0 console=tty0' \
+	> boot/syslinux/syslinux.cfg
+sudo dd bs=440 count=1 if=/usr/lib/syslinux/bios/mbr.bin of=/dev/loop2
+cp /usr/lib/syslinux/bios/*.c32 boot/syslinux/.
+sudo extlinux --install boot/syslinux/
+mkdir -p etc/init
+cat >etc/init/boot <<EOF
+#!/bin/sh
+mount -t proc proc /proc
+ln -s /proc/self/fd /dev/fd
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+mount -t sysfs sys /sys
+mount -o remount,rw /
+ip link set up dev eth0
+ip addr add 192.168.1.127/24 dev eth0
+ip route add default via 192.168.1.1 dev eth0
+/usr/sbin/sshd
+exec /usr/bin/bash
+EOF
+cat > etc/resolv.conf <<EOF
+nameserver 192.168.1.1
+EOF
+cat >> etc/group <<EOF
+nobody:x:99:
+EOF
+cat >> etc/passwd <<EOF
+nobody:x:99:99:nobody:/:/usr/bin/nologin
+EOF
+cat >> etc/ssh/sshd_config <<EOF
+PermitRootLogin yes
+EOF
+ssh-keygen -b 2048 -t rsa -f etc/ssh/ssh_host_rsa_key -N ''
+ssh-keygen -b 1024 -t dsa -f etc/ssh/ssh_host_dsa_key -N ''
+ssh-keygen -b 521 -t ecdsa -f etc/ssh/ssh_host_ecdsa_key -N ''
+ssh-keygen -b 2048 -t ed25519 -f etc/ssh/ssh_host_ed25519_key -N ''
+chmod 0400 etc/ssh/ssh_host_*_key
+mkdir root/.ssh
+cp $HOME/.ssh/id_rsa.pub root/.ssh/authorized_keys
+chmod 0700 root/.ssh
+sudo chown -R root:root .
+sudo chmod 0775 etc/init/boot
+cd ..
+sudo umount mnt
+sudo partx -v --delete /dev/loop2
+sudo losetup -d /dev/loop2
+
+
+cat > mnt/test.c <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main( int argc, char *argv[] )
+{
+	puts( "hello" );
+	exit( EXIT_SUCCESS );
+}
+EOF
+
+cat > mnt/test.cpp <<EOF
+#include <iostream>
+#include <cstdlib>
+
+int main( void )
+{
+	std::cout << "hello" << std::endl;
+	std::exit( EXIT_FAILURE );
+}
+EOF
+
+
+TODOS: in linux package makepkg
+https://github.com/libarchive/libarchive/issues/411
+
+https://rubenerd.com/sata-on-qemu/
+
+/usr/libexec/qemu-kvm --enable-kvm -cpu 486 -m 32 -vnc 0.0.0.0:2 \
+	-kernel linux/pkg/linux/boot/vmlinuz-linux \
+	-append 'root=/dev/hda1 nomodeset init=/etc/rc console=ttyS0 console=tty0' \
+	-cdrom /data/isos/arch486.iso -hda /data/libvirt/arch486.qcow2 -nographic
+
+qemu-system-i386 --enable-kvm -cpu 486 -m 32 -cdrom /data/isos/arch486.iso \
+	-hda /data/libvirt/arch486.qcow2 -curses -boot d \
+	-netdev user,id=net0,net=10.0.0.0/24,host=10.0.0.2,dhcpstart=10.0.0.16,hostfwd=tcp::2222-:22 \
+	-device rtl8139,netdev=net0
+
+qemu-system-i386 --enable-kvm -cpu 486 -m 32 \
+	-hda /home/cross/arch486.img -curses -boot d \
+	-netdev user,id=net0,net=10.0.0.0/24,host=10.0.0.2,dhcpstart=10.0.0.16,hostfwd=tcp::2222-:22 \
+	-device rtl8139,netdev=net0
+
+# very funny: uvesafb: failed to execute /sbin/v86d
+# Intel and ARM DRM modules:
+# BUG: unable to handle kernel NULL pointer dereference at   (null)
+
+# libarchive wants to autoretool, kick the author
+# fails in:
+==> Starting prepare()...
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, 'build/autoconf'.
+libtoolize: copying file 'build/autoconf/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIRS, 'build/autoconf'.
+libtoolize: copying file 'build/autoconf/libtool.m4'
+libtoolize: copying file 'build/autoconf/ltoptions.m4'
+libtoolize: copying file 'build/autoconf/ltsugar.m4'
+libtoolize: copying file 'build/autoconf/ltversion.m4'
+libtoolize: copying file 'build/autoconf/lt~obsolete.m4'
+configure.ac:136: error: possibly undefined macro: AC_MSG_FAILURE
+      If this token and others are legitimate, please use m4_pattern_allow.
+      See the Autoconf documentation.
+configure.ac:310: error: possibly undefined macro: AC_CHECK_LIB
+autoreconf: /home/cross/x-tools/i486-unknown-linux-gnu/bin/autoconf failed with exit status: 1
+==> ERROR: A failure occurred in prepare().
+    Aborting...
+
+librarchive: checking size of wchar_t... configure: error: in `/home/cross/build/libarchive/src/libarchive-3.3.2':
+configure: error: cannot compute sizeof (wchar_t)
+See `config.log' for more details
+==> ERROR: A failure occurred in build().
+    Aborting...
+configure:13828: checking windows.h usability
+configure:13828: gcc -c -O2 -pipe  conftest.c >&5
+conftest.c:109:21: fatal error: windows.h: No such file or directory
+ #include <windows.h>
+                     ^
+compilation terminated.
+configure:13828: $? = 1
+configure: failed program was:
+| /* confdefs.h */
+| #define PACKAGE_NAME "libarchive"
+| #define PACKAGE_TARNAME "libarchive"
+| #define PACKAGE_VERSION "3.3.2"
+=> seriously!!
+
+=> wchar_t on Linux, without probing?!
+
+Centos 7:
+Fatal Internal Error in libarchive: Out of memory
+When building tar package
+
+TODO:
+ca-certificates for curl:
+ERROR: ld.so: object 'libfakeroot-tcp.so' from LD_PRELOAD cannot be preloaded: ignored.
+bsdtar: /lib/libc.so.6: version `GLIBC_2.25' not found (required by /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/libexpat.so.1)
+  -> Compressing package...
+ERROR: ld.so: object 'libfakeroot-tcp.so' from LD_PRELOAD cannot be preloaded: ignored.
+bsdtar: /lib/libc.so.6: version `GLIBC_2.25' not found (required by /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/libexpat.so.1)
+==> ERROR: Failed to create package file.
+=> bsdtar, libexpat linked to host libc?
+=> using the Centos 7 version for now, renamed bsdtar in x-tools so it cannot be found
+
+util-linux:
+###########
+configure: error: /bin/sh config/config.sub \ failed
+==> ERROR: A failure occurred in build().
+    Aborting...
+
+total mess in util-linux, the problem is "Stripping unneeded symbols from binaries and libraries"
+in makepkg
+mount: error while loading shared libraries: libmount.so.1: cannot open shared object file: No such file or directory
+[root@xs13 /]# ldd /usr/lib/libmount.la 
+
+and again, I don't seem to be able to compile a running pacman!
+debug: returning error 6 from _alpm_db_register_sync : wrong or NULL argument passed
+error: could not register 'temp' database (wrong or NULL argument passed)
+error: no usable package repositories configured.
+debug: unregistering database 'local'
+=> pacman -Syy seems broken, put -U -R -Q work, this is enough to continue to build
+   packages and to install them :-)
+
+
+gcc aftermatch:
+
+SPECFILE=`dirname $(gcc -print-libgcc-file-name)`/specs
+gcc -dumpspecs > $SPECFILE
+*cpp:
+%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT} -isystem/usr/include
+=> C works
+
+g++ -o test test.cpp
+In file included from /usr/include/c++/7.2.0/ext/string_conversions.h:41:0,
+                 from /usr/include/c++/7.2.0/bits/basic_string.h:6159,
+                 from /usr/include/c++/7.2.0/string:52,
+                 from /usr/include/c++/7.2.0/bits/locale_classes.h:40,
+                 from /usr/include/c++/7.2.0/bits/ios_base.h:41,
+                 from /usr/include/c++/7.2.0/ios:42,
+                 from /usr/include/c++/7.2.0/ostream:38,
+                 from /usr/include/c++/7.2.0/iostream:39,
+                 from test.cpp:1:
+/usr/include/c++/7.2.0/cstdlib:75:15: fatal error: stdlib.h: No such file or directory
+ #include_next <stdlib.h>
+               ^~~~~~~~~~
+export CPLUS_INCLUDE_PATH=/usr/include/c++/7.2.0
+=> doens't help
+
+/etc/bash.bashrc:
+PS1='(chroot) \u:\w\$ '
+
+PHASE 2
+#######
+
+Test what we can build inside the chroot.
+When we get all dependencies right, we go into the real environment (which is
+i486 and thus not SMP and slow- ok, we could use distcc, but anyway)
+
+Main problem: we have trouble to run fakeroot in a chroot
+fakeroot: nested operation not yet supported
+makepkf -F takes care of that (thanks for providing minial fakeroot support)
+but pacman also takes an -F parameter
+-> INFAKEROOT=1 in /usr/bin/makepkg
+
+As pacman seems to have some trouble, we overwrite the temp packages inside
+the chroot and replace the files on the filesystem forcefully:
+error: could not register 'temp' database (wrong or NULL argument passed)
+
+In this round don't skip dependencies and tests if possible.
+
+cp pkg/arch-install-scripts/usr/bin/arch-chroot /usr/local/bin/.
+
+arch-chroot /home/cross/i486-root/
+
+# package specific things
+
+# iana-etc:
+download error https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xml
+=> we miss /etc/ssl/certs/ca-certificates.crt from  ca-certificates-utils, we
+   can copy it from an existing archlinux
+
+# hack /usr/bin/makepkg, run_pacman again, this time set
+# --config /etc/pacman-i486.conf -r /
+
+# tzdata
+/build/tzdata/PKGBUILD: line 25: zic: command not found
+==> ERROR: A failure occurred in package().
+    Aborting...
+=> forgot zig in the shim
+
+# ncurses
+# dlsym errors and we don't have a C++ compiler (yet)
+sed -i 's@./configure@./configure --without-dlsym@g' ncurses/PKGBUILD
+sed -i 's@--with-cxx-binding --with-cxx-shared@--without-cxx  --without-cxx-binding --without-cxx-shared@g' ncurses/PKGBUILD
+
+# perl
+######
+perl: warning: Please check that your locale settings:
+        LANGUAGE = (unset),
+        LC_ALL = (unset),
+        LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+
+# openssl
+sed -i 's@i686@i486@g' openssl/PKGBUILD
+sed -i 's@no-ssl3-method@no-sse2 no-ssl3-method@g' openssl/PKGBUILD
+
+# xz
+# with gcc 7.2 we get new errors
+sed -i 's@--enable-werror@--disable-werror@g' xz/PKGBUILD
+
+# help2man
+# needs perl-locale-gettext, which needs gettext, which needs glib2
+# which needs meson (so a big nogo currently!)
+# obviously it builds also without gettext..
+sed -i 's@^depends\(.*\)@#depends\1@g' help2man/PKGBUILD
+
+# bc
+# requires texinfo, is this part of base-devel?
+# bootstrap --force
+# no /usr/lib32
+# ./fbc -c ./libmath.b </dev/null >libmath.h
+
+
+# libelf 
+########
+In file included from /usr/include/error.h:52:0,
+                 from xmalloc.c:33:
+/usr/include/bits/error.h: In function 'error':
+/usr/include/bits/error.h:40:5: error: format not a string literal, argument types not checked [-Werror=format-nonliteral]
+     __error_noreturn (__status, __errnum, __format, __va_arg_pack ());
+     ^~~~~~~~~~~~~~~~
+=> -isystem in gcc specfile needed, not -I
+
+
+# 
+# libxml2
+# go without icu for now, icu needs C++
+# also, python bindings and git are not really needed
+sed -i 's@^depends\(.*\)@#depends\1@g' libxml2/PKGBUILD
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libxml2/PKGBUILD
+build()
+{
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
+  make
+}
+sed -i 's@--with-icu@@' libxml2/PKGBUILD
+# dito package
+# really, what is it with people!
+# take: ftp://xmlsoft.org/libxml2/libxml2-2.9.7.tar.gz
+#source=(git+https://git.gnome.org/browse/libxml2#commit=$_commit
+# no tests, c++ tests would fail
+./configure: line 13042: syntax error near unexpected token `Z,zlib,'
+./configure: line 13042: `    PKG_CHECK_MODULES(Z,zlib,'
+==> ERROR: A failure occurred in build().
+    Aborting...
+-> zlib probing needs pkg-config, which is it's own disaster, so disable
+zlib for now.
+=> hack out the broken PKG_CHECK_MODULES out of configure!
+-> same trick for LZMA (equally broken) and ICU
+-> disable testing for now, either it takes long or it hangs
+
+# libgcrypt
+# download location broken, download by hand, adapt PKGBUILD
+
+# libxslt: same disaster as libxml2
+# no python, no check
+
+# kmod: circular dependency on linux-headers, let's build
+# linux/linux-headers correctly outside the chroot and install
+# them here (at least linux-headers)
+# gtk-doc draws in Gnome bullshit again
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' kmod/PKGBUILD
+
+# libtirpc: break the cyrcle with systemd (via krb5)
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libtirpc/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' libtirpc/PKGBUILD
+# configure: error: gssapi.h not found. Use --disable-gssapi, or install GSS-API.
+# --disable-gssapi
+
+# pam:
+# dependency w3m is for documentation, let's remove it
+rm: cannot remove '/build/pam/pkg/pam/usr/share/doc/Linux-PAM/sag-pam_userdb.html': No such file or directory
+also remove section in PKGBUILD
+
+# inetutils:
+# disable checks
+
+# iroute2
+# trying with iptables, as iptables draws in tons of things
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iproute2/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' iproute2/PKGBUILD
+
+# bison
+# --nocheck: fails miserably to compile tests (C++ missing?)
+
+# linux-headers: fails hapilly and has tons of weird stuff in it
+install: failed to access ‘/home/cross/build/linux/pkg/linux-headers/usr/lib/modules/4.13.13-1/build’: No such file or directory
+_package-headers()
+=>  mkdir -p "${_builddir}" everywhere, the problem is install -D on Centos, obviously broken!
+
+# kmod
+configure: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables liblzma_CFLAGS
+and liblzma_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See `config.log' for more details
+==> ERROR: A failure occurred in build().
+    Aborting...
+=> let's try to set lzma ourselves or disable it, get around pkg-config probing
+# no pkg-config, no docu, try to work around
+sed -i 's@--enable-gtk-doc@--disable-gtk-doc@g' kmod/PKGBUILD
+sed -i 's@./configure@liblzma_CFLAGS=-I/usr/include liblzma_LIBS=-llzma ./configure@g' kmod/PKGBUILD
+sed -i 's@./configure@zlib_CFLAGS=-I/usr/include zlib_LIBS=-lz ./configure@g' kmod/PKGBUILD
+=> ok heck: linking errors
+sed -i 's@--with-xz@--without-xz@g' kmod/PKGBUILD
+sed -i 's@--with-zlib@--without-zlib@g' kmod/PKGBUILD
+
+# libidn
+# --nocheck, testing hangs
+
+# iputils
+# remove git again
+# no docu, hack out manually 
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iptuils/PKGBUILD
+
+# perl-error
+# no checks, needs perl test-pod
+sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' perl-error/PKGBUILD
+
+
+# shadow
+# git treatment again.
+# no docu
+# --disable-man
+
+# git
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' git/PKGBUILD
+# no make doc
+# disable most things in build
+# disable doc in install-doc
+# NO_GETTEXT=1
+# --nocheck
+=> no luck
+
+# lz4:
+# git tweaking again, use 1.8.0 tarball
+
+# tar:
+# checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
+# configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
+# See `config.log' for more details
+=> oh, please, bugger off!
+sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
+
+#TODO:
+# lz4
+# git package again
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' lz4/PKGBUILD
+
+#TODO: cracklib util-linux e2fsprogs libldap keyutils krb5 they end in circlejerk with systemd!
+# we will solve that later by building a non-systemd version and then bootstrapping first systemd
+# git: out of reach for now, far too many dependencies
+perl-error git
+
+# for now we don't rebuild ca-certificates, we had to copy them funilly anyway, and it's
+# just a bunch of certs. So, in phase 3 or 4 then..
+
+# curl
+######
+# curl needs asciidoc and p11-kit, don't build them, use them from the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' curl/PKGBUILD
+# build with minimal features, enough to make pacman download packages
+sed -i 's@depends\(.*\)@depends=('ca-certificates' 'openssl' 'zlib')@g' curl/PKGBUILD
+# zsh, perl is used to create a completion file for curl and zsh?
+sed -i 's@--with-gssapi@--with-gssapi --without-zsh-functions-dir@g' curl/PKGBUILD
+
+# pacman
+########
+# pacman's tests mostly fail on non-Archlinux, so skip them
+# asciidoc is a makedepend, we can use the one on the host
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' pacman/PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' pacman/PKGBUILD
+# minimal dependencies, we don't sign anything yet
+sed -i "s/'gpgme'//g" pacman/PKGBUILD
+sed -i "s/'pacman-mirrorlist'//g" pacman/PKGBUILD
+sed -i "s/'archlinux-keyring'//g" pacman/PKGBUILD
+# we need pkg-config, otherwise pacman find libarchive in the wrong
+# place, but pkg-config needs glib2 and glib2 is built using meson (urgh!)
+# when we take the host version, lets patch the host pkgconfig file to
+# use the sysroot of the toolchain
+# we simply set LIBARCHIVE_CFLAGS and LIBARCHIVE_LIBS to get rid of pkg-config probing
+sed -i 's@./configure@LIBARCHIVE_CFLAGS=-I/usr/include LIBARCHIVE_LIBS=-larchive ./configure@g' pacman/PKGBUILD
+# --nocheck still, as we don't have python yet
+# and of course :-)
+sed -i 's/exit 1 # \$E_USER_ABORT/# exit 1 # $E_USER_ABORT/g' /home/cross/i486-root/usr/bin/makepkg
+# TODO
+install: cannot stat '/build/pacman/src/pacman.conf.i486': No such file or directory
+==> ERROR: A failure occurred in package().
+    Aborting...
+=> use the /etc/pacman-i486.conf from the chroot as pacman.conf.i486 (we still have the temp
+   repo and we force the Architecture)
+sed -i "s/686)/486)/g" pacman/PKGBUILD
+sed -i 's/mycarch="i686"/mycarch="i486")/g' pacman/PKGBUILD
+sed -i 's/mychost="i686-pc-linux-gnu"/mychost="i486-pc-linux-gnu"/g' pacman/PKGBUILD
+sed -i 's/myflags="-march=i686"/myflags=-march=i486/g' pacman/PKGBUILD
+
+# coreutils
+###########
+sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' coreutils/PKGBUILD
+
+# zlib
+######
+strip: /lib/libz.so.1: no version information available (required by /lib/libbfd-2.29.1.so)
+=> this is because some tools are built with other versions (toolchain vs. chroot)
+=> so we must not install zlib before we rebuild binutils
+
+# util-linux
+############
+# disable some dependencies on systemd, python, PAM (chfn_chsh)
+# and other stuff we don't need
+# libtool seems broken
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' PKGBUILD
+sed -i 's@ \+depends\(.*\)@#depends\1@g' PKGBUILD
+sed -i 's@--with-python=3@--without-python \\@g' PKGBUILD
+sed -i '/--without-python/ a \ --without-systemd --without-systemdsystemunitdir' PKGBUILD
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu@g' PKGBUILD
+sed -i '/--without-python \\/ a \ --disable-chfn-chsh \\' PKGBUILD
+sed -i '/--without-python \\/ a \ --disable-shared --enable-static \\' PKGBUILD
+sed -i 's@\(chmod 4755 "$pkgdir"/usr/bin/{newgrp,ch{sh,fn}}\)@#\1@g' PKGBUILD
+sed -i "s@\(sed -i '/ListenStream.*\)@#\1@g" PKGBUILD
+sed -i 's@\(rm "$pkgdir.*\)@#\1@g' PKGBUILD
+# chgrp: chgrp: invalid group: 'tty'invalid group: 'tty'
+# /etc/group belongs to filesystem, but has only a root entry when installed
+=> filesystem package: post.install hook has not been executed (filesystem.install)
+=> for now do it manually
+groupadd -g 5 tty
+# IMPORTANT DNAGER: the test suite is crazzy and destroys the host!! use --nocheck
+# packaging generates tons of errors, lets hope, they are not critical.
+# cp: omitting directory ‘/’
+# => at least util-linux needs !strip OPTIONS (makepkg-i486.conf)
+#rm "$pkgdir"/usr/lib/lib*.{a,so}*
+
+# pcre
+######
+# no C++
+sed -i 's@./configure@./configure --disable-cpp@g' pcre/PKGBUILD
+# --nocheck as we have trouble to find shared libraries
+
+# gmp
+#####
+# no C++
+sed -i 's@--enable-cxx@--disable-cxx@g' gmp/PKGBUILD
+
+# gawk
+######
+# we don't have a valid locale yet, disable NLS
+# and disable testing
+sed -i 's@./configure@./configure --disable-nls@g' PKGBUILD
+
+# openssh
+#########
+# package suffers from featuritis
+# remove ldns and kerberos5 support, keep libedit (as it's easy to build)
+# ssh => not good, openssl <> unbound <> openssl cycle and mess
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' PKGBUILD
+sed -i 's@--with-ldns@--without-ldns@g' PKGBUILD
+sed -i 's@--with-kerberos5=/usr@--without-kerberos5@g' PKGBUILD
+#ln: failed to create symbolic link '/build/openssh/pkg/openssh/usr/share/man/man1/slogin.1.gz': No such file or directory
+sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD
+
+# git
+#####
+# manual PKGBUILD fix
+# install: cannot stat 'contrib/credential/libsecret/git-credential-libsecret': No such file or directory
+# => PKGBUILD is a mess, sorry!
+# no asciidoc, as this needs python2
+#asciidoc -b docbook -d manpage -f ../../Documentation/asciidoc.conf \
+#        -agit_version=2.15.0  git-subtree.txt
+# disable make install-doc
+#make: pkg-config: Command not found
+#make: pkg-config: Command not found
+#make: Leaving directory '/build/git/src/git-2.15.0/contrib/subtree'
+#mv: cannot stat '/build/git/pkg/git/usr/share/perl5/site_perl/Git/*': No such file or directory
+=> hack away python, perl, systemd, contrib, docu and other things we don't need right now
+
+git clone...
+Cloning into 'strusBase'...
+fatal: cannot run ssh: No such file or directory
+fatal: unable to fork
+fatal: Unable to find remote helper for 'https'
+fatal: Unable to find remote helper for 'http'
+=> we need ssh
+
+# tcl
+#####
+# disable tests: cynical, disable unit tests of a software needed for testing
+
+# autoconf
+##########
+# checks need fortan (wow. that package is old!)
+# depends contains base-devel stuff?! diffutils
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' autoconf/PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' autoconf/PKGBUILD
+# not bad, but lets disable testing for now:
+# ERROR: 455 tests were run,
+# 5 failed (4 expected failures).
+# 48 tests were skipped.
+
+# automake
+##########
+# automake needs dejagnu for testing, not now, disabling checks
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' automake/PKGBUILD
+# TOTAL: 2901
+# PASS:  2673
+# SKIP:  164
+# XFAIL: 41
+# FAIL:  21
+# XPASS: 0
+# ERROR: 2
+=> ok, but let's disable testing
+
+# dejagnu
+#########
+# has hard-wired AC_PROG_CXX in configure, remove internal C++ tests
+sed -i '/.\/configure/ i \  sed -i "s@AC_PROG_CXX@#AC_PROG_CXX@" configure.ac' dejagnu/PKGBUILD
+sed -i '/configure.ac/ a \  sed -i "s@\\(unit_SOURCES.*\\)@#\\1@g" Makefile.am' dejagnu/PKGBUILD
+sed -i '/configure.ac/ a \  sed -i "s@\\(check_PROGRAMS*\\)@#\\1@g" Makefile.am' dejagnu/PKGBUILD
+sed -i '/Makefile.am/ a \  autoreconf' dejagnu/PKGBUILD
+
+# wget
+######
+# no gnutls, no libpsl
+sed -i 's@^depends\(.*\)@#depends\1@g' PKGBUILD
+sed -i 's@--enable-nls@--disable-nls@g' PKGBUILD
+sed -i 's@--with-ssl=gnutls@--with-ssl=openssl@g' PKGBUILD
+sed -i '/.\/configure/ a \    --without-libpsl \\' PKGBUILD
+# work around pkg-config
+sed -i 's@./configure@OPENSSL_CFLAGS=-I/usr/include OPENSSL_LIBS="-lssl lcrypto" ./configure@g' PKGBUILD
+# needs myriads of perl modules for testing => --nocheck
+sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' PKGBUILD
+
+# binutils
+##########
+# risky, risky
+sed -i 's/glibc>=2.26/glib/g' binutils/PKGBUILD
+# this is in gold, so let's disable gold! We don't have C++ (yet), so this should not matter..
+sed -i 's@--enable-gold@--disable-gold@g' binutils/PKGBUILD
+
+# libunwind
+###########
+# no TeX, no docu
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libunwind/PKGBUILD
+
+
+# TODO: gcc
+#####
+TODO:
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' binutils/PKGBUILD
+sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' binutils/PKGBUILD
+sed -i 's@^depends\(.*\)@#depends\1@g' binutils/PKGBUILD
+
+# gcc
+#####
+# no gcc-ada and doxygen
+sed -i '/makedepend/ s/gcc-ada //g' gcc/PKGBUILD
+sed -i '/makedepend/ s/doxygen //g' gcc/PKGBUILD
+# avoid huge git checkouts
+sed -i 's@git+https://gcc.gnu.org/git/gcc.git.*@ftp://ftp.mpi-sb.mpg.de/pub/gnu/mirror/gcc.gnu.org/pub/gcc/releases/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz@' gcc/PKGBUILD
+sed -i 's@cd gcc$@cd ${pkgname}-${pkgver}@g' gcc/PKGBUILD
+sed -i 's@$srcdir/gcc/configure@$srcdir/${pkgname}-${pkgver}/configure@g' gcc/PKGBUILD
+# we don't have a working C++ compiler right now, be must bootstrap
+# doesn't work, we need c++ sind 4.8!
+#sed -i '/--enable-shared/ a \      --enable-bootstrap \\' gcc/PKGBUILD
+# remove ADA, we don't have (and will most likely never have a GNAT binary to
+# bootstrap ADA itself), on the other hand, there is nothing using ADA anyway.
+# at least not in packages/community
+sed -i '/pkgname/ s/gcc-ada//g' gcc/PKGBUILD
+sed -i '/enable-languages/ s/ada//g' gcc/PKGBUILD
+# send bugs to the right place
+sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' gcc/PKGBUILD
+# so, I don't know what GNU people call bootstrapping, but this definitely isn't for C!
+/usr/include/c++/7.2.0/cstdlib:75:15: fatal error: stdlib.h: No such file or directory
+=> let's try to fix the C++ compiler then..
+# this is really really dangerous, let's hope, it works
+=> find /usr/include/c++/7.2.0 -type f -exec sed -i 's/#include_next/#include/g' {} \;
+# /build/gcc/src/gcc-7.2.0/libgo/testsuite/gotest: line 624: 28445 Killed                  ./a.out -test.short -test.timeout=${timeout}s "$@"
+=> ok, enough, go without testing
+==> Starting package_gcc-go()...
+make: *** i486-pc-linux-gnu/libgo: No such file or directory.  Stop.
+==> ERROR: A failure occurred in package_gcc-go().
+    Aborting...
+=> fails, oh well, nobody needs go :-)
+
+
+
+only c language
+no checkdepdns, makedepnds
+
+why the hell, I switched off c++, so wy are still cpp probes being done!?
+/lib/cpp hardcoded, seriosly!!
+# in prepare()
+ln -s ../bin/cpp /home/cross/x-tools/i486-unknown-linux-gnu/lib/cpp
+find . -name configure -exec sed -i 's@/lib/cpp@/home/cross/x-tools/i486-unknown-linux-gnu/bin/cpp@g' {} \;
+
+since 4.8 gcc is written in C++, fine. so we have to have a crosstool-ng C++ or
+=> we add C++ to the crosstool-ng toolchain, easier and more secure
+
+ included from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:0:
+/home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:540:34: error: declaration of C function ‘const cha
+r* strsignal(int)’ conflicts with
+ extern const char *strsignal (int);
+                                  ^
+In file included from /usr/include/c++/4.8.2/cstring:42:0,
+                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:235,
+                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:
+/usr/include/string.h:562:14: error: previous declaration ‘char* strsignal(int)’ here
+ extern char *strsignal (int __sig) __THROW;             ^
+In file included from ./bconfig.h:5:0,
+=> so, we get to an end here, c++ is taken from the host while cross-compiling?!
+-> remove glibc-devel on the host!
+-> draw the g++ link, autoconf fails in gcc in funny ways (not finding uint64_t)
+-> carefull, we build a gcc over a crossng-gcc, not sure, this is supported..
+-> aha. if mpfr, mpc and gmp are not installed and taken from sysroot but from i486-root
+   some pathes get messed up.
+
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82590
+https://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg550065.html
+https://gcc.gnu.org/bugzilla/show_bug.cgi?format=multiple&id=54692
+
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65863
+-> huh?
+https://gcc.gnu.org/ml/gcc-help/2016-06/msg00016.html
+- > yes, this is the inicatition I needed, mpfr, gmp and mpc point to a weird location
+
+The stage one compiler doesn't find the shared library, o well:
+/home/cross/build/gcc/src/gcc-build/./gcc/cc1: error while loading shared libraries: libmpc.so.3: cannot open shared object file: No such file or directory
+-> export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib
+
+And it never ends:
+In file included from /home/cross/build/gcc/src/gcc-7.2.0/libgcc/libgcc2.c:27:0:
+/home/cross/build/gcc/src/gcc-7.2.0/libgcc/../gcc/tsystem.h:87:10: fatal error: stdio.h: No such file or directory
+ #include <stdio.h>
+          ^~~~~~~~~
+compilation terminated.
+make[2]: *** [Makefile:491: _muldi3.o] Error 1
+-> https://gcc.gnu.org/ml/gcc-help/2012-04/msg00088.html
+-> so, let's try giving it a --with-sysroot to the crosstool-ng dirs
+-> and this means also it got past stage 1 compilers :-)
+
+/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: error loading plugin: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: wrong ELF class: ELFCLASS32
+collect2: error: ld returned 1 exit status
+make[2]: *** [Makefile:982: libgcc_s.so] Error 1
+=> for now, remove LTO stuff in PKGBUILD
+
+make: *** i486-unknown-linux-gnu/libstdc++-v3/doc: No such file or directory.  Stop.
+==> ERROR: A failure occurred in build().
+    Aborting...
+=> remove the PKGBUILD line #  make -C $CHOST/libstdc++-v3/doc DESTDIR="$pkgdir" doc-install-man
+libstdc++-v3/
+=> # make documentation
+  #make -C $CHOST/libstdc++-v3/doc doc-man-doxygen
+
+install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
+=> gcc auto-probed itself into i486-pc-linux-gnu, so the installed files are there
+CHOST="i486-pc-linux-gnu"    
+make: Leaving directory '/home/cross/build/gcc/src/gcc-build/gcc'
+install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
+=> sweet, let's try a symlink
+
+_libdir=usr/lib/gcc/$CHOST/$pkgver
+=> hard-code: to _libdir=usr/lib/gcc/i486-pc-linux-gnu/$pkgver
+=> nope, now others break
+this is hardly the ArchLinux way: vanilla and upstream
+
+again CHOST set to  i486-pc-linux-gnu
+=> this package is a disaster!
+=> we have a mess with two CHOSTS, one for crosstool-ng (unknown) and
+   one for our chroot
+
+# remove traces of ADA
+  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+
+# rm: cannot remove ‘/home/cross/build/gcc/pkg/gcc/usr/share/info/gccgo’: No such file or directory
+#  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+
+/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: cannot find -lquadmath
+collect2: error: ld returned 1 exit status
+libtool: install: error: relink `libgfortran.la' with the above command before installing it
+make: *** [Makefile:1331: install-toolexeclibLTLIBRARIES] Error 1
+make: Leaving directory '/home/cross/build/gcc/src/gcc-build/i486-unknown-linux-gnu/libgfortran'
+==> ERROR: A failure occurred in package_gcc-libs().
+    Aborting...
+=> libquadmath must be retooled before libfortran
+=> nope libfortran simply fails to relink => remove it
+
+install: cannot stat ‘/home/cross/build/gcc/src/gcc/COPYING.RUNTIME’: No such file or directory
+=> sweet, remove it
+
+error: failed to commit transaction (conflicting files)
+gcc: /home/cross/i486-root/usr/lib/libstdc++.a exists in filesystem (owned by gcc-libs)
+gcc: /home/cross/i486-root/usr/lib/libstdc++.la exists in filesystem (owned by gcc-libs)
+Errors occurred, no packages were upgraded.
+=> well, force the package
+
+test.c:1:10: fatal error: stdio.h: No such file or directory
+
+
+# END TODO: gcc
+
+# libtool
+#########
+# patched heavily again, git version cannot be bootstrapped use official tarball
+
+# glibc
+#######
+# use 2.25 version, not 2.26. Keep the ABI intact!
+# endless loop? gawk -f ../scripts/gen-as-const.awk pthread-pi-defines.sym \
+# two reasons: clock and artifacts walk backwards or forward in time
+# chroot on server with chroot, hard to have an asynchronous clock?
+# or glibc is already installed on the system (where not?), so how the
+# hell can it be possibly built!
+# => oh, this would be cruel.
+# or 3rd reason, we have a glibc shim, maybe this one causes some trouble
+# => why?
+# or libtool fixing, whatever fixing means (https://forums.gentoo.org/viewtopic-t-496052-start-0.html)
+# => nope.
+# -isystem /usr/includ ein gcc spec? quite likely!
+# ah: old friend:
+build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L18':
+dl-sysdep.c:(.text+0x8c): undefined reference to `__memcmp_ia32'
+/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L87':
+dl-sysdep.c:(.text+0x11f): undefined reference to `__memcmp_ia32'
+/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L19':
+dl-sysdep.c:(.text+0x152): undefined reference to `__memcmp_ia32'
+/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L85':
+dl-sysdep.c:(.text+0x19c): undefined reference to `__memcmp_ia32'
+dl-sysdep.c:(.text+0x1b7): undefined reference to `__memcmp_ia32'
+/build/glibc/src/glibc-build/libc.a(dl-sysdep.o):dl-sysdep.c:(.text+0x202): more undefined references to `__memcmp_ia32' follow
+elf/sln
+=> USE_MULTIARCH
+=> --disable-multi-arch
+=> let's test this time, too dangerous to loose the chroot otherwise!
+# older 2.25 misses a binutils 2.29 patch:
+https://git.busybox.net/buildroot/diff/package/glibc/0005-fix-binutils-2-29-build.patch?id=cf821efbd0b24690b52f379d4a9934a16073762e
+{standard input}: Assembler messages:
+{standard input}: Error: `loc1@GLIBC_2.0' can't be versioned to common symbol 'loc1'
+{standard input}: Error: `loc2@GLIBC_2.0' can't be versioned to common symbol 'loc2'
+{standard input}: Error: `locs@GLIBC_2.0' can't be versioned to common symbol 'locs'
+make[2]: *** [../o-iterator.mk:9: /build/glibc/src/glibc-build/misc/regexp.os] Error 1
+
+PACKAGES="iana-etc filesystem linux-api-headers tzdata ncurses readline bash \
+gdbm perl openssl bzip2 xz m4 help2man flex bc elfutils \
+libtool libxml2 libgpg-error libgcrypt libxslt \
+docbook-xml docbook-xsl xmlto libcap libtirpc pambase pam inetutils bison iproute2 kmod \
+sysfsutils libidn iputils \
+expat acl attr lz4 tar libarchive curl pacman \
+joe coreutils util-linux pcre grep findutils file diffutils ed patch \
+autoconf automake libedit openssh pcre2 git libunwind strace wget \
+gmp mpfr gawk libmpc zlib tcl expect dejagnu binutils gcc libtool glibc"
+for p in $PACKAGES; do
+	asp export $p   
+done
+
+for p in $PACKAGES
+	cd $p
+
+	sed -i "s/^arch=.*/arch=('i486')/" PKGBUILD
+
+	# for some packages we cannot execute tests (because the dependencies to install in
+	# the toolchain environment would be too much)
+	# perl: --nocheck
+	# openssl: --nocheck
+	# libelf: --nocheck
+	# libtool: --nocheck
+	# libxml2: --nocheck
+	# libxslt: --nocheck
+	# inetutils: --nocheck
+	# bison: --nocheck
+	# libarchive: --nocheck
+	# pacman: --nocheck
+	# util-linux: --nocheck
+	# pcre: --nocheck
+	# gawk: --nocheck
+	# tcl: --nocheck
+
+	makepkg -C --config /etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
+
+	# TODO: 
+	# some package break in parallel builds or produce really funky
+	# error messages or/and results
+	# binutils: use makepkg-noparallel.conf
+        # gcc: use makepkg-noparallel.conf for debuging, the real build works fine in parallel
+        
+	cp -v *.pkg.tar.gz /packages/i486/.
+
+	pacman --noconfirm --config /etc/pacman-i486.conf -U *.pkg.tar.gz 
+
+	# replace all pacman articats and clean caches
+	rm -rf /packages/i486/temp* /var/cache/pacman/pkg/*
+	repo-add /packages/i486/temp.db.tar.gz /packages/i486/*pkg.tar.gz
+	
+	#repo-add -n /packages/i486/temp.db.tar.gz /packages/i486/*pkg.tar.gz
+
+	pacman --noconfirm --config /etc/pacman-i486.conf -r / -S $p
+
+	pacman --config /etc/pacman-i486.conf -r / -Q | grep $p
+done
+
+# aftermatch for gcc/binutils
+
+#collect2: unable to find ld: this sounds bad, like an archicture mismatch somewhere
+#in binutils/gcc
+=> this is the cross compiled gcc for i486 inside the chroot, it expects
+   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
+=> we can temporarily fix this:
+ln -s /usr/bin/ld /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
+etc.
+
+# libz.so missing?
+ln -s libz.so.1 /usr/lib/libz.so
+
+# aftermatch for glibc
+
+# bacause pacman cannot set file permissions
+chmod u+x /usr/bin/* /lib/*.so*
+
+# kernel headers:
+#/usr/include/linux/errno.h missing
+#/usr/include/adm/errno.h missing
+=> a libarchive compression issue, files missing, because they are in pkg of
+  linux-api-headers?!
+
+remove debug packages
+
+error: failed to commit transaction (conflicting files)
+/usr/lib/libstdc++.a exists in both 'gcc-libs' and 'gcc'
+/usr/lib/libstdc++.la exists in both 'gcc-libs' and 'gcc'
+/usr/lib/libblkid.a exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libblkid.la exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libfdisk.a exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libfdisk.la exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libmount.a exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libmount.la exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libsmartcols.a exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libsmartcols.la exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libuuid.a exists in both 'util-linux' and 'libutil-linux'
+/usr/lib/libuuid.la exists in both 'util-linux' and 'libutil-linux'
+Errors occurred, no packages were upgraded.
+
+=> ok, we loose files and permissions
+
+# in 'real' 486
+###############
+
+next round: do those problems persist
+
+error: could not register 'temp' database (wrong or NULL argument passed)
+
+installed binaries have wrong permissions (no execute permission), a pacman issue?
+shilly flags? libarchive problem?
+
+git: https helpers
+chmod 0777 /usr/lib/git-core/git-remote-*
+
+later: for inside the chroot
+
+# uname module hack
+###################
+
+# as root
+# we need i486, so setarch doesn't work for us, because it emulates only,
+# a i686, use the hacked uname kernel module:
+wget http://clfs.org/files/extras/uname_hack-20080713.tar.bz2
+tar xf uname_hack-20080713.tar.bz2 
+cd uname_hack
+# swap memset arguments:
+# /root/uname_hack/uname_hack.c:50:2: warning: 'memset' used with constant zero length parameter; this could be due to transposed parameters [-Wmemset-transposed-args]
+#  memset(uname_hack_uts_machine, uname_hack_uts_machine_len, '\0');
+#  ^~~~~~
+#  Building modules, stage 2.
+make uname_hack_fake_machine=i486
+insmod  uname_hack.ko
+#lib/config.guess in automake returns i486-pc-linux-gnu
+# uname -m returns i486
+cd ..
+
+# patch our hosts pacman.conf, so it doesn't get fooled by the architecture hack
+sed -i 's@^Architecture.*@Architecture = x86_64@g' /etc/pacman.conf
+
+# optional packages for stage 1
+# TODO: do we need this for old machines?
+# linux-firmware
+# use git from the host for now
+#sed -i 's@makedepends\(.*\)@#makedepends\1@g' linux-firmware/PKGBUILD
