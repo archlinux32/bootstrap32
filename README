@@ -1,7 +1,4 @@
-Archlinux ARM method
---------------------
-
-mission
+Mission
 -------
 
 Build a crosstool-ng toolchain for i486.
@@ -47,7 +44,7 @@ There is another caveat: we are patching the PKGBUILDs
 to do proper cross-compilation (--with-host, --with-target).
 Still we try to stay close to the original PKGBUILDs.
 
-references
+References
 ----------
 
 https://archlinuxarm.org/wiki/Distcc_Cross-Compiling
@@ -71,8 +68,8 @@ https://how-to-build-for-arm.wikispaces.com/
 https://arsv.github.io/perl-cross/
 http://www.ibb.net/~anne/keyboard.html
 
-recipes
--------
+Recipe
+------
 
 #########
 # PHASE 0
@@ -87,7 +84,7 @@ recipes
 
 # Install necessary tools
 
-./prep_env.sh
+./install_host.sh
 
 # Prepare the cross-compiler for the destination platform, in our
 # case i486.
@@ -118,6 +115,12 @@ cp .config ct-ng.config
 
 ./build_cross.sh
 
+# prepare repo where we build stage 1 with the cross-compiler
+
+su cross ./prepare_stage1_repo.sh
+
+
+
 # TODO FROM HERE:
 
 # get the Archlinux32 diffs
@@ -125,75 +128,6 @@ cp .config ct-ng.config
 
 cd $HOME
 git clone git@github.com:archlinux32/packages.git packages32
-
-# prepare the i486-chroot
-#########################
-
-# create and initialize a new i486 chroot in $HOME/i486-root
-mkdir $HOME/i486-root
-
-# prepare pacman in i486-chroot
-###############################
-
-# prepare directories for a new pacman root
-mkdir -p $HOME/i486-root/etc/pacman.d $HOME/i486-root/var/lib/pacman \
-	$HOME/i486-root/var/cache/pacman/pkg \
-	$HOME/i486-root/var/log $HOME/i486-root/etc/pacman.d/gnupg/ \
-	$HOME/i486-root/etc/pacman.d/hooks/
-
-# adapt configuration to work from outside the chroot to write artifacts
-# into the chroot
-
-cp /etc/pacman.conf $HOME/i486-root/etc/.
-
-sed -i 's@^Architecture.*@Architecture = i486@g' $HOME/i486-root/etc/pacman.conf
-
-sed -i 's@#RootDir.*@RootDir = /home/cross/i486-root@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@#DBPath.*@DBPath = /home/cross/i486-root/var/lib/pacman/@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@#CacheDir.*@CacheDir = /home/cross/i486-root/var/cache/pacman/pkg/@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@#LogFile.*@LogFile = /home/cross/i486-root/var/log/pacman.log@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@#GPGDir.*@GPGDir = /home/cross/i486-root/etc/pacman.d/gnupg/@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@#HookDir.*@HookDir = /home/cross/i486-root/etc/pacman.d/hooks/@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@^HoldPkg@#HoldPkg@g' $HOME/i486-root/etc/pacman.conf
-
-# disable all standard repos
-sed -i 's@\(^Include = /etc/pacman.d/mirrorlist\)@#\1@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@\[core\]@#[core]@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@\[extra\]@#[extra]@g' $HOME/i486-root/etc/pacman.conf
-sed -i 's@\[community\]@#[community]@g' $HOME/i486-root/etc/pacman.conf
-
-# add a temporary package repo in the filesystem
-cat >>$HOME/i486-root/etc/pacman.conf <<EOF
-[temp]
-SigLevel = Never
-Server = file:///home/cross/i486-root/packages/\$arch
-EOF
-
-# create a local package directory
-mkdir -p $HOME/i486-root/packages $HOME/i486-root/packages/i486
-repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*
-
-# finally, test and initialize ALPM library
-sudo pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syyu
-pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q
-
-# prepare makepkg for building into the i486-chroot
-###################################################
-
-# prepare the build enviroment
-mkdir $HOME/build
-cd $HOME/build
-
-cp /usr/bin/makepkg $HOME/build/makepkg-i486
-
-# patch run_pacman in makepkg, we cannot pass the pacman root to it as parameter ATM
-sed -i 's/"$PACMAN_PATH"/"$PACMAN_PATH" --config \/home\/cross\/i486-root\/etc\/pacman.conf -r \/home\/cross\/i486-root/' makepkg-i486
-
-cp /etc/makepkg.conf makepkg-i486.conf
-sed -i 's@^CARCH=.*@CARCH="i486"@' makepkg-i486.conf
-sed -i 's@^CHOST=.*@CHOST="i486-unknown-linux-gnu"@' makepkg-i486.conf
-sed -i 's@^#MAKEFLAGS=.*@MAKEFLAGS="-j20"@' makepkg-i486.conf
-sed -i 's@-march=x86-64 -mtune=generic @@' makepkg-i486.conf
 
 #########
 # PHASE 1
@@ -245,12 +179,12 @@ cd pkg/gcc-libs
 tar cJvf - .PKGINFO * | xz > ../../gcc-libs-7.2.0-1-i486.pkg.tar.xz
 cd ../..
 
-cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
-rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
-rm -rf  $HOME/i486-root/packages/i486/temp.db*
-rm -rf  $HOME/i486-root/packages/i486/temp.files*
-repo-add -R $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
-sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy gcc-libs
+cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
+rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
+repo-add -R $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
+sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy gcc-libs
 cd ..
 
 # the glibc shim
@@ -317,12 +251,12 @@ cd pkg/glibc
 tar cJvf - .PKGINFO * | xz > ../../glibc-2.26-1-i486.pkg.tar.xz
 cd ../..
 
-cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
-rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
-rm -rf  $HOME/i486-root/packages/i486/temp.db*
-rm -rf  $HOME/i486-root/packages/i486/temp.files*
-repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
-sudo pacman --force --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy glibc
+cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
+rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
+repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
+sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy glibc
 
 # the ca-certificates-utils shim
 ################################
@@ -352,12 +286,12 @@ cd pkg/ca-certificates-utils
 tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-20170307-1-any.pkg.tar.xz
 cd ../..
 
-cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
-rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
-rm -rf  $HOME/i486-root/packages/i486/temp.db*
-rm -rf  $HOME/i486-root/packages/i486/temp.files*
-repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
-sudo pacman --force --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy ca-certificates-utils
+cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
+rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
+rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
+repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
+sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy ca-certificates-utils
 
 cd ..
 
@@ -433,24 +367,24 @@ for p in $PACKAGES; do
 	tail $p.log
 
 	rm -f *debug*.pkg.tar.xz
-	cp -v *.pkg.tar.xz $HOME/i486-root/packages/i486/.
+	cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
 
 	# redo the whole cache
-	rm -rf $HOME/i486-root/var/cache/pacman/pkg/*
-	rm -rf  $HOME/i486-root/packages/i486/temp.db*
-	rm -rf  $HOME/i486-root/packages/i486/temp.files*
-	repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
+	rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
+	rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
+	repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
 	
 	# incrementall add of new package (works once!)
-	repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.xz
+	repo-add -n $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
 
 	# for util-linux also libutil-linux
-	sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy $p
-	pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q
+	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy $p
+	pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Q
 
 	if test $p in $SYSROOT_PACKAGES; then
 		pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-		sudo bsdtar xvf $HOME/i486-root/packages/i486/$p-*.pkg.tar.xz
+		sudo bsdtar xvf $STAGE1_CHROOT/packages/i486/$p-*.pkg.tar.xz
 		popd
 	fi
 	
@@ -949,7 +883,7 @@ $HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486.conf --skipchecksu
 => this is the cross compiled gcc for i486 inside the chroot, it expects
    its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
 => we can temporarily fix this:
-sudo ln -s /usr/bin/ld $HOME/i486-root/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
+sudo ln -s /usr/bin/ld $STAGE1_CHROOT/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
 
 
 #######################################
@@ -982,11 +916,11 @@ TODO FROM HERE
 	# libunistring for gettext
 	# libffi for glib2
 	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-	bsdtar xf $HOME/i486-root/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
 	popd
 
 	cd ..
@@ -1337,19 +1271,19 @@ for p in $PACKAGES
 	# binutils: use makepkg-noparallel.conf
         # gcc: use makepkg-noparallel.conf for debuging, the real build works fine in parallel
 
-	makepkg -C --config $HOME/i486-root/etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
+	makepkg -C --config $STAGE1_CHROOT/etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
 	
-	cp -v *.pkg.tar.gz $HOME/i486-root/packages/i486/.
+	cp -v *.pkg.tar.gz $STAGE1_CHROOT/packages/i486/.
 
 # if things are messed up
-#	rm -rf $HOME/i486-root/packages/i486/temp* $HOME/i486-root/var/cache/pacman/pkg/*
-#	repo-add $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.gz
+#	rm -rf $STAGE1_CHROOT/packages/i486/temp* $STAGE1_CHROOT/var/cache/pacman/pkg/*
+#	repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.gz
 
-	repo-add -n $HOME/i486-root/packages/i486/temp.db.tar.gz $HOME/i486-root/packages/i486/*pkg.tar.gz
+	repo-add -n $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.gz
 
-	sudo pacman --noconfirm --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Syy $p
+	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy $p
 
-	pacman --config $HOME/i486-root/etc/pacman.conf -r $HOME/i486-root -Q | grep $p
+	pacman --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Q | grep $p
 
 	# for ncurses, readline for bash
 	# gdbm and db for perl
@@ -1362,30 +1296,30 @@ for p in $PACKAGES
 	# libunistring for gettext
 	# libffi for glib2
 	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-	bsdtar xf $HOME/i486-root/packages/i486/ncurses-6.0+20170902-3-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/readline-7.0.003-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/gdbm-1.13-1-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/db-5.3.28-3-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/perl-5.26.1-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/openssl-1.1.0.g-1-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/expat-2.2.5-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/lz4-1\:1.8.0-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/xz-5.2.3-1-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/zlib-1\:1.2.11-2-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/gmp-6.1.2-1-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/mpfr-3.1.6.p1-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libmpc-1.0.3-2-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/gawk-4.1.4-2-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libarchive-3.3.2-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libcap-2.25-1-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/bzip2-1.0.6-6-i486.pkg.tar.gz
-	bsdtar xf $HOME/i486-root/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	bsdtar xf $HOME/i486-root/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/ncurses-6.0+20170902-3-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/readline-7.0.003-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/gdbm-1.13-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/db-5.3.28-3-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/perl-5.26.1-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/openssl-1.1.0.g-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/expat-2.2.5-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/lz4-1\:1.8.0-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/xz-5.2.3-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/zlib-1\:1.2.11-2-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/gmp-6.1.2-1-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/mpfr-3.1.6.p1-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libmpc-1.0.3-2-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/gawk-4.1.4-2-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libarchive-3.3.2-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libcap-2.25-1-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/bzip2-1.0.6-6-i486.pkg.tar.gz
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
+	bsdtar xf $STAGE1_CHROOT/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
 	popd
 
 	cd ..

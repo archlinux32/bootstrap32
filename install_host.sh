@@ -2,6 +2,8 @@
 
 # Install necessary tools
 
+. "./default.conf"
+
 # development stuff
 pacman --noconfirm --needed -S base-devel
 
@@ -25,3 +27,5 @@ pacman --noconfirm --needed -S flex
 
 # for a bootable ISO image
 pacman --noconfirm --needed -S syslinux cdrtools
+
+echo "Host ready."
