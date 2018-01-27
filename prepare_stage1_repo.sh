@@ -2,12 +2,8 @@
 
 . "./default.conf"
 
-set -x 
-
 # prepare the i486-chroot for stage 1
 # prepare pacman in i486-chroot
-
-sudo rm -rf $STAGE1_CHROOT
 
 if test ! -d $STAGE1_CHROOT; then
 
@@ -61,28 +57,40 @@ EOF
 
 	sudo pacman --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syyu
 	pacman --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Q
-
-	# prepare the build enviroment
-
-	mkdir $HOME/build
-	cd $HOME/build
-
-	# prepare makepkg for building into the i486-chroot
-
-	cp /usr/bin/makepkg $HOME/build/makepkg-i486
-
-	# patch run_pacman in makepkg, we cannot pass the pacman root to it as parameter ATM
-	sed -i "s@\"\$PACMAN_PATH\"@\"\$PACMAN_PATH\" --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT@" makepkg-i486
-
-	cp /etc/makepkg.conf makepkg-i486.conf
-	sed -i 's@^CARCH=.*@CARCH="i486"@' makepkg-i486.conf
-	sed -i 's@^CHOST=.*@CHOST="i486-unknown-linux-gnu"@' makepkg-i486.conf
-	sed -i 's@^#MAKEFLAGS=.*@MAKEFLAGS="-j20"@' makepkg-i486.conf
-	sed -i 's@-march=x86-64 -mtune=generic @@' makepkg-i486.conf
-
-	echo "Prepared the stage 1 build environment."
-
 fi
 
+if test ! -d $STAGE1_BUILD; then
 
+	# prepare the build enviroment
+	
+	mkdir $STAGE1_BUILD
+	cd $STAGE1_BUILD
 
+	# prepare makepkg for building into the i486-chroot
+	cp /usr/bin/makepkg $STAGE1_BUILD/makepkg-i486
+
+	# patch run_pacman in makepkg, we cannot pass the pacman root to it as parameter ATM
+	
+	sed -i "s@\"\$PACMAN_PATH\"@\"\$PACMAN_PATH\" --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT@" makepkg-i486
+
+	# prepare a configuration for building the packages with makepkg
+	# fitting to the destination architecture
+	
+	cp /etc/makepkg.conf makepkg-i486.conf
+	sed -i "s@^CARCH=.*@CARCH=\"i486\"@" makepkg-i486.conf
+	sed -i "s@^CHOST=.*@CHOST=\"${TARGET_ARCH}\"@" makepkg-i486.conf
+	CPUS=$(nproc)
+	sed -i "s@^#MAKEFLAGS=.*@MAKEFLAGS=\"-j$CPUS\"@" makepkg-i486.conf
+	sed -i "s@-march=x86-64 -mtune=generic @-march=i486 @" makepkg-i486.conf
+
+	echo "Prepared the stage 1 build environment."
+fi
+
+if test ! -d $CROSS_HOME/packages32; then
+	
+	# get packages repo from Archlinux32 for the diffs
+
+	git clone git@github.com:archlinux32/packages.git $CROSS_HOME/packages32
+	
+	echo "Fetched Archlinux32 diffs for packages."
+fi

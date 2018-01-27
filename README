@@ -119,19 +119,15 @@ cp .config ct-ng.config
 
 su cross ./prepare_stage1_repo.sh
 
-
-
-# TODO FROM HERE:
-
-# get the Archlinux32 diffs
-###########################
-
-cd $HOME
-git clone git@github.com:archlinux32/packages.git packages32
-
 #########
 # PHASE 1
 #########
+
+Build stage1 with the cross-compiler and modified PKGBUILDs and patches
+into $STAGE1_CHROOT
+
+# TODO FROM HERE:
+
 
 # package shims
 ################
