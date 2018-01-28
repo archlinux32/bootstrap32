@@ -15,28 +15,27 @@ export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
 . "$SCRIPT_DIR/packages-$TARGET_CPU-stage1/template"
 
-if test $(pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | grep -c "$PACKAGE") = 0; then
+if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | grep -c "$PACKAGE") = 0; then
 	echo "Building package $PACKAGE."
 
 	cd $STAGE1_BUILD || exit 1
 	
 	rm -rf "$PACKAGE"
-	
-	# source the package specific configuration
-	
-	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"
-	if test -f "$PACKAGE_CONF"; then
-		. "$PACKAGE_CONF"
-	fi
 
-	# get the package build description
-	
+	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"	
+	if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
+		NEEDS_YAOURT=$(grep NEEDS_YAOURT $PACKAGE_CONF | cut -f 2 -d =)
+	fi
 	if test "$NEEDS_YAOURT"; then
 		yaourt -G "$PACKAGE"
 	else
 		asp export "$PACKAGE"
 	fi
+
 	cd "$PACKAGE" || exit 1
+
+	# attach our destination platform to be a supported architecture
+	sed -i "/^arch=[^#]*any/!{/^arch=(/s/(/($TARGET_CPU /}" PKGBUILD
 
 	# if exists packages32 diff-PKGBUILD, attach at the end
 	# (we assume, we build only 'core' packages)
@@ -45,7 +44,12 @@ if test $(pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAG
 		cat "$DIFF_PKGBUILD" >> PKGBUILD
 	fi
 
-	sed -i "/^arch=[^#]*any/!{/^arch=(/s/(/($TARGET_CPU /}" PKGBUILD
+	# source package descriptions, sets variables for this script
+	# and executes whatever is needed to build the package
+
+	if test -f "$PACKAGE_CONF"; then
+		. "$PACKAGE_CONF"
+	fi
 
 	if test "$NOPARALLEL_BUILD" = 0; then
 		CPUS=$(nproc)
@@ -70,13 +74,14 @@ if test $(pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAG
 		rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
 		repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
 	
-		# for util-linux also libutil-linux
+		# install into chroot via pacman
 		sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
 		pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q
 
+		# optionally install into cross-compiler sysroot with bsdtar
 		if test "$SYSROOT_INSTALL" = 1; then
 			cd "$XTOOLS_ARCH/$TARGET_CPU-unknown-linux-gnu/sysroot" || exit 1
-			sudo bsdtar xvf "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz"
+			sudo bsdtar xvf $STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
 			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
 		fi
 		

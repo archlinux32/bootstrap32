@@ -23,6 +23,9 @@ if test ! -d $STAGE1_CHROOT; then
 	# into the chroot
 
 	cp /etc/pacman.conf $STAGE1_CHROOT/etc/.
+	
+	sed -i '/\[archlinuxfr\]/,// d' $STAGE1_CHROOT/etc/pacman.conf
+	sed -i '/\[multilib\]/,// d' $STAGE1_CHROOT/etc/pacman.conf
 
 	sed -i 's@^Architecture.*@Architecture = i486@g' $STAGE1_CHROOT/etc/pacman.conf
 
@@ -81,7 +84,7 @@ if test ! -d $STAGE1_BUILD; then
 	sed -i "s@^CHOST=.*@CHOST=\"${TARGET_ARCH}\"@" makepkg-i486.conf
 	CPUS=$(nproc)
 	sed -i "s@^#MAKEFLAGS=.*@MAKEFLAGS=\"-j$CPUS\"@" makepkg-i486.conf
-	sed -i "s@-march=x86-64 -mtune=generic @-march=i486 @" makepkg-i486.conf
+	sed -i "s@-march=x86-64 -mtune=generic @@" makepkg-i486.conf
 
 	echo "Prepared the stage 1 build environment."
 fi

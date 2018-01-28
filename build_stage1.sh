@@ -7,7 +7,8 @@
 # for cross-compiling packages will be installed with bsdtar into
 # the sysroot of the specific cross compiler in $XTOOLS_ARCH
 
-PACKAGES="iana-etc filesystem tzdata"
+PACKAGES="iana-etc filesystem linux-api-headers tzdata
+ncurses readline"
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage1_package.sh" "$p"
