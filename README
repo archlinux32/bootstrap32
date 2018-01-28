@@ -201,36 +201,7 @@ expat bzip2 lz4 xz pcre gzip libarchive curl \
 file libmpc mpfr libmnl libelf libnfnetlink iptables \
 libedit sysfsutils libidn"
 
-# cross-compiling perl doesn't work in parallel
-NOPARALLEL_PACKAGE="perl"
 
-for p in $PACKAGES; do
-
-
-		
-
-
-	# redo the whole cache
-	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
-	rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
-	rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
-	repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
-	
-	# incrementall add of new package (works once!)
-	repo-add -n $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
-
-	# for util-linux also libutil-linux
-	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy $p
-	pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Q
-
-	if test $p in $SYSROOT_PACKAGES; then
-		pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-		sudo bsdtar xvf $STAGE1_CHROOT/packages/i486/$p-*.pkg.tar.xz
-		popd
-	fi
-	
-	cd ..
-done
 
 # special patches for some packages
 ###################################

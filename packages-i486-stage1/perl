@@ -1,1 +1,2 @@
+# cross-compiling perl doesn't work in parallel
 NOPARALLEL_BUILD=1

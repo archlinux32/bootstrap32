@@ -13,10 +13,9 @@ PACKAGE=$1
 
 export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
-NEEDS_YAOURT=0
-NOPARALLEL_BUILD=0
+. "$SCRIPT_DIR/packages-$TARGET_CPU-stage1/template"
 
-if test ! -f "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE.pkg.tar.xz"; then
+if test $(pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | grep -c "$PACKAGE") = 0; then
 	echo "Building package $PACKAGE."
 
 	cd $STAGE1_BUILD || exit 1
@@ -32,7 +31,7 @@ if test ! -f "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE.pkg.tar.xz"; then
 
 	# get the package build description
 	
-	if test $NEEDS_YAOURT; then
+	if test "$NEEDS_YAOURT"; then
 		yaourt -G "$PACKAGE"
 	else
 		asp export "$PACKAGE"
@@ -48,7 +47,7 @@ if test ! -f "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE.pkg.tar.xz"; then
 
 	sed -i "/^arch=[^#]*any/!{/^arch=(/s/(/($TARGET_CPU /}" PKGBUILD
 
-	if test $NOPARALLEL_BUILD = 0; then
+	if test "$NOPARALLEL_BUILD" = 0; then
 		CPUS=$(nproc)
 	else
 		CPUS=1
@@ -64,7 +63,27 @@ if test ! -f "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE.pkg.tar.xz"; then
 	if test $RES = 0; then
 		rm -f ./*debug*.pkg.tar.xz
 		cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
+
+		# redo the whole cache
+		rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
+		rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
+		rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
+		repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
+	
+		# for util-linux also libutil-linux
+		sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
+		pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q
+
+		if test "$SYSROOT_INSTALL" = 1; then
+			cd "$XTOOLS_ARCH/$TARGET_CPU-unknown-linux-gnu/sysroot" || exit 1
+			sudo bsdtar xvf "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz"
+			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
+		fi
+		
 	fi
+
+	cd $STAGE1_BUILD || exit 1
+
 fi
 
 echo "Built package $PACKAGE."
