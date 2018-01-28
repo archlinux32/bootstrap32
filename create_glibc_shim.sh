@@ -70,7 +70,7 @@ EOF
 	tar cJvf - .PKGINFO * | xz > ../../glibc-shim-2.26-1-$TARGET_CPU.pkg.tar.xz
 	cd ../..
 
-	cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
+	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
 	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*

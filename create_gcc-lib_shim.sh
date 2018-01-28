@@ -6,10 +6,10 @@
 
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz; then
 
-	cd $STAGE1_BUILD
+	cd $STAGE1_BUILD || exit 1
 	rm -rf gcc-libs-shim
 	mkdir gcc-libs-shim
-	cd gcc-libs-shim
+	cd gcc-libs-shim || exit 1
 	mkdir -p pkg/gcc-libs-shim/usr/lib
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/lib/libgcc_s.so pkg/gcc-libs-shim/usr/lib/.
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/lib/libgcc_s.so.1 pkg/gcc-libs-shim/usr/lib/.
@@ -21,8 +21,8 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/gcc-libs-shim-7.2.0-1-$TARGET_C
 	ln -s libstdc++.so.6.0.24 pkg/gcc-libs-shim/usr/lib/libstdc++.so.6
 	ln -s libstdc++.so.6.0.24 pkg/gcc-libs-shim/usr/lib/libstdc++.so
 
-	BUILDDATE=`date '+%s'`
-	size=`du -sk --apparent-size pkg/`
+	BUILDDATE=$(date '+%s')
+	size=$(du -sk --apparent-size pkg/)
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/gcc-libs-shim/.PKGINFO <<EOF
 pkgname = gcc-libs-shim
@@ -36,11 +36,11 @@ provides = gcc-libs
 conflict = gcc-libs
 EOF
 
-	cd pkg/gcc-libs-shim
-	tar cJvf - .PKGINFO * | xz > ../../gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz
-	cd ../..
+	cd pkg/gcc-libs-shim || exit 1
+	tar cJvf - .PKGINFO ./* | xz > ../../gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz
+	cd ../.. || exit 1
 
-	cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
+	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
 	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*

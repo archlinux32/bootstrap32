@@ -28,4 +28,16 @@ pacman --noconfirm --needed -S flex
 # for a bootable ISO image
 pacman --noconfirm --needed -S syslinux cdrtools
 
+# some packages come from the AUR
+if test "$(grep -c '\[archlinuxfr\]' /etc/pacman.conf)" = 0; then
+	cat >> /etc/pacman.conf <<EOF
+[archlinuxfr]
+Server = http://repo.archlinux.fr/\$arch
+SigLevel = Optional DatabaseOptional
+EOF
+
+	pacman --noconfirm -Syy
+	pacman --noconfirm -S --needed yaourt
+fi
+
 echo "Host ready."

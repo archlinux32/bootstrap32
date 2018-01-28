@@ -19,14 +19,14 @@ if test ! -f /etc/sudoers.d/cross; then
 fi
 
 # we need the github keys
-if test ! -d $CROSS_HOME/.ssh; then
-	mkdir $CROSS_HOME/.ssh
-	chown cross:cross $CROSS_HOME/.ssh
+if test ! -d "$CROSS_HOME/.ssh"; then
+	mkdir "$CROSS_HOME/.ssh"
+	chown cross:cross "$CROSS_HOME/.ssh"
 fi
-if test ! -f $CROSS_HOME/.ssh/id_rsa.pub; then
-	cp $HOME/.ssh/id_rsa.pub $CROSS_HOME/.ssh/.
-	cp $HOME/.ssh/id_rsa $CROSS_HOME/.ssh/.
-	chown cross:cross $CROSS_HOME/.ssh/id_rsa*
+if test ! -f "$CROSS_HOME/.ssh/id_rsa.pub"; then
+	cp "$HOME/.ssh/id_rsa.pub" "$CROSS_HOME/.ssh/."
+	cp "$HOME/.ssh/id_rsa" "$CROSS_HOME/.ssh/."
+	chown cross:cross "$CROSS_HOME/.ssh/id_rsa*"
 fi
 
 if test ! -x /usr/local/bin/ct-ng; then
@@ -47,7 +47,7 @@ fi
 
 if test ! -x $CROSS_HOME/x-tools/${TARGET_ARCH}/bin/${TARGET_ARCH}-gcc; then
 	echo "Building cross compiler for ${TARGET_ARCH}=gcc:"
-	rm -rf $CROSS_HOME/{x-tools,.build,build.log,.wget-hsts,.config,.config.old}
+	rm -rf $XTOOLS_HOME
 	cp ct-ng.config $CROSS_HOME/.config
 	CPUS=$(nproc)
 	sed -i "s/^CT_PARALLEL_JOBS=.*/CT_PARALLEL_JOBS=$CPUS/" $CROSS_HOME/.config
@@ -58,6 +58,5 @@ EOF
 	echo "Done creating the cross compiler."
 fi
 
-echo -n "Cross-compiler ready: "
 CROSS_MSG="$($CROSS_HOME/x-tools/${TARGET_ARCH}/bin/${TARGET_ARCH}-gcc --version | head -n 1)"
-echo $CROSS_MSG
+echo "Cross-compiler ready: $CROSS_MSG"

@@ -1,0 +1,8 @@
+# NEEDS_YAOURT: asp is the default tool to fetch packages, if the
+# package is only available in AUR, the set NEEDS_YAOURT=1
+NEEDS_YAOURT=0
+
+# NOPARALLEL_BUILD: -j<N> parameter to makepkg will be set to -j
+# if NOPARALLEL_PACKAGE=1. The default is to use all avaiable cores
+# and set -j<CPUS>
+NOPARALLEL_BUILD=0

@@ -64,7 +64,7 @@ if test ! -d $STAGE1_BUILD; then
 	# prepare the build enviroment
 	
 	mkdir $STAGE1_BUILD
-	cd $STAGE1_BUILD
+	cd $STAGE1_BUILD || exit 1
 
 	# prepare makepkg for building into the i486-chroot
 	cp /usr/bin/makepkg $STAGE1_BUILD/makepkg-i486
@@ -90,7 +90,7 @@ if test ! -d $CROSS_HOME/packages32; then
 	
 	# get packages repo from Archlinux32 for the diffs
 
-	git clone git@github.com:archlinux32/packages.git $CROSS_HOME/packages32
+	git clone $GIT_URL_ARCHLINUX32_PACKAGES $CROSS_HOME/packages32
 	
 	echo "Fetched Archlinux32 diffs for packages."
 fi

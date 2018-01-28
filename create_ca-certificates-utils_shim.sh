@@ -6,16 +6,16 @@
 
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz; then
 
-	cd $STAGE1_BUILD
+	cd $STAGE1_BUILD || exit 1
 	rm -rf ca-certificates-utils-shim
 	
 	mkdir ca-certificates-utils-shim
-	cd ca-certificates-utils-shim
+	cd ca-certificates-utils-shim || exit 1
 	mkdir -p pkg/ca-certificates-utils-shim/etc/ssl/certs/
 	cp /etc/ssl/certs/ca-certificates.crt pkg/ca-certificates-utils-shim/etc/ssl/certs/.
 
-	BUILDDATE=`date '+%s'`
-	size=`du -sk --apparent-size pkg/`
+	BUILDDATE=$(date '+%s')
+	size=$(du -sk --apparent-size pkg/)
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/ca-certificates-utils-shim/.PKGINFO <<EOF
 pkgname = ca-certificates-utils-shim
@@ -29,11 +29,11 @@ provides = ca-certificates-utils
 conflict = ca-certificates-utils
 EOF
 
-	cd pkg/ca-certificates-utils-shim
-	tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz
-	cd ../..
+	cd pkg/ca-certificates-utils-shim || exit 1
+	tar cJvf - .PKGINFO ./* | xz > ../../ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz
+	cd ../.. || exit 1
 
-	cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
+	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
 	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*

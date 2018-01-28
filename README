@@ -144,19 +144,23 @@ su cross ./create_glibc_shim.sh
 
 su cross ./create_ca-certificates-utils_shim.sh
 
+# Install stage 1
+
+./build_stage1.sh
+
+
+
+
 # TODO FROM HERE:
 
 
 # build packages for the i486-chroot
 ####################################
 
-All packages we built here are installed with pacman into i486-chroot
-and with bsdtar in the toolchains sysroot
 
 # the package list
 ##################
 
-export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/bin:${PATH}
 
 # basic packages 
 PACKAGES="iana-etc filesystem linux-api-headers tzdata ncurses readline bash \
@@ -173,7 +177,6 @@ net-tools libmnl elfutils libnfnetlink iptables iproute2 \
 libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
-# TODO: sort out name clash glibc and glibc-real
 
 # for ncurses, readline for bash
 # attr for acl
@@ -202,24 +205,10 @@ libedit sysfsutils libidn"
 NOPARALLEL_PACKAGE="perl"
 
 for p in $PACKAGES; do
-	# TODO: for some packages, uinit
-	# yaourt -G $p
-	asp export $p
-	cd $p
 
-	# TODO: if exists packages32 diff-PKGBUILD, attach at the end
 
-	sed -i '/^arch=[^#]*any/!{/^arch=(/s/(/(i486 /}' PKGBUILD
-	if test $p in $NOPARALLEL_PACKAGE; then
-		$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486-noparallel.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
-	else
-		$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
-	fi
 		
-	tail $p.log
 
-	rm -f *debug*.pkg.tar.xz
-	cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
 
 	# redo the whole cache
 	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
