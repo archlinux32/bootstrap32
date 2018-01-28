@@ -123,17 +123,11 @@ su cross ./prepare_stage1_repo.sh
 # PHASE 1
 #########
 
-Build stage1 with the cross-compiler and modified PKGBUILDs and patches
-into $STAGE1_CHROOT
+# Build stage1 in $STAGE1_BUILD with the cross-compiler and modified
+# PKGBUILDs and patches into $STAGE1_CHROOT.
 
-# TODO FROM HERE:
-
-
-# package shims
-################
-
-# we cannot build the glibc or the compilers, we create phantom packages by hand without
-# makepkg with files from the toolchain's sysroot
+# we cannot build the glibc or the compilers, we create phantom packages
+# by hand without makepkg with files from the toolchain's sysroot
 
 # so we build gcc-libs for compiler libraries (C and C++) and the glibc
 # we will NOT build them using the cross-compiler as packages but later
@@ -141,155 +135,17 @@ into $STAGE1_CHROOT
 # dependency for makepkg all the time, if not the original one, so close
 # ones fitting to the crosstoolchain.
 
-# the gcc-lib shim
-##################
+su cross ./create_gcc-lib_shim.sh
 
-cd $HOME/build
-mkdir gcc-libs
-cd gcc-libs
-mkdir -p pkg/gcc-libs/usr/lib
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libgcc_s.so pkg/gcc-libs/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libgcc_s.so.1 pkg/gcc-libs/usr/lib/.
-cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/.
-ln -s libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/libatomic.so.1
-ln -s libatomic.so.1.2.0 pkg/gcc-libs/usr/lib/libatomic.so
-cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libatomic.a pkg/gcc-libs/usr/lib/.
-cp -L $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/lib/libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/.
-ln -s libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/libstdc++.so.6
-ln -s libstdc++.so.6.0.24 pkg/gcc-libs/usr/lib/libstdc++.so
+su cross ./create_glibc_shim.sh
 
-BUILDDATE=`date '+%s'`
-size=`du -sk --apparent-size pkg/`
-size="$(( ${size%%[^0-9]*} * 1024 ))"
-cat > pkg/gcc-libs/.PKGINFO <<EOF
-pkgname = gcc-libs
-pkgver = 4.9.4-1
-pkgdesc = Runtime libraries shipped by GCC (from crosstool-ng sysroot)
-url = http://gcc.gnu.org
-builddate = $BUILDDATE
-size = $size
-arch = i486
-EOF
+# take pre-computed cert stores from an existing machine as the
+# dependencies to build the package are just too many
 
-cd pkg/gcc-libs
-tar cJvf - .PKGINFO * | xz > ../../gcc-libs-7.2.0-1-i486.pkg.tar.xz
-cd ../..
+su cross ./create_ca-certificates-utils_shim.sh
 
-cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
-rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
-repo-add -R $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
-sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy gcc-libs
-cd ..
+# TODO FROM HERE:
 
-# the glibc shim
-################
-
-cd $HOME/build
-mkdir glibc
-cd glibc
-mkdir -p pkg/glibc/usr/include
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/include/* pkg/glibc/usr/include
-sudo rm -rf pkg/glibc/usr/include/{linux,misc,mtd,rdma,scsi,sound,video,xen,asm,asm-generic}
-mkdir -p pkg/glibc/etc
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/etc/rpc pkg/glibc/etc/.
-mkdir -p pkg/glibc/usr/bin
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/* pkg/glibc/usr/bin/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/sbin/* pkg/glibc/usr/bin/.
-mkdir -p pkg/glibc/usr/lib
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.o pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.a pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/*.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/ld-linux.so.2 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/ld-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libc.so.6 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libc-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libpthread.so.0 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libpthread-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/gconv pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libutil.so* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libutil-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libanl.so.1 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libanl-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libBrokenLocale.so.1 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libBrokenLocale-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libcrypt.so.1 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libcrypt-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libdl.so.2 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libdl-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libm.so.6 pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libm-2.26.so pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libnsl* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libnss* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libresolv* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/librt* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/lib/libthread_db* pkg/glibc/usr/lib/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/audit pkg/glibc/usr/lib/.
-mkdir -p pkg/glibc/usr/share
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/share/i18n pkg/glibc/usr/share/.
-cp -a $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/share/locale pkg/glibc/usr/share/.
-
-BUILDDATE=`date '+%s'`
-size=`du -sk --apparent-size pkg/`
-size="$(( ${size%%[^0-9]*} * 1024 ))"
-cat > pkg/glibc/.PKGINFO <<EOF
-pkgname = glibc
-pkgver = 2.26-1
-pkgdesc = GNU C Library (from crosstool-ng sysroot)
-url = http://www.gnu.org/software/libc
-builddate = $BUILDDATE
-size = $size
-arch = i486
-EOF
-
-cd pkg/glibc
-tar cJvf - .PKGINFO * | xz > ../../glibc-2.26-1-i486.pkg.tar.xz
-cd ../..
-
-cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
-rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
-repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
-sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy glibc
-
-# the ca-certificates-utils shim
-################################
-
-# take pre-computed cert stores from an existing machine
-
-cd $HOME/build
-mkdir ca-certificates-utils
-cd ca-certificates-utils
-mkdir -p pkg/ca-certificates-utils/etc/ssl/certs/
-cp /etc/ssl/certs/ca-certificates.crt pkg/ca-certificates-utils/etc/ssl/certs/.
-
-BUILDDATE=`date '+%s'`
-size=`du -sk --apparent-size pkg/`
-size="$(( ${size%%[^0-9]*} * 1024 ))"
-cat > pkg/ca-certificates-utils/.PKGINFO <<EOF
-pkgname = ca-certificates-utils
-pkgver = 20170307-1
-pkgdesc = Common CA certificates (utilities)
-url = http://pkgs.fedoraproject.org/cgit/rpms/ca-certificates.git
-builddate = $BUILDDATE
-size = $size
-arch = any
-EOF
-
-cd pkg/ca-certificates-utils
-tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-20170307-1-any.pkg.tar.xz
-cd ../..
-
-cp -v *.pkg.tar.xz $STAGE1_CHROOT/packages/i486/.
-rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.db*
-rm -rf  $STAGE1_CHROOT/packages/i486/temp.files*
-repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.xz
-sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy ca-certificates-utils
-
-cd ..
 
 # build packages for the i486-chroot
 ####################################

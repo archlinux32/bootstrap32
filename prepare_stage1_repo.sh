@@ -94,3 +94,5 @@ if test ! -d $CROSS_HOME/packages32; then
 	
 	echo "Fetched Archlinux32 diffs for packages."
 fi
+
+echo "Stage 1 repos ready."
