@@ -21,6 +21,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	cd $STAGE1_BUILD || exit 1
 	
 	rm -rf "$PACKAGE"
+	rm -f $STAGE1_PACKAGES/$PACKAGE-*pkg.tar.xz
 
 	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"	
 	if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
