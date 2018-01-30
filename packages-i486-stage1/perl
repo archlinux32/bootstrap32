@@ -1,2 +1,24 @@
 # cross-compiling perl doesn't work in parallel
 NOPARALLEL_BUILD=1
+
+# the official cross-compilation support in Perl is weird and needs a
+# running remote SSH access to the real machine:
+# https://stackoverflow.com/questions/5464538/cross-compile-perl-for-arm
+#
+# we go with https://arsv.github.io/perl-cross/
+sed -i '/source=/ a\        https://github.com/arsv/perl-cross/releases/download/1.1.8/perl-cross-1.1.8.tar.gz' PKGBUILD
+sed -i "/md5sums=/ a\         'SKIP'" PKGBUILD
+sed -i '1!N; /prepare() *{\n *cd/ a \  tar --strip-components=1 -zxf ${srcdir}/perl-cross-1.1.8.tar.gz' PKGBUILD
+sed -i "s@./Configure -des@./configure --target=$TARGET_ARCH@" PKGBUILD
+
+# rm: cannot remove '/home/cross/build/perl/pkg/perl/usr/bin/perl5.26.1': No such file or directory
+sed -i 's@\(rm "$pkgdir/usr/bin/perl$pkgver\)@#\1@g' PKGBUILD
+
+# the hook fails as we lack some findtools and sed
+# pacman does not have a --no-execute-hooks mode
+#Can't open /dev/null: No such file or directory
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 8: find: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: pacman: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: wc: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 25: wc: command not found
+#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 13: sed: command not found

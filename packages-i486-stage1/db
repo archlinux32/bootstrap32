@@ -1,0 +1,5 @@
+# db is needed by perl
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@\.\./dist/configure@../dist/configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD

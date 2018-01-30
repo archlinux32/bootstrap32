@@ -1,4 +1,5 @@
-# libreadline is needed by bash
+# acl is needed by almost all packages dealing with the filesystem, most
+# prominently 'coreutils'
 SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation

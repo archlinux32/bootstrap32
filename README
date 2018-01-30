@@ -163,9 +163,8 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 
 # basic packages 
-PACKAGES="  bash \
-joe \
-attr acl gmp gdbm db perl openssl pambase zlib cracklib libtirpc pam libcap coreutils
+PACKAGES=" \
+   openssl pambase zlib cracklib libtirpc pam libcap coreutils
 util-linux e2fsprogs \
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl ca-certificates-utils \
 archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
@@ -178,23 +177,21 @@ libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
-# attr for acl
-# gdbm, db for perl
 # libtirpc for pam
 # zlib for cracklib
 # cracklib, pam for libcap
-# gmp, openssl, libcap for coreutils
+# openssl, libcap for coreutils
 # zlib for cracklib
 # libutil-linux and util-linux for e2fsprogs
 # expat, bzip2, lz4, xz for libarchive
 # libarchive, curl for pacman
 # file (libmagic) for ...
-# gmp, mpfr for gawk, gcc
+# mpfr for gawk, gcc
 # libnfnetlink for iptables
 # libmnl, libelf, iptables for iproute2
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
-SYSROOT_PACKAGES=" attr acl gmp gdbm db zlib cracklib libtirpc pam libcap openssl \
+SYSROOT_PACKAGES="zlib cracklib libtirpc pam libcap openssl \
 libutil-linux util-linux \
 expat bzip2 lz4 xz pcre gzip libarchive curl \
 file libmpc mpfr libmnl libelf libnfnetlink iptables \
@@ -206,16 +203,8 @@ libedit sysfsutils libidn"
 ###################################
 
 
-# bash
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' bash/PKGBUILD
 
-# joe
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' joe/PKGBUILD
 
-# gmp
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gmp/PKGBUILD
-# remove explicit CHOST for build host
-sed -i 's@--build=${CHOST}@@g' gmp/PKGBUILD
 
 # libcap
 sed -i 's@KERNEL_HEADERS=/usr/include@BUILD_CC=gcc CC=i486-unknown-linux-gnu-gcc AR=i486-unknown-linux-gnu-ar RANLIB=i486-unknown-linux-gnu-ranlib KERNEL_HEADERS=/usr/include@' libcap/PKGBUILD
@@ -235,42 +224,7 @@ sed -i '2!N; /prepare() *{ *\n *cd/ a \  patch -Np1 < ${srcdir}/libcap-2.25-gper
 # #include <security/pam_modules.h>
 # => add pam as dependency and build it
 
-# attr
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' attr/PKGBUILD
-# no gettext
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' attr/PKGBUILD
 
-# acl
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' acl/PKGBUILD
-
-# gdbm
-#??? https://how-to-build-for-arm.wikispaces.com/gdbm: really needed? we should have configure support 
-# let's try configure:
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gdbm/PKGBUILD
-
-# db
-sed -i 's@\.\./dist/configure@../dist/configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' db/PKGBUILD
-
-# perl
-# the official cross-compilation support in Perl is weird and needs a
-# running remote SSH access to the real machine:
-# https://stackoverflow.com/questions/5464538/cross-compile-perl-for-arm
-#
-# we go with https://arsv.github.io/perl-cross/
-sed -i '/source=/ a\        https://github.com/arsv/perl-cross/releases/download/1.1.8/perl-cross-1.1.8.tar.gz' perl/PKGBUILD
-sed -i "/md5sums=/ a\         'SKIP'" perl/PKGBUILD
-sed -i '1!N; /prepare() *{\n *cd/ a \  tar --strip-components=1 -zxf ${srcdir}/perl-cross-1.1.8.tar.gz' perl/PKGBUILD
-sed -i 's@./Configure -des@./configure --target=i486-unknown-linux-gnu@' perl/PKGBUILD
-#rm: cannot remove '/home/cross/build/perl/pkg/perl/usr/bin/perl5.26.1': No such file or directory
-sed -i 's@\(rm "$pkgdir/usr/bin/perl$pkgver\)@#\1@g' perl/PKGBUILD
-# the hook fails as we lack some findtools and sed
-# pacman does not have a --no-execute-hooks mode
-#Can't open /dev/null: No such file or directory
-#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 8: find: command not found
-#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: pacman: command not found
-#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 19: wc: command not found
-#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 25: wc: command not found
-#/usr/share/libalpm/scripts/detect-old-perl-modules.sh: line 13: sed: command not found
 
 # openssl
 sed -i "s@'i686'@'i486'@g" openssl/PKGBUILD

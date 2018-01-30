@@ -1,5 +1,8 @@
-# libreadline is needed by bash
+# gmp is needed by coreutils (later for gawk, gcc)
 SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# remove explicit CHOST for build host
+sed -i 's@--build=${CHOST}@@g' PKGBUILD

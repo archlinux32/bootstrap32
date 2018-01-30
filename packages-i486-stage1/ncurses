@@ -1,4 +1,5 @@
 # ncurses is needed by bash
 SYSROOT_INSTALL=1
 
+# prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD

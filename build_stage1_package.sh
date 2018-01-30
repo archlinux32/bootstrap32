@@ -15,12 +15,12 @@ export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
 . "$SCRIPT_DIR/packages-$TARGET_CPU-stage1/template"
 
-if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | grep -c "$PACKAGE") = 0; then
+if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$") = 0; then
 	echo "Building package $PACKAGE."
 
 	cd $STAGE1_BUILD || exit 1
 	
-	rm -rf "$PACKAGE"
+	sudo rm -rf "$PACKAGE"
 	rm -f $STAGE1_PACKAGES/$PACKAGE-*pkg.tar.xz
 
 	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"	

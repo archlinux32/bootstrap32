@@ -1,4 +1,4 @@
-# libreadline is needed by bash
+# gdbm is needed by perl
 SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation
