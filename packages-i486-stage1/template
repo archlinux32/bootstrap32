@@ -15,3 +15,10 @@ NOPARALLEL_BUILD=0
 # force the installation of the files in the package also into
 # the sysroot of the cross-compiler
 SYSROOT_INSTALL=0
+
+# ADDITIONAL_INSTALL_PACKAGE = <package name>
+# per default the package has the same name as the package file,
+# some packages generate additional package files to install
+# (for example util-linux also has a libutil-linux)
+# Note: SYSROOT_INSTALL respects this too
+ADDITIONAL_INSTALL_PACKAGE=

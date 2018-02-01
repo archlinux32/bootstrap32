@@ -1,0 +1,22 @@
+# libcap is needed for coreutils
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@KERNEL_HEADERS=/usr/include@BUILD_CC=gcc CC=$TARGET_ARCH-gcc AR=$TARGET_ARCH-ar RANLIB=$TARGET_ARCH-ranlib KERNEL_HEADERS=/usr/include@" PKGBUILD
+
+# https://bugs.gentoo.org/604802
+#  gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
+#  gperf output is somehow broken for cross-compilation
+# https://bugs.gentoo.org/attachment.cgi?id=462080
+# TODO: https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
+# wget -O libcap-2.25-gperf.patch 'https://604802.bugs.gentoo.org/attachment.cgi?id=462080'
+# copy libcap-2.25-gperf.patch from i486 folder
+sed -i 's@source=(@source=(libcap-2.25-gperf.patch @' PKGBUILD
+sed -i "s@md5sums=(@md5sums=('SKIP' @" PKGBUILD
+sed -i '2!N; /prepare() *{ *\n *cd/ a \  patch -Np1 < ${srcdir}/libcap-2.25-gperf.patch' PKGBUILD
+
+# TODO: mail this to https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
+# libcap needs pam just when building a test (which we cannot execute anyway)
+# test.c:3:10: fatal error: security/pam_modules.h: No such file or directory
+# #include <security/pam_modules.h>
+# => add pam as dependency and build it as we need it anyway sooner or later

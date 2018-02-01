@@ -1,0 +1,238 @@
+diff -rauN coreutils-8.28/Makefile.in coreutils-8.28-noman-patch/Makefile.in
+--- coreutils-8.28/Makefile.in	2017-09-02 04:25:09.000000000 +0200
++++ coreutils-8.28-noman-patch/Makefile.in	2017-12-08 18:55:52.273333333 +0100
+@@ -2594,7 +2594,6 @@
+ 	$(top_srcdir)/build-aux/texinfo.tex \
+ 	$(top_srcdir)/build-aux/ylwrap $(top_srcdir)/doc/local.mk \
+ 	$(top_srcdir)/lib/alloca.c $(top_srcdir)/lib/config.hin \
+-	$(top_srcdir)/lib/local.mk $(top_srcdir)/man/local.mk \
+ 	$(top_srcdir)/src/local.mk $(top_srcdir)/src/single-binary.mk \
+ 	$(top_srcdir)/tests/local.mk ABOUT-NLS AUTHORS COPYING \
+ 	ChangeLog INSTALL NEWS README THANKS TODO build-aux/compile \
+@@ -2695,7 +2694,6 @@
+ EOVERFLOW_VALUE = @EOVERFLOW_VALUE@
+ ERRNO_H = @ERRNO_H@
+ EXEEXT = @EXEEXT@
+-EXTRA_MANS = @EXTRA_MANS@
+ FLOAT_H = @FLOAT_H@
+ FNMATCH_H = @FNMATCH_H@
+ GETADDRINFO_LIB = @GETADDRINFO_LIB@
+@@ -3972,7 +3970,6 @@
+ lispdir = @lispdir@
+ localedir = @localedir@
+ localstatedir = @localstatedir@
+-man1_MANS = @man1_MANS@
+ mandir = @mandir@
+ mkdir_p = @mkdir_p@
+ oldincludedir = @oldincludedir@
+@@ -4165,8 +4162,8 @@
+ 	lib/xgetcwd.h lib/xnanosleep.h lib/xreadlink.h lib/xstrtod.h \
+ 	lib/xstrtol.h lib/xstrtod.c lib/xstrtod.h lib/xalloc.h \
+ 	lib/yesno.h src/dcgen src/dircolors.hin src/primes.h \
+-	src/tac-pipe.c src/extract-magic man/help2man man/dummy-man \
+-	$(man1_MANS:.1=.x) $(EXTRA_MANS:.1=.x) $(all_tests) init.cfg \
++	src/tac-pipe.c src/extract-magic \
++	$(all_tests) init.cfg \
+ 	tests/Coreutils.pm tests/CuSkip.pm tests/CuTmpdir.pm \
+ 	tests/d_type-check tests/envvar-check tests/factor/run.sh \
+ 	tests/factor/create-test.sh tests/filefrag-extent-compare \
+@@ -4275,7 +4272,7 @@
+ 	lib/ref-add.sed lib/ref-del.sed $(SCRIPTS) \
+ 	$(no_install__progs) src/coreutils_symlinks \
+ 	src/coreutils_shebangs src/fs-def src/fs-magic \
+-	src/fs-kernel-magic $(ALL_MANS) $(factor_tests)
++	src/fs-kernel-magic $(factor_tests)
+ MOSTLYCLEANDIRS = lib/arpa lib/netinet lib/selinux lib/sys lib/sys \
+ 	lib/sys lib/sys lib/sys lib/sys lib/sys lib/sys
+ AM_CPPFLAGS = -Ilib -I$(top_srcdir)/lib -Isrc -I$(top_srcdir)/src
+@@ -5139,18 +5136,6 @@
+      }				\
+    END {$$m and (warn "$@: do not use upper case in \@var{...}\n"), exit 1}'
+ 
+-@HAVE_PERL_FALSE@run_help2man = $(SHELL) $(srcdir)/man/dummy-man
+-@HAVE_PERL_TRUE@run_help2man = $(PERL) -- $(srcdir)/man/help2man
+-ALL_MANS = $(man1_MANS) $(EXTRA_MANS)
+-
+-# Dependencies common to all man pages.  Updated below.
+-
+-# Depend on this to get version number changes.
+-
+-# This is required so that changes to e.g., emit_bug_reporting_address
+-# provoke regeneration of all the manpages.
+-mandeps = .version $(top_srcdir)/src/system.h $(am__append_5)
+-
+ # Indirections required so that we'll still be able to know the
+ # complete list of our tests even if the user overrides TESTS
+ # from the command line (as permitted by the test harness API).
+@@ -5978,10 +5963,10 @@
+ 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+ 
+ .SUFFIXES:
+-.SUFFIXES: .1 .c .dvi .log .o .obj .pl .pl$(EXEEXT) .ps .sed .sh .sh$(EXEEXT) .sin .trs .x .xpl .xpl$(EXEEXT) .y
++.SUFFIXES: .c .dvi .log .o .obj .pl .pl$(EXEEXT) .ps .sed .sh .sh$(EXEEXT) .sin .trs .x .xpl .xpl$(EXEEXT) .y
+ am--refresh: Makefile
+ 	@:
+-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/lib/local.mk $(srcdir)/lib/gnulib.mk $(top_srcdir)/src/local.mk $(srcdir)/src/cu-progs.mk $(top_srcdir)/src/single-binary.mk $(top_srcdir)/doc/local.mk $(top_srcdir)/man/local.mk $(top_srcdir)/tests/local.mk $(am__configure_deps)
++$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/lib/local.mk $(srcdir)/lib/gnulib.mk $(top_srcdir)/src/local.mk $(srcdir)/src/cu-progs.mk $(top_srcdir)/src/single-binary.mk $(top_srcdir)/doc/local.mk $(top_srcdir)/tests/local.mk $(am__configure_deps)
+ 	@for dep in $?; do \
+ 	  case '$(am__configure_deps)' in \
+ 	    *$$dep*) \
+@@ -6003,7 +5988,7 @@
+ 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
+ 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
+ 	esac;
+-$(top_srcdir)/lib/local.mk $(srcdir)/lib/gnulib.mk $(top_srcdir)/src/local.mk $(srcdir)/src/cu-progs.mk $(top_srcdir)/src/single-binary.mk $(top_srcdir)/doc/local.mk $(top_srcdir)/man/local.mk $(top_srcdir)/tests/local.mk $(am__empty):
++$(top_srcdir)/lib/local.mk $(srcdir)/lib/gnulib.mk $(top_srcdir)/src/local.mk $(srcdir)/src/cu-progs.mk $(top_srcdir)/src/single-binary.mk $(top_srcdir)/doc/local.mk $(top_srcdir)/tests/local.mk $(am__empty):
+ 
+ $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+ 	$(SHELL) ./config.status --recheck
+@@ -14750,149 +14735,6 @@
+ 
+ check-local: check-texinfo
+ 
+-# This is a kludge to remove generated 'man/*.1' from a non-srcdir build.
+-# Without this, "make distcheck" might fail.
+-distclean-local:
+-	test x$(srcdir) = x$(builddir) || rm -f $(ALL_MANS)
+-
+-$(ALL_MANS): $(mandeps)
+-# Most prog.1 man pages depend on src/prog.  List the exceptions:
+-@SINGLE_BINARY_FALSE@man/install.1:   src/ginstall$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/test.1:      src/[$(EXEEXT)
+-
+-@SINGLE_BINARY_FALSE@man/arch.1:      src/arch$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/b2sum.1:     src/b2sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/base32.1:    src/base32$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/base64.1:    src/base64$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/basename.1:  src/basename$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/cat.1:       src/cat$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/chcon.1:     src/chcon$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/chgrp.1:     src/chgrp$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/chmod.1:     src/chmod$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/chown.1:     src/chown$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/chroot.1:    src/chroot$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/cksum.1:     src/cksum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/comm.1:      src/comm$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/coreutils.1: src/coreutils$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/cp.1:        src/cp$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/csplit.1:    src/csplit$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/cut.1:       src/cut$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/date.1:      src/date$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/dd.1:        src/dd$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/df.1:        src/df$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/dir.1:       src/dir$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/dircolors.1: src/dircolors$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/dirname.1:   src/dirname$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/du.1:        src/du$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/echo.1:      src/echo$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/env.1:       src/env$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/expand.1:    src/expand$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/expr.1:      src/expr$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/factor.1:    src/factor$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/false.1:     src/false$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/fmt.1:       src/fmt$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/fold.1:      src/fold$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/groups.1:    src/groups$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/head.1:      src/head$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/hostid.1:    src/hostid$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/hostname.1:  src/hostname$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/id.1:        src/id$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/join.1:      src/join$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/kill.1:      src/kill$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/link.1:      src/link$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/ln.1:        src/ln$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/logname.1:   src/logname$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/ls.1:        src/ls$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/md5sum.1:    src/md5sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/mkdir.1:     src/mkdir$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/mkfifo.1:    src/mkfifo$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/mknod.1:     src/mknod$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/mktemp.1:    src/mktemp$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/mv.1:        src/mv$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/nice.1:      src/nice$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/nl.1:        src/nl$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/nohup.1:     src/nohup$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/nproc.1:     src/nproc$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/numfmt.1:    src/numfmt$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/od.1:        src/od$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/paste.1:     src/paste$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/pathchk.1:   src/pathchk$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/pinky.1:     src/pinky$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/pr.1:        src/pr$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/printenv.1:  src/printenv$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/printf.1:    src/printf$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/ptx.1:       src/ptx$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/pwd.1:       src/pwd$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/readlink.1:  src/readlink$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/realpath.1:  src/realpath$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/rm.1:        src/rm$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/rmdir.1:     src/rmdir$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/runcon.1:    src/runcon$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/seq.1:       src/seq$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sha1sum.1:   src/sha1sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sha224sum.1: src/sha224sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sha256sum.1: src/sha256sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sha384sum.1: src/sha384sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sha512sum.1: src/sha512sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/shred.1:     src/shred$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/shuf.1:      src/shuf$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sleep.1:     src/sleep$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sort.1:      src/sort$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/split.1:     src/split$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/stat.1:      src/stat$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/stdbuf.1:    src/stdbuf$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/stty.1:      src/stty$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sum.1:       src/sum$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/sync.1:      src/sync$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tac.1:       src/tac$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tail.1:      src/tail$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tee.1:       src/tee$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/timeout.1:   src/timeout$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/touch.1:     src/touch$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tr.1:        src/tr$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/true.1:      src/true$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/truncate.1:  src/truncate$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tsort.1:     src/tsort$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/tty.1:       src/tty$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/uname.1:     src/uname$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/unexpand.1:  src/unexpand$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/uniq.1:      src/uniq$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/unlink.1:    src/unlink$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/uptime.1:    src/uptime$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/users.1:     src/users$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/vdir.1:      src/vdir$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/wc.1:        src/wc$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/who.1:       src/who$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/whoami.1:    src/whoami$(EXEEXT)
+-@SINGLE_BINARY_FALSE@man/yes.1:       src/yes$(EXEEXT)
+-
+-.x.1:
+-	$(AM_V_GEN)name=`echo $@ | sed 's|.*/||; s|\.1$$||'` || exit 1;	\
+-	case $$name in							\
+-	  install) prog='ginstall'; argv=$$name;;			\
+-	     test) prog='['; argv='[';;					\
+-		*) prog=$$name; argv=$$prog;;				\
+-	esac;								\
+-	rm -f $@ $@-t							\
+-	  && t=$*.td							\
+-	  && rm -rf $$t							\
+-	  && $(MKDIR_P) $$t						\
+-	  && (cd $$t && $(LN_S) '$(abs_top_builddir)/src/'$$prog$(EXEEXT) \
+-				$$argv$(EXEEXT))			\
+-	&& : $${SOURCE_DATE_EPOCH=`cat $(srcdir)/.timestamp 2>/dev/null || :`} \
+-	&& export SOURCE_DATE_EPOCH && $(run_help2man)			\
+-		     --source='$(PACKAGE_STRING)'			\
+-		     --include=$(srcdir)/man/$$name.x			\
+-		     --output=$$t/$$name.1				\
+-		     --info-page='\(aq(coreutils) '$$name' invocation\(aq' \
+-		     $$t/$$argv$(EXEEXT)				\
+-	  && sed \
+-	       -e 's|$*\.td/||g' \
+-	       -e '/For complete documentation/d' \
+-	       $$t/$$name.1 > $@-t			\
+-	  && rm -rf $$t							\
+-	  && chmod a-w $@-t						\
+-	  && mv $@-t $@
+ .PHONY: check-root
+ check-root:
+ 	$(MAKE) check TESTS='$(root_tests)' SUBDIRS=.

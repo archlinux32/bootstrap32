@@ -1,0 +1,67 @@
+diff -rauN pam_unix2-2.9.1/config.h.in pam_unix2-2.9.1-unix-passwd-no-yp-patch/config.h.in
+--- pam_unix2-2.9.1/config.h.in	2012-04-03 15:31:24.000000000 +0200
++++ pam_unix2-2.9.1-unix-passwd-no-yp-patch/config.h.in	2017-12-08 16:15:09.870000003 +0100
+@@ -194,3 +194,6 @@
+ 
+ /* Define to 1 if you need to in order for `stat' and other things to work. */
+ #undef _POSIX_SOURCE
++
++/* Define to 1 if you have the <rpcsvc/yp_prot.h> header file. */
++#undef HAVE_RPCSVC_YP_PROT_H
+diff -rauN pam_unix2-2.9.1/configure.in pam_unix2-2.9.1-unix-passwd-no-yp-patch/configure.in
+--- pam_unix2-2.9.1/configure.in	2012-04-03 15:31:17.000000000 +0200
++++ pam_unix2-2.9.1-unix-passwd-no-yp-patch/configure.in	2017-12-08 16:15:22.160000000 +0100
+@@ -60,6 +60,7 @@
+ AC_CHECK_HEADERS(crypt.h)
+ AC_CHECK_HEADERS(stdlib.h pwd.h sys/types.h syslog.h sys/syslog.h string.h strings.h, , AC_MSG_ERROR(some basic headers are missing))
+ AC_CHECK_HEADERS(security/pam_appl.h security/pam_modules.h, , AC_MSG_ERROR(broken libpam installation))
++AC_CHECK_HEADERS(rpcsvc/yp_prot.h)
+ 
+ dnl Check for Linux-PAM 0.99.x
+ AC_CHECK_HEADERS(security/pam_ext.h)
+diff -rauN pam_unix2-2.9.1/src/unix_passwd.c pam_unix2-2.9.1-unix-passwd-no-yp-patch/src/unix_passwd.c
+--- pam_unix2-2.9.1/src/unix_passwd.c	2012-04-03 15:24:51.000000000 +0200
++++ pam_unix2-2.9.1-unix-passwd-no-yp-patch/src/unix_passwd.c	2017-12-08 16:15:33.389999993 +0100
+@@ -53,8 +53,10 @@
+ #include <rpc/types.h>
+ #include <nss.h>
+ #include <syslog.h>
++#if defined(HAVE_YP_PROT_H)
+ #include <rpcsvc/yp_prot.h>
+ #include <rpcsvc/ypclnt.h>
++#endif
+ 
+ #define PAM_SM_PASSWORD
+ #include <security/pam_modules.h>
+@@ -413,6 +415,7 @@
+     }
+ }
+ 
++#if defined(HAVE_YP_PROT_H)
+ static char *
+ getnismaster (pam_handle_t *pamh, int flags)
+ {
+@@ -445,6 +448,7 @@
+ 
+   return master;
+ }
++#endif
+ 
+ static int
+ read_loop (int fd, char *buffer, int count)
+@@ -1095,6 +1099,7 @@
+ 
+       ulckpwdf ();
+     }
++#if defined(HAVE_YP_PROT_H)
+   else if (data->service == S_YP)
+     {
+       struct yppasswd yppwd;
+@@ -1137,6 +1142,7 @@
+ 	  retval = PAM_AUTHTOK_ERR;
+ 	}
+     }
++#endif
+ 
+   return retval;
+ }

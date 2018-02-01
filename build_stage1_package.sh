@@ -62,7 +62,9 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	fi
 	
 	# copy bigger patches into the build area
-	cp $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch .
+	if test $(find SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch 2>/dev/null | grep -q .); then
+		cp $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch .
+	fi
 
 	# disable or enable parallel builds
 	
@@ -99,13 +101,18 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		# install into chroot via pacman
 		
 		sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
-		pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q
+		if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
+			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$ADDITIONAL_INSTALL_PACKAGE"
+		fi
 
 		# optionally install into cross-compiler sysroot with bsdtar
 		
 		if test "$SYSROOT_INSTALL" = 1; then
 			cd "$XTOOLS_ARCH/$TARGET_CPU-unknown-linux-gnu/sysroot" || exit 1
 			sudo bsdtar xvf $STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+			if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
+				sudo bsdtar xvf $STAGE1_CHROOT/packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+			fi
 			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
 		fi
 		

@@ -1,0 +1,27 @@
+# pam is needed for libcap
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@" PKGBUILD
+
+# no flex, w3m, docboox-xml/xsl (no docu and take flex from the host)
+sed -i "s@makedepends=@#makedepends=@" PKGBUILD
+
+# disable NIS/YP
+sed -i 's@./configure@./configure --disable-nis@g' PKGBUILD
+
+# unix_passwd.c:56:10: fatal error: rpcsvc/yp_prot.h: No such file or directory
+# #include <rpcsvc/yp_prot.h>
+# => pam-1.3.0-unix-passwd-no-yp.patch
+sed -i 's@source=(@source=(pam-1.3.0-unix-passwd-no-yp.patch @' PKGBUILD
+sed -i "s@md5sums=(@md5sums=('3f5edd685cdd2c0a2ca44bc6e75320d8' @" PKGBUILD
+sed -i '/patch -Np/ a \  patch -Np1 -i "${srcdir}/pam-1.3.0-unix-passwd-no-yp.patch"' PKGBUILD
+
+# disable docu rebuilding
+sed -i 's@./configure@./configure --disable-regenerate-docu@' PKGBUILD
+
+# no documentation built, so nothing to remove
+sed -i '2!N; /# FS #40749\n \+rm/ s/rm/#rm/g' PKGBUILD
+
+# tons of tools needed to build documentation, we ommit the documentation right now
+sed -i "s@makedepends@#makedepends@" PKGBUILD

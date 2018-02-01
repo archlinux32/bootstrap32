@@ -164,8 +164,7 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 # basic packages 
 PACKAGES=" \
-        pam libcap coreutils
-util-linux e2fsprogs \
+ e2fsprogs \
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl ca-certificates-utils \
 archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 sed fakeroot texinfo grep findutils file diffutils ed patch \
@@ -177,9 +176,6 @@ libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
-# pam for libcap
-# libcap for coreutils
-# libutil-linux and util-linux for e2fsprogs
 # expat, bzip2, lz4, xz for libarchive
 # libarchive, curl for pacman
 # file (libmagic) for ...
@@ -188,8 +184,7 @@ sysfsutils libidn nettle iputils"
 # libmnl, libelf, iptables for iproute2
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
-SYSROOT_PACKAGES=" pam libcap \
-libutil-linux util-linux \
+SYSROOT_PACKAGES=" \
 expat bzip2 lz4 xz pcre gzip libarchive curl \
 file libmpc mpfr libmnl libelf libnfnetlink iptables \
 libedit sysfsutils libidn"
@@ -200,73 +195,6 @@ libedit sysfsutils libidn"
 ###################################
 
 
-
-
-
-# libcap
-sed -i 's@KERNEL_HEADERS=/usr/include@BUILD_CC=gcc CC=i486-unknown-linux-gnu-gcc AR=i486-unknown-linux-gnu-ar RANLIB=i486-unknown-linux-gnu-ranlib KERNEL_HEADERS=/usr/include@' libcap/PKGBUILD
-# https://bugs.gentoo.org/604802
-#  gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
-#  gperf output is somehow broken for cross-compilation
-# https://bugs.gentoo.org/attachment.cgi?id=462080
-# TODO: https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
-# wget -O libcap-2.25-gperf.patch 'https://604802.bugs.gentoo.org/attachment.cgi?id=462080'
-# copy libcap-2.25-gperf.patch from i486 folder
-sed -i 's@source=(@source=(libcap-2.25-gperf.patch @' libcap/PKGBUILD
-sed -i "s@md5sums=(@md5sums=('SKIP' @" libcap/PKGBUILD
-sed -i '2!N; /prepare() *{ *\n *cd/ a \  patch -Np1 < ${srcdir}/libcap-2.25-gperf.patch' libcap/PKGBUILD
-# TODO: mail this to https://git.kernel.org/pub/scm/linux/kernel/git/morgan/libcap.git/log/
-# libcap needs pam just when building a test (which we cannot execute anyway)
-# test.c:3:10: fatal error: security/pam_modules.h: No such file or directory
-# #include <security/pam_modules.h>
-# => add pam as dependency and build it
-
-
-
-
-
-# pam
-# no flex, w3m, docboox-xml/xsl (no docu and take flex from the host)
-sed -i "s@makedepends=@#makedepends=@" pam/PKGBUILD
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pam/PKGBUILD
-# disable NIS/YP
-sed -i 's@./configure@./configure --disable-nis@g' pam/PKGBUILD
-# no help, still errors:
-# unix_passwd.c:56:10: fatal error: rpcsvc/yp_prot.h: No such file or directory
-# #include <rpcsvc/yp_prot.h>
-# => pam-1.3.0-unix-passwd-no-yp.patch
-sed -i 's@source=(@source=(pam-1.3.0-unix-passwd-no-yp.patch @' pam/PKGBUILD
-sed -i "s@md5sums=(@md5sums=('3f5edd685cdd2c0a2ca44bc6e75320d8' @" pam/PKGBUILD
-sed -i '/patch -Np/ a \  patch -Np1 -i "${srcdir}/pam-1.3.0-unix-passwd-no-yp.patch"' pam/PKGBUILD
-# disable docu rebuilding
-sed -i 's@./configure@./configure --disable-regenerate-docu@' pam/PKGBUILD
-# no documentation built, so nothing to remove
-sed -i '2!N; /# FS #40749\n \+rm/ s/rm/#rm/g' pam/PKGBUILD
-
-# tons of tools needed to build documentation, we ommit the documentation right now
-sed -i "s@makedepends@#makedepends@" pam/PKGBUILD
-
-# coreutils  
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' coreutils/PKGBUILD
-# apply man generation patch (one has to wonder, is it maintained at all?)
-# help2man errors: help2man: can't get `--help' info from man/chmod.td/chmod
-# http://ftp.lfs-matrix.net/pub/clfs/conglomeration/coreutils/coreutils-8.28-noman.patch
-# based on a patch by William Harrington (kb0iic at cross-lfs dot org) 2014-10-30 for coreutils 8.23
-sed -i 's@source=(@source=(coreutils-8.28-noman.patch @' coreutils/PKGBUILD
-sed -i "s@md5sums=(@md5sums=('SKIP' @" coreutils/PKGBUILD
-
-# util-linux
-# TODO: in statage1 build script install additional packages: for util-linux also libutil-linux
-# disable some dependencies on systemd, python, libcap-ng
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' util-linux/PKGBUILD
-sed -i 's@ \+depends\(.*\)@#depends\1@g' util-linux/PKGBUILD
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' util-linux/PKGBUILD
-# no python
-sed -i 's@--with-python=3@--without-python \\@g' util-linux/PKGBUILD
-# no systemd
-sed -i '/--without-python/ a \ --without-systemd --without-systemdsystemunitdir' util-linux/PKGBUILD
-# sed -i '/ListenStream/ aRuntimeDirectory=uuidd' "$pkgdir/usr/lib/systemd/system/uuidd.socket"
-sed -i "s@\(sed.*\)@#\1@" util-linux/PKGBUILD
 
 # e2fsprogs
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' e2fsprogs/PKGBUILD
@@ -1592,6 +1520,15 @@ sed -i 's/myflags="-march=i686"/myflags=-march=i486/g' pacman/PKGBUILD
 # coreutils
 ###########
 sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' coreutils/PKGBUILD
+
+# TODO: needed in stage 2?
+# apply man generation patch (one has to wonder, is it maintained at all?)
+# help2man errors: help2man: can't get `--help' info from man/chmod.td/chmod
+# http://ftp.lfs-matrix.net/pub/clfs/conglomeration/coreutils/coreutils-8.28-noman.patch
+# based on a patch by William Harrington (kb0iic at cross-lfs dot org) 2014-10-30 for coreutils 8.23
+#sed -i 's@source=(@source=(coreutils-8.28-noman.patch @' PKGBUILD
+#sed -i "s@md5sums=(@md5sums=('SKIP' @" PKGBUILD
+#sed -i '/build()/ i \  prepare() { \n\  cd ${pkgname}-${pkgver}\n\ patch -Np1 < ${srcdir}/coreutils-8.28-noman.patch \n }' PKGBUILD
 
 # zlib
 ######

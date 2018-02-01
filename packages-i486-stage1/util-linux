@@ -1,0 +1,21 @@
+# libutil-linux is needed for e2fsprogs
+SYSROOT_INSTALL=1
+
+# TODO: install two packages libutil-linux util-linux
+ADDITIONAL_INSTALL_PACKAGE=libutil-linux
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@" PKGBUILD
+
+# disable some dependencies on systemd, python, libcap-ng
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' PKGBUILD
+sed -i 's@ \+depends\(.*\)@#depends\1@g' PKGBUILD
+
+# no python
+sed -i 's@--with-python=3@--without-python \\@g' PKGBUILD
+
+# no systemd
+sed -i '/--without-python/ a \ --without-systemd --without-systemdsystemunitdir' PKGBUILD
+sed -i "s@\(sed.*\)@#\1@" PKGBUILD
+# TODO: needed?
+# sed -i '/ListenStream/ aRuntimeDirectory=uuidd' "$pkgdir/usr/lib/systemd/system/uuidd.socket"
