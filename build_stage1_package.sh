@@ -33,8 +33,10 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	# using asp (or from the AUR using yaourt)
 	
 	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"	
-	if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
-		NEEDS_YAOURT=$(grep NEEDS_YAOURT $PACKAGE_CONF | cut -f 2 -d =)
+	if test -f $PACKAGE_CONF; then
+		if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
+			NEEDS_YAOURT=$(grep NEEDS_YAOURT $PACKAGE_CONF | cut -f 2 -d =)
+		fi
 	fi
 	if test "$NEEDS_YAOURT"; then
 		yaourt -G "$PACKAGE"
@@ -62,7 +64,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	fi
 	
 	# copy bigger patches into the build area
-	if test $(find SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch 2>/dev/null | grep -q .); then
+	if test $(find $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch 2>/dev/null | wc -l) != 0; then
 		cp $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch .
 	fi
 
@@ -116,10 +118,16 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
 		fi
 		
+		echo "Built package $PACKAGE."
+	
+	else	
+		echo "ERROR building package $PACKAGE"
+		exit 1
 	fi
 
 	cd $STAGE1_BUILD || exit 1
 
+else
+	echo "$PACKAGE exists."
 fi
 
-echo "Built package $PACKAGE."

@@ -169,7 +169,7 @@ archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 make mpfr gawk libmpc binutils gcc \
  linux   uinit \
 glibc \
-net-tools libmnl elfutils libnfnetlink iptables iproute2 \
+ libmnl elfutils libnfnetlink iptables iproute2 \
 libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
@@ -341,15 +341,8 @@ cat ~/packages32/core/glibc/PKGBUILD >> PKGBUILD
 sed -i "/makedepends/s/lib32-gcc-libs//g" PKGBUILD
 sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
 
-# net-tools
-sed -i "s@make @make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld@g" net-tools/PKGBUILD
-sed -i "s@make\$@make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld @g" net-tools/PKGBUILD
-# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
-sed -i "/makedepends/s/git//g" net-tools/PKGBUILD
-# apply patch for double definitons in ip.h
-sed -i 's@source=(@source=(net-tools-1.60-if_tunnel.patch @' net-tools/PKGBUILD
-sed -i "s@sha1sums=(@sha1sums=('SKIP' @" net-tools/PKGBUILD
-sed -i '2!N; /prepare() {/ a \  pushd ${srcdir}/${pkgname}; patch -Np1 < ${srcdir}/net-tools-1.60-if_tunnel.patch; popd' PKGBUILD
+
+
 
 # libmnl
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libmnl/PKGBUILD

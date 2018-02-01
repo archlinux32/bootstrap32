@@ -1,0 +1,11 @@
+diff -rauN net-tools-1.60-115f1af2/iptunnel.c net-tools-1.60-115f1af2-no-ip-header-patch/iptunnel.c
+--- net-tools-1.60-115f1af2/iptunnel.c	2017-12-26 21:14:18.650935837 +0100
++++ net-tools-1.60-115f1af2-no-ip-header-patch/iptunnel.c	2017-12-26 21:15:45.088534518 +0100
+@@ -26,7 +26,6 @@
+ #include <sys/socket.h>
+ #include <sys/ioctl.h>
+ #include <netinet/in.h>
+-#include <netinet/ip.h>
+ #include <arpa/inet.h>
+ #include <net/if.h>
+ #include <net/if_arp.h>

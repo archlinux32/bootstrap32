@@ -26,7 +26,7 @@ fi
 if test ! -f "$CROSS_HOME/.ssh/id_rsa.pub"; then
 	cp "$HOME/.ssh/id_rsa.pub" "$CROSS_HOME/.ssh/."
 	cp "$HOME/.ssh/id_rsa" "$CROSS_HOME/.ssh/."
-	chown cross:cross "$CROSS_HOME/.ssh/id_rsa*"
+	chown cross:cross $CROSS_HOME/.ssh/id_rsa*
 fi
 
 if test ! -x /usr/local/bin/ct-ng; then

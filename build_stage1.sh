@@ -15,9 +15,11 @@ util-linux e2fsprogs
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl
 
 sed texinfo grep findutils file diffutils ed patch
-kbd procps-ng shadow"
+kbd procps-ng shadow
+
+net-tools"
 
 for p in $PACKAGES; do
-	"$SCRIPT_DIR/build_stage1_package.sh" "$p"
+	"$SCRIPT_DIR/build_stage1_package.sh" "$p" || exit 1
 done
 
