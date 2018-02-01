@@ -1,6 +1,3 @@
-# cross-compiling perl doesn't work in parallel
-NOPARALLEL_BUILD=1
-
 # the official cross-compilation support in Perl is weird and needs a
 # running remote SSH access to the real machine:
 # https://stackoverflow.com/questions/5464538/cross-compile-perl-for-arm
@@ -10,6 +7,11 @@ sed -i '/source=/ a\        https://github.com/arsv/perl-cross/releases/download
 sed -i "/md5sums=/ a\         'SKIP'" PKGBUILD
 sed -i '1!N; /prepare() *{\n *cd/ a \  tar --strip-components=1 -zxf ${srcdir}/perl-cross-1.1.8.tar.gz' PKGBUILD
 sed -i "s@./Configure -des@./configure --target=$TARGET_ARCH@" PKGBUILD
+
+# ./miniperl_top: no ./miniperl found; build it before using miniperl_top
+# we can build in parallel with this small trick: there is a dependency
+# missing from miniperl_top to miniperl it seems
+sed -i 's/^ \+make$/make miniperl; make/' PKGBUILD
 
 # rm: cannot remove '/home/cross/build/perl/pkg/perl/usr/bin/perl5.26.1': No such file or directory
 sed -i 's@\(rm "$pkgdir/usr/bin/perl$pkgver\)@#\1@g' PKGBUILD
