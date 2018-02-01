@@ -1,0 +1,3 @@
+# prepare configure for cross-compilation
+sed -i "s@sh configure@sh configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+

@@ -1,0 +1,12 @@
+# lz4 is needed for libarchive
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@\( \+\)make@\1make CC=$TARGET_ARCH-cc RANLIB=$TARGET_ARCH-ranlib AR=$TARGET_ARCH-ar@g" PKGBUILD
+
+# lz4 has a git makedepends, diffutils for unit tests
+sed -i 's@makedepends\(.*\)@#makedepends\1@g' PKGBUILD
+sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' PKGBUILD
+
+
+

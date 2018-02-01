@@ -109,9 +109,9 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		
 		if test "$SYSROOT_INSTALL" = 1; then
 			cd "$XTOOLS_ARCH/$TARGET_CPU-unknown-linux-gnu/sysroot" || exit 1
-			sudo bsdtar xvf $STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+			sudo bsdtar xf $STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
 			if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
-				sudo bsdtar xvf $STAGE1_CHROOT/packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+				sudo bsdtar xf $STAGE1_CHROOT/packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
 			fi
 			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
 		fi

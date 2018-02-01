@@ -164,8 +164,7 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 # basic packages 
 PACKAGES=" \
- e2fsprogs \
-expat bzip2 lz4 xz pcre less gzip tar libarchive curl ca-certificates-utils \
+  ca-certificates-utils \
 archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 sed fakeroot texinfo grep findutils file diffutils ed patch \
 make mpfr gawk libmpc binutils gcc \
@@ -176,8 +175,6 @@ libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
-# expat, bzip2, lz4, xz for libarchive
-# libarchive, curl for pacman
 # file (libmagic) for ...
 # mpfr for gawk, gcc
 # libnfnetlink for iptables
@@ -185,7 +182,7 @@ sysfsutils libidn nettle iputils"
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
-expat bzip2 lz4 xz pcre gzip libarchive curl \
+  \
 file libmpc mpfr libmnl libelf libnfnetlink iptables \
 libedit sysfsutils libidn"
 
@@ -196,64 +193,7 @@ libedit sysfsutils libidn"
 
 
 
-# e2fsprogs
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' e2fsprogs/PKGBUILD
-# remove superflous 'bc' make dependency
-sed -i "/makedepends/s/'bc'//g" e2fsprogs/PKGBUILD
 
-# expat
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' expat/PKGBUILD
-
-# bzip2
-sed -i "s@\( \+\)make@\1make CC=i486-unknown-linux-gnu-cc RANLIB=i486-unknown-linux-gnu-ranlib AR=i486-unknown-linux-gnu-ar@g" bzip2/PKGBUILD
-
-# lz4
-sed -i "s@\( \+\)make@\1make CC=i486-unknown-linux-gnu-cc RANLIB=i486-unknown-linux-gnu-ranlib AR=i486-unknown-linux-gnu-ar@g" lz4/PKGBUILD
-# lz4 has a git makedepends, diffutils for unit tests
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' lz4/PKGBUILD
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' lz4/PKGBUILD
-
-# xz
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' xz/PKGBUILD
-# with gcc 7.2 we get new errors
-sed -i 's@--enable-werror@--disable-werror@g' xz/PKGBUILD
-
-# pcre
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pcre/PKGBUILD
-
-# less
-sed -i 's@sh configure@sh configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' less/PKGBUILD
-
-# gzip
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gzip/PKGBUILD
-
-# tar
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' tar/PKGBUILD
-# checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
-# configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
-# See `config.log' for more details
-sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
-
-# libarchive
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libarchive/PKGBUILD
-
-# curl
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' curl/PKGBUILD
-# build with minimal features, we don't need some libraries
-sed -i "/depends=/s/'krb5'//" curl/PKGBUILD
-sed -i "/depends=/s/'libssh2'//" curl/PKGBUILD
-sed -i '/--prefix=\/usr/ a \      --without-libssh2 \\' curl/PKGBUILD
-sed -i "/depends=/s/'libpsl'//" curl/PKGBUILD
-sed -i '/--prefix=\/usr/ a \      --without-libpsl \\' curl/PKGBUILD
-sed -i "/depends=/s/'libnghttp2'//" curl/PKGBUILD
-sed -i '/--prefix=\/usr/ a \      --without-nghttp2 \\' curl/PKGBUILD
-sed -i '/--prefix=\/usr/ a \      --without-gssapi \\' curl/PKGBUILD
-# no ca-certificates, needs tons of tools to build (like p11-kit), so we 
-# create a fake one with certificates from the host (is this LE/BE-safe?)
-# can we actually simply ommit them for now?
-sed -i "/depends=/s/'ca-certificates'//" curl/PKGBUILD
-# zsh, perl is used to create a completion file for curl and zsh
-sed -i '/--prefix=\/usr/ a \      --without-zsh-functions-dir \\' curl/PKGBUILD
 
 # pacman-mirrorlist
 cp $HOME/packages32/core/pacman-mirrorlist/mirrorlist pacman-mirrorlist/.

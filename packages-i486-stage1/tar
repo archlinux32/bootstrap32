@@ -1,0 +1,7 @@
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
+# configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
+# See `config.log' for more details
+sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' PKGBUILD

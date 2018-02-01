@@ -1,7 +1,7 @@
 # libutil-linux is needed for e2fsprogs
 SYSROOT_INSTALL=1
 
-# TODO: install two packages libutil-linux util-linux
+# install two packages: libutil-linux and util-linux
 ADDITIONAL_INSTALL_PACKAGE=libutil-linux
 
 # prepare configure for cross-compilation
