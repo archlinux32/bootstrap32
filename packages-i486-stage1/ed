@@ -1,0 +1,5 @@
+# ed is needed for patch
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure CC=$TARGET_ARCH-gcc@" PKGBUILD

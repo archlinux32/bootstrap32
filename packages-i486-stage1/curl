@@ -17,9 +17,10 @@ sed -i '/--prefix=\/usr/ a \      --without-nghttp2 \\' PKGBUILD
 sed -i '/--prefix=\/usr/ a \      --without-gssapi \\' PKGBUILD
 
 # no ca-certificates, needs tons of tools to build (like p11-kit), so we 
-# create a fake one with certificates from the host
+# create a fake one with certificates from the host (the ca crts from
+# ca-certificates-utils should be enough actually)
 # TODO: is this LE/BE-safe?
-# sed -i "/depends=/s/'ca-certificates'//" PKGBUILD
+sed -i "/depends=/s/'ca-certificates'//" PKGBUILD
 
 # zsh, perl is used to create a completion file for curl and zsh
 sed -i '/--prefix=\/usr/ a \      --without-zsh-functions-dir \\' PKGBUILD

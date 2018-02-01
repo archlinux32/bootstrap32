@@ -164,18 +164,16 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 # basic packages 
 PACKAGES=" \
-  ca-certificates-utils \
 archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
-sed fakeroot texinfo grep findutils file diffutils ed patch \
+ fakeroot    \
 make mpfr gawk libmpc binutils gcc \
-kbd linux procps-ng shadow uinit \
+ linux   uinit \
 glibc \
 net-tools libmnl elfutils libnfnetlink iptables iproute2 \
 libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
-# file (libmagic) for ...
 # mpfr for gawk, gcc
 # libnfnetlink for iptables
 # libmnl, libelf, iptables for iproute2
@@ -230,10 +228,6 @@ sed -i 's@pacman.conf.i686@pacman.conf.i486@' pacman/PKGBUILD
 # some more architecture patching
 sed -i 's@i686@i486@g' pacman/PKGBUILD
 
-# sed
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' sed/PKGBUILD
-# gettext: take the one from the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' sed/PKGBUILD
 
 # fakeroot
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' fakeroot/PKGBUILD
@@ -244,29 +238,11 @@ sed -i 's@\(po4a\)@#\1@g' fakeroot/PKGBUILD
 #/tmp/alpm_va2bmk/.INSTALL: line 2: usr/bin/ldconfig: No such file or directory
 #error: command failed to execute correctly
 
-# texinfo
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' texinfo/PKGBUILD
 
-# grep
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' grep/PKGBUILD
 
-# findutils
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' findutils/PKGBUILD
 
-# file
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' file/PKGBUILD
 
-# diffutils
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' diffutils/PKGBUILD
-# http://lists.busybox.net/pipermail/buildroot/2017-September/203435.html
-sed -i '/.\/configure/ i \  echo "gl_cv_func_getopt_gnu=yes" > config.cache' diffutils/PKGBUILD
-sed -i 's@./configure@./configure --cache-file=config.cache@g' diffutils/PKGBUILD
 
-# ed
-sed -i 's@./configure@./configure CC=i486-unknown-linux-gnu-gcc@g' ed/PKGBUILD
-
-# patch
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' patch/PKGBUILD
 
 # make
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' make/PKGBUILD
@@ -335,34 +311,8 @@ sed -i 's@--enable-threads=posix@--disable-threads@' gcc/PKGBUILD
 # disable all languages but C and C++
 use gcc-cross-PKGBUILD
 
-# kbd
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' kbd/PKGBUILD
-# no unit testing (using C 'check')
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' kbd/PKGBUILD
 
-# procps-ng
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' procps-ng/PKGBUILD
-# no systemd for now
-sed -i "/makedepends=/s/'systemd'//" procps-ng/PKGBUILD
-sed -i "/depends=/s/'libsystemd'//" procps-ng/PKGBUILD
-sed -i 's@--with-systemd@--without-systemd@' procps-ng/PKGBUILD
-# do not use the stub rpl_malloc/rpl_realloc functions (they don't cross-compile
-# and we know that glibc fixed those problems long time ago)
-sed -i '2!N; /prepare()/ a \        sed -i "s/AC_FUNC_MALLOC/dnl AC_FUNC_MALLOC/" configure.ac \
-	sed -i "s/AC_FUNC_REALLOC/dnl AC_FUNC_RELLOC/" configure.ac \
-	autoconf
-' PKGBUILD
 
-# shadow
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' shadow/PKGBUILD
-# remove docu and git dependencies
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' shadow/PKGBUILD
-# needs xml2po
-sed -i 's@--enable-man@--disable-man@g' shadow/PKGBUILD
-sed -i '/find/,/-delete/{s/\(.*\)/#\1/g}' shadow/PKGBUILD
-sed -i '/rmdir/,/man8/{s/\(.*\)/#\1/g}' shadow/PKGBUILD
-sed -i 's/^#}/}/' shadow/PKGBUILD
-sed -i '2!N; /prepare()/ a \  sed -i "/SUBDIRS/s/man//g" Makefile.am' shadow/PKGBUILD
 
 # uinit
 sed -i 's/make /make CC=i486-unknown-linux-gnu-gcc /g' uinit/PKGBUILD

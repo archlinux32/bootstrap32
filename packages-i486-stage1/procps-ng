@@ -1,0 +1,14 @@
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@" PKGBUILD
+
+# no systemd for now
+sed -i "/makedepends=/s/'systemd'//" PKGBUILD
+sed -i "/depends=/s/'libsystemd'//" PKGBUILD
+sed -i 's@--with-systemd@--without-systemd@' PKGBUILD
+
+# do not use the stub rpl_malloc/rpl_realloc functions (they don't cross-compile
+# and we know that glibc fixed those problems long time ago)
+sed -i '2!N; /prepare()/ a \        sed -i "s/AC_FUNC_MALLOC/dnl AC_FUNC_MALLOC/" configure.ac \
+	sed -i "s/AC_FUNC_REALLOC/dnl AC_FUNC_RELLOC/" configure.ac \
+	autoconf
+' PKGBUILD
