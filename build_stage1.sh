@@ -9,7 +9,8 @@
 
 PACKAGES="iana-etc filesystem linux-api-headers tzdata
 ncurses readline bash joe
-attr acl gmp gdbm db perl"
+attr acl gmp gdbm db perl openssl
+zlib pambase cracklib libtirpc"
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage1_package.sh" "$p"

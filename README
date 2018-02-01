@@ -164,7 +164,7 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 # basic packages 
 PACKAGES=" \
-   openssl pambase zlib cracklib libtirpc pam libcap coreutils
+        pam libcap coreutils
 util-linux e2fsprogs \
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl ca-certificates-utils \
 archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
@@ -177,11 +177,8 @@ libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
-# libtirpc for pam
-# zlib for cracklib
-# cracklib, pam for libcap
-# openssl, libcap for coreutils
-# zlib for cracklib
+# pam for libcap
+# libcap for coreutils
 # libutil-linux and util-linux for e2fsprogs
 # expat, bzip2, lz4, xz for libarchive
 # libarchive, curl for pacman
@@ -191,7 +188,7 @@ sysfsutils libidn nettle iputils"
 # libmnl, libelf, iptables for iproute2
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
-SYSROOT_PACKAGES="zlib cracklib libtirpc pam libcap openssl \
+SYSROOT_PACKAGES=" pam libcap \
 libutil-linux util-linux \
 expat bzip2 lz4 xz pcre gzip libarchive curl \
 file libmpc mpfr libmnl libelf libnfnetlink iptables \
@@ -226,40 +223,7 @@ sed -i '2!N; /prepare() *{ *\n *cd/ a \  patch -Np1 < ${srcdir}/libcap-2.25-gper
 
 
 
-# openssl
-sed -i "s@'i686'@'i486'@g" openssl/PKGBUILD
-# https://how-to-build-for-arm.wikispaces.com/openssl
-sed -i "s@'linux-elf'@'linux-generic32'@g" openssl/PKGBUILD
-sed -i 's@shared no-ssl3-method ${optflags}@shared ${optflags}@' openssl/PKGBUILD
-sed -i "s@make@make TARGETMACH=i486-unknown-linux-gnu BUILDMACH=x86_64-pc-linux-gnu CROSS=i486-unknown-linux-gnu CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld AS=i486-unknown-linux-gnu-as@g" openssl/PKGBUILD
-# TODO: bc is needed in the chroot to rebuild bc later, either build bc
-# inside chroot or cross-compile here
 
-# zlib
-sed -i '1!N; /autoreconf.*\n/ s@./configure@./configure -host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@' zlib/PKGBUILD
-sed -i "s@make@make TARGETMACH=i486-unknown-linux-gnu BUILDMACH=x86_64-pc-linux-gnu CROSS=i486-unknown-linux-gnu CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld AS=i486-unknown-linux-gnu-as@g" zlib/PKGBUILD
-
-# cracklib
-sed -i 's@./configure@./configure -host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@' cracklib/PKGBUILD
-# the dictionary cannot be created while packaging by calling the cross-compiled tool!
-# we are not interested in an actually running cracklib doing some security checks, just in the library
-#./util/cracklib-packer: line 117: /home/cross/build/cracklib/src/cracklib-2.9.6/util/.libs/lt-cracklib-packer: No such file or directory
-sed -i 's/\(  \+sh\)/#\1/g' cracklib/PKGBUILD
-sed -i 's/\(  \+ | sh\)/#\1/g' cracklib/PKGBUILD
-
-# libtirpc
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libtirpc/PKGBUILD
-# disable Kerberos
-sed -i "/depends=/s/'krb5'//" libtirpc/PKGBUILD
-# gssapi seems also to be a dependency, not in PKBUILD, disable it
-sed -i 's@./configure@./configure --disable-gssapi@g' libtirpc/PKGBUILD
-# doens't really like to be cross-compiled..
-# xdr_sizeof.c:93:13: error: 'uintptr_t' undeclared (first use in this function); did you mean '__intptr_t'?
-# => https://bugzilla.redhat.com/show_bug.cgi?id=1482063
-# => libtirpc-1.0.2-stdint.patch
-sed -i 's@source=(@source=(libtirpc-1.0.2-stdint.patch @' libtirpc/PKGBUILD
-sed -i "s@sha1sums=(@sha1sums=('0322752c231884c5434b4e56a3c376d7bfedf9d9' @" libtirpc/PKGBUILD
-sed -i '/build()/ i \  prepare() { \n\  cd ${pkgname}-${pkgver}\n\ patch -Np1 < ${srcdir}/libtirpc-1.0.2-stdint.patch \n }' libtirpc/PKGBUILD
 
 # pam
 # no flex, w3m, docboox-xml/xsl (no docu and take flex from the host)

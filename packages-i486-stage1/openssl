@@ -1,0 +1,12 @@
+# openssl is needed for a lot of packages, most prominently for 'coreutils'
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+# see https://how-to-build-for-arm.wikispaces.com/openssl
+sed -i "s@'i686'@'$TARGET_CPU'@g" PKGBUILD
+sed -i "s@'linux-elf'@'linux-generic32'@g" PKGBUILD
+sed -i 's@shared no-ssl3-method ${optflags}@shared ${optflags}@' PKGBUILD
+sed -i "s@make@make TARGETMACH=$TARGET_ARCH BUILDMACH=$BUILD_ARCH CROSS=$TARGET_ARCH CC=$TARGET_ARCH-cc LD=$TARGET_ARCH-ld AS=$TARGET_ARCH-as@g" PKGBUILD
+
+# TODO: bc is needed in the chroot to rebuild bc later, either build bc
+# inside chroot or cross-compile here

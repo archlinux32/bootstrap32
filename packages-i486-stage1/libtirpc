@@ -1,0 +1,19 @@
+# libtirpc is needed by pam
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@" PKGBUILD
+
+# disable Kerberos
+sed -i "/depends=/s/'krb5'//" PKGBUILD
+
+# gssapi seems also to be a dependency, not in PKBUILD, disable it
+sed -i 's@./configure@./configure --disable-gssapi@g' PKGBUILD
+
+# doens't really like to be cross-compiled..
+# xdr_sizeof.c:93:13: error: 'uintptr_t' undeclared (first use in this function); did you mean '__intptr_t'?
+# => https://bugzilla.redhat.com/show_bug.cgi?id=1482063
+# => libtirpc-1.0.2-stdint.patch
+sed -i 's@source=(@source=(libtirpc-1.0.2-stdint.patch @' PKGBUILD
+sed -i "s@sha1sums=(@sha1sums=('0322752c231884c5434b4e56a3c376d7bfedf9d9' @" PKGBUILD
+sed -i '/build()/ i \  prepare() { \n\  cd ${pkgname}-${pkgver}\n\ patch -Np1 < ${srcdir}/libtirpc-1.0.2-stdint.patch \n }' PKGBUILD
