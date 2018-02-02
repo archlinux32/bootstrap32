@@ -1,0 +1,8 @@
+# libelf is needed by iproute2
+SYSROOT_INSTALL=1
+
+# we actually need the libelf subpackage to link to
+ADDITIONAL_INSTALL_PACKAGE=libelf
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD

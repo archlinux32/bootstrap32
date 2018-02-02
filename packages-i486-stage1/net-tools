@@ -1,5 +1,5 @@
 # prepare configure for cross-compilation
-sed -i "s@make @make CC=$TARGET_ARCH-cc LD=$TARGET_ARCH-ld@g" PKGBUILD
+sed -i "s@make @make CC=$TARGET_ARCH-cc LD=$TARGET_ARCH-ld @g" PKGBUILD
 sed -i "s@make\$@make CC=$TARGET_ARCH-cc LD=$TARGET_ARCH-ld @g" PKGBUILD
 
 # git for release checkouts, using the one from host
@@ -9,7 +9,3 @@ sed -i "/makedepends/s/git//g" PKGBUILD
 sed -i 's@source=(@source=(net-tools-1.60-if_tunnel.patch @' PKGBUILD
 sed -i "s@sha1sums=(@sha1sums=('SKIP' @" PKGBUILD
 sed -i '2!N; /prepare() {/ a \  pushd ${srcdir}/${pkgname}; patch -Np1 < ${srcdir}/net-tools-1.60-if_tunnel.patch; popd' PKGBUILD
-
-# TODO: wrong installation pathes, should be /usr/bin
-# install: cannot create regular file '/bin/ifconfig': Permission denied
-# make: *** [Makefile:216: installbin] Error 1

@@ -169,19 +169,18 @@ archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 make mpfr gawk libmpc binutils gcc \
  linux   uinit \
 glibc \
- libmnl elfutils libnfnetlink iptables iproute2 \
+   iptables iproute2 \
 libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
 # mpfr for gawk, gcc
-# libnfnetlink for iptables
-# libmnl, libelf, iptables for iproute2
+# iptables for iproute2
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
   \
-file libmpc mpfr libmnl libelf libnfnetlink iptables \
+file libmpc mpfr iptables \
 libedit sysfsutils libidn"
 
 
@@ -344,14 +343,8 @@ sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
 
 
 
-# libmnl
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libmnl/PKGBUILD
 
-# libelf
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libelf/PKGBUILD
 
-# libnfnetlink
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libnfnetlink/PKGBUILD
 
 # iptables
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' iptables/PKGBUILD
