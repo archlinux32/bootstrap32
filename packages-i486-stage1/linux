@@ -1,0 +1,16 @@
+# we currently build a monolitic kernel for the basic stuff which was
+# available since 25 years. :-)
+
+# the Linux kernel has it's own way for cross compilation
+sed -i "s@make prepare@make prepare ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD
+sed -i "s@make config@make config ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD
+
+# remove make dependencies, currently we build without module support
+sed -i "s@make bzImage modules@make bzImage ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD
+sed -i "s@make modules_install@#make modules_install@g" PKGBUILD
+
+# TODO: build what's possible, ommit the rest
+# remove dependencies from kernel package, we don't have modules or a ramdisk right now
+#sed -i 's/ \+\(depends=\)/#\1/' PKGBUILD
+# ignore failing hooks on installation, it's just depmod and mkinitcpio which we both don't need
+#sed -i 's@makedepends\(.*\)@#makedepends\1@g' PKGBUILD

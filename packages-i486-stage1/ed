@@ -1,4 +1,4 @@
-# ed is needed for patch
+# ed is needed for patch and bc
 SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation

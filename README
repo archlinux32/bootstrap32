@@ -169,17 +169,16 @@ archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 make mpfr gawk libmpc binutils gcc \
  linux   uinit \
 glibc \
-libedit openssh \
+  \
 sysfsutils libidn nettle iputils"
 # libunwind
 
 # mpfr for gawk, gcc
-# libedit for openssh
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
   \
 file libmpc mpfr \
-libedit sysfsutils libidn"
+sysfsutils libidn"
 
 
 
@@ -316,13 +315,6 @@ sed -i 's/make /make CC=i486-unknown-linux-gnu-gcc /g' uinit/PKGBUILD
 # remove git dependency
 sed -i 's@makedepends\(.*\)@#makedepends\1@g' uinit/PKGBUILD
 
-# linux
-sed -i 's@make@make ARCH=i386 CROSS_COMPILE=$HOME/x-tools/i486-unknown-linux-gnu/bin/i486-unknown-linux-gnu-@g' linux/PKGBUILD
-# remove make dependencies, currently we build without module support
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' linux/PKGBUILD
-# remove dependencies from kernel package, we don't have modules or a ramdisk right now
-sed -i 's/ \+\(depends=\)/#\1/' PKGBUILD
-# ignore failing hooks on installation, it's just depmod and mkinitcpio which we both don't need
 
 # glibc
 sed -i 's@/configure"@/configure" --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
@@ -346,20 +338,7 @@ sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
 
 
 
-# libedit
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libedit/PKGBUILD
 
-# openssh
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' openssh/PKGBUILD
-# package suffers from featuritis
-# remove ldns and kerberos5 support, keep libedit (as it's easy to build)
-# ssh => not good, openssl <> unbound <> openssl cycle and mess
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' openssh/PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' openssh/PKGBUILD
-sed -i 's@--with-ldns@--without-ldns@g' openssh/PKGBUILD
-sed -i 's@--with-kerberos5=/usr@--without-kerberos5@g' openssh/PKGBUILD
-#ln: failed to create symbolic link '/build/openssh/pkg/openssh/usr/share/man/man1/slogin.1.gz': No such file or directory
-sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD
 
 # libidn
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libidn/PKGBUILD

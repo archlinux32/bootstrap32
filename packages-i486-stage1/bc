@@ -1,0 +1,11 @@
+# bc is needed by linux
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# fbc is built with target compiler instead of host compiler:
+# /bin/sh: ./fbc: No such file or directory
+# http://lists.busybox.net/pipermail/buildroot/2017-July/196239.html
+# we take the host bc instead of the bootstrapped fbc
+sed -i '1!N; /build() *{\n *cd/ a \  sed -i "s@./fbc -c@bc -c@" bc\/Makefile.in' PKGBUILD

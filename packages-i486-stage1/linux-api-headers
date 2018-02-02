@@ -1,4 +1,4 @@
-# the Linux kernel has it's own way for cross compilations, we need
+# the Linux kernel has it's own way for cross compilation, we need
 # only the header files for glibc later, but it's better to make sure
 # to pick the correct target archicture right away
 sed -i "s@make@make ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD

@@ -22,6 +22,9 @@ pacman --noconfirm --needed -S arch-install-scripts
 # for linux kernel
 pacman --noconfirm --needed -S bc
 
+# for bc
+pacman --noconfirm --needed -S ed
+
 # for pam
 pacman --noconfirm --needed -S flex
 
