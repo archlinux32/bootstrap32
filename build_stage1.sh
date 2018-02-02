@@ -17,7 +17,7 @@ elfutils
 sed texinfo grep findutils file diffutils ed patch
 kbd procps-ng shadow
 
-net-tools libmnl libnfnetlink"
+net-tools libmnl libnfnetlink iptables iproute2"
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage1_package.sh" "$p" || exit 1

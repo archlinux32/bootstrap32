@@ -169,18 +169,16 @@ archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
 make mpfr gawk libmpc binutils gcc \
  linux   uinit \
 glibc \
-   iptables iproute2 \
 libedit openssh \
 sysfsutils libidn nettle iputils"
 # libunwind
 
 # mpfr for gawk, gcc
-# iptables for iproute2
 # libedit for openssh
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
   \
-file libmpc mpfr iptables \
+file libmpc mpfr \
 libedit sysfsutils libidn"
 
 
@@ -346,21 +344,7 @@ sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
 
 
 
-# iptables
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' iptables/PKGBUILD
-sed -i 's@--enable-bpf-compiler@--disable-bpf-compiler@g' iptables/PKGBUILD
-# disable nftable support, draws in more libraries, we need the xtables depevelopment mainly now for iproute2
-sed -i 's@./configure@./configure --disable-nftables@' iptables/PKGBUILD
-# disable connection tracking
-sed -i 's@./configure@./configure --disable-connlabel@' iptables/PKGBUILD
 
-# iproute2
-# cross-compilation and verbosity flags
-sed -i "s@make\$@make V=1 CC=i486-unknown-linux-gnu-cc AR=i486-unknown-linux-gnu-ar@g" iproute2/PKGBUILD
-# disabled iptables (too many dependencies)
-# disable linux-atm (unlikely we have such a hardware for i486)
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iproute2/PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' iproute2/PKGBUILD
 
 # libedit
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libedit/PKGBUILD

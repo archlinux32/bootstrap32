@@ -1,0 +1,19 @@
+# iptables is needed by iproute2
+SYSROOT_INSTALL=1
+
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# disable Berkley Packet Filtering
+sed -i 's@--enable-bpf-compiler@--disable-bpf-compiler@g' PKGBUILD
+
+# disable nftable support, draws in more libraries, we need the xtables
+# depevelopment mainly now for iproute2
+sed -i "/depends=/s/libnftnl//" PKGBUILD
+sed -i 's@./configure@./configure --disable-nftables@' PKGBUILD
+
+# disable libpcap (tcpdump, draws in too many dependencies)
+sed -i "/depends=/s/libpcap//" PKGBUILD
+
+# disable connection tracking
+sed -i 's@./configure@./configure --disable-connlabel@' PKGBUILD

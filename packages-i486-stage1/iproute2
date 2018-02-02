@@ -1,0 +1,5 @@
+# cross-compilation and verbosity flags
+sed -i "s@make\$@make V=1 HOSTCC=gcc CC=$TARGET_ARCH-cc AR=$TARGET_ARCH-ar@g" PKGBUILD
+
+# disable linux-atm (unlikely we still have some ATM based networks)
+sed -i "/makedepends=/s/'linux-atm'//" PKGBUILD
