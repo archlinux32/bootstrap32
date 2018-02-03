@@ -1,5 +1,11 @@
 # prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
 
+# no libedit, introduces a cycle with linux-headers, libedit
+sed -i "s@./configure@./configure --disable-readline@" PKGBUILD
+
 # no man page generation
 sed -i "/depends=/s/help2man//" PKGBUILD
+
+# see https://bugs.archlinux.org/task/57352
+sed -i 's@"\(https://ftp.gnu.org/gnu/inetutils.*\)"@\1@g' PKGBUILD

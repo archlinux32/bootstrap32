@@ -11,12 +11,12 @@ PACKAGES="iana-etc filesystem linux-api-headers tzdata
 ncurses readline bash joe
 attr acl gmp gdbm db perl openssl
 zlib pambase cracklib libtirpc pam libcap coreutils
-util-linux inetutils e2fsprogs
+util-linux e2fsprogs
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl
 elfutils
 sed texinfo grep findutils file diffutils ed patch
 kbd procps-ng shadow
-bc linux
+inetutils bc kmod linux
 net-tools libmnl libnfnetlink iptables iproute2
 libedit openssh"
 
