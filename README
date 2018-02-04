@@ -423,8 +423,6 @@ done
 # proto-kernel without ramdisk and modules if possible, just enough to boot into
 # a virtual machine (we take qemu/kvm/libvirt)
 # libelf is only needed for loadable modules, we disable that for now
-# careful about AMD and Intel DRM modules, they simply segfault in the 
-# kernel when they don't have proper access to their firmware
 sed -i 's@config.i686@config.i486@g' linux/PKGBUILD
 
 # circular reference in getext (needed by attr, which needs also gettext)
