@@ -17,7 +17,7 @@ export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
 # draw in default values for build variables
 
-. "$SCRIPT_DIR/packages-$TARGET_CPU-stage1/template"
+. "$SCRIPT_DIR/$TARGET_CPU-stage1/template/DESCR"
 
 if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$") = 0; then
 	echo "Building package $PACKAGE."
@@ -32,7 +32,8 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	# check out the package build information from the upstream git rep
 	# using asp (or from the AUR using yaourt)
 	
-	PACKAGE_CONF="$SCRIPT_DIR/packages-$TARGET_CPU-stage1/$PACKAGE"	
+	PACKAGE_DIR="$SCRIPT_DIR/$TARGET_CPU-stage1/$PACKAGE"
+	PACKAGE_CONF="$PACKAGE_DIR/DESCR"	
 	if test -f $PACKAGE_CONF; then
 		if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
 			NEEDS_YAOURT=$(grep NEEDS_YAOURT $PACKAGE_CONF | cut -f 2 -d =)
@@ -63,10 +64,9 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		. "$PACKAGE_CONF"
 	fi
 	
-	# copy bigger patches into the build area
-	if test $(find $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch 2>/dev/null | wc -l) != 0; then
-		cp $SCRIPT_DIR/patches-$TARGET_CPU-stage1/$PACKAGE-*.patch .
-	fi
+	# copy all files into the build area (but the package DESCR file)
+	cp $PACKAGE_DIR/* .
+	rm -f DESCR
 
 	# disable or enable parallel builds
 	
