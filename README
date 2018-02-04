@@ -309,13 +309,6 @@ use gcc-cross-PKGBUILD
 
 
 
-
-# uinit
-sed -i 's/make /make CC=i486-unknown-linux-gnu-gcc /g' uinit/PKGBUILD
-# remove git dependency
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' uinit/PKGBUILD
-
-
 # glibc
 sed -i 's@/configure"@/configure" --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
 # change bug reporting
@@ -419,15 +412,6 @@ done
 # special patches for some packages
 ###################################
 
-# linux
-# proto-kernel without ramdisk and modules if possible, just enough to boot into
-# a virtual machine (we take qemu/kvm/libvirt)
-# libelf is only needed for loadable modules, we disable that for now
-sed -i 's@config.i686@config.i486@g' linux/PKGBUILD
-
-# circular reference in getext (needed by attr, which needs also gettext)
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' attr/PKGBUILD
-
 # autoconf needs help2man, checks need fortan (wow. that package is old!)
 # depends contains base-devel stuff?! diffutils
 sed -i 's@makedepends\(.*\)@#makedepends\1@g' autoconf/PKGBUILD
@@ -445,19 +429,6 @@ sed -i 's@makedepends\(.*\)@#makedepends\1@g' libtool/PKGBUILD
 chmod u+w /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
 sed -i 's@^#/bin/perl@/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/perl@g' \
 	/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
-
-# libarchive calls autoreconf, this is quite annoying as perl in crosstool-nt or
-# build for the x-tools is hard to get running properly
-# do the autoreconf -fi outside, create a package libarchive-3.3.2-retooled.tgz
-# libarchive has trouble with wchar_t (and has quite some other trouble around autoconf it seems)
-# remove the wchar_t and wchar_t sizeof test in configure.ac manutally before retooling
-# and of course tests fail!
-sed -i "s@^source=.*@source=('libarchive-3.3.2-retooled.tgz')@g" libarchive/PKGBUILD
-sed -i "s@^sha256sums=.*@sha256sums=('1f856e6f5cc0e1479f381e381a031ba19d09f80b51ac88e74b2c140fc78606e8')@g" libarchive/PKGBUILD
-sed -i 's@autoreconf@#autoreconf@g' libarchive/PKGBUILD
-
-#depends=(ca-certificates-{mozilla,cacert})
-sed -i 's@depends=(ca-certificates-{mozilla,cacert})@##depends=(ca-certificates-{mozilla,cacert})\1@g' ca-certificates/PKGBUILD
 
 # curl
 ######
@@ -484,21 +455,6 @@ sed -i 's/exit 1 # \$E_USER_ABORT/# exit 1 # $E_USER_ABORT/g' /home/cross/i486-r
 
 # libarchive/libtool fuckups:
 # for expat and lzma: /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/
-
-
-
-# pcre
-######
-# no C++
-sed -i 's@./configure@./configure --disable-cpp@g' pcre/PKGBUILD
-# --nocheck as we have trouble to find shared libraries
-
-# findutils
-###########
-# --nockeck: FAIL: test-mbrtowc1.sh     
-#FAIL: test-mbrtowc2.sh
-#FAIL: test-mbrtowc3.sh
-#FAIL: test-mbrtowc4.sh
 
 # mpfr
 ######
@@ -669,11 +625,6 @@ Errors occurred, no packages were upgraded.
 
 test.c:1:10: fatal error: stdio.h: No such file or directory
 
-# sed
-#####
-# gettext: take the one from the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' sed/PKGBUILD
-
 # fakeroot
 ##########
 # disable makedepends and take out po4a
@@ -730,81 +681,23 @@ sed -i 's@autoreconf@#autoreconf@g' libarchive/PKGBUILD
 # generic build
 ###############
 
-# some binaries in the cross tools (also known as perl) have really
-# weird library pathes (and no rpath it seems)
-export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/perl5/5.26/core_perl/CORE
-export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/bin:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin:${PATH}
 for p in $PACKAGES
-	cd $p
-	sed -i "s/^arch=.*/arch=('i486')/" PKGBUILD
 
 	# for some packages we cannot execute tests (because the dependencies to install in
 	# the toolchain environment would be too much)
-	# perl: --nocheck
-	# openssl: --nocheck
-	# expat: --nocheck
-	# lz4: --nocheck
 	# autoconf: --nocheck
 	# automake: --nockeck
-	# libarchive: --nocheck
 	# pacman: --nocheck
-	# util-linux: --nocheck
-	# pcre: --nocheck
-	# findutils: --nocheck
 	# mpfr: --nocheck
 
-	# some package break in parallel builds or produce really funky
-	# error messages or/and results
-	# binutils: use makepkg-noparallel.conf
-        # gcc: use makepkg-noparallel.conf for debuging, the real build works fine in parallel
-
-	makepkg -C --config $STAGE1_CHROOT/etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
-	
-	cp -v *.pkg.tar.gz $STAGE1_CHROOT/packages/i486/.
-
-# if things are messed up
-#	rm -rf $STAGE1_CHROOT/packages/i486/temp* $STAGE1_CHROOT/var/cache/pacman/pkg/*
-#	repo-add $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.gz
-
-	repo-add -n $STAGE1_CHROOT/packages/i486/temp.db.tar.gz $STAGE1_CHROOT/packages/i486/*pkg.tar.gz
-
-	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy $p
-
-	pacman --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Q | grep $p
-
 	# for ncurses, readline for bash
-	# gdbm and db for perl
-	# openssl for linux
-	# attr for acl
-	# libarchive, autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)\
-	# libcap for coreutils
-	# bzip2 for pcre
-	# pcre for grep
+	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)
 	# libunistring for gettext
 	# libffi for glib2
-	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-	bsdtar xf $STAGE1_CHROOT/packages/i486/ncurses-6.0+20170902-3-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/readline-7.0.003-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/gdbm-1.13-1-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/db-5.3.28-3-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/perl-5.26.1-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/openssl-1.1.0.g-1-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/attr-2.4.47-3-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/expat-2.2.5-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/lz4-1\:1.8.0-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/xz-5.2.3-1-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/zlib-1\:1.2.11-2-i486.pkg.tar.gz
 	bsdtar xf $STAGE1_CHROOT/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/gmp-6.1.2-1-i486.pkg.tar.gz
 	bsdtar xf $STAGE1_CHROOT/packages/i486/mpfr-3.1.6.p1-1-i486.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/libmpc-1.0.3-2-i486.pkg.tar.gz
 	bsdtar xf $STAGE1_CHROOT/packages/i486/gawk-4.1.4-2-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libarchive-3.3.2-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libcap-2.25-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/bzip2-1.0.6-6-i486.pkg.tar.gz
 	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
 	popd
@@ -1030,10 +923,6 @@ configure: failed program was:
 => seriously!!
 
 => wchar_t on Linux, without probing?!
-
-Centos 7:
-Fatal Internal Error in libarchive: Out of memory
-When building tar package
 
 TODO:
 ca-certificates for curl:

@@ -4,5 +4,5 @@ SYSROOT_INSTALL=1
 # prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
 
-# no gettext
+# circular reference in getext (needed by attr, which needs also gettext)
 sed -i 's@^makedepends\(.*\)@#makedepends\1@g' PKGBUILD

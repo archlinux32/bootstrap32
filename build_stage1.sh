@@ -16,7 +16,7 @@ expat bzip2 lz4 xz pcre less gzip tar libarchive curl
 elfutils
 sed texinfo grep findutils file diffutils ed patch
 kbd procps-ng shadow
-inetutils bc kmod linux
+inetutils bc kmod linux uinit
 net-tools libmnl libnfnetlink iptables iproute2
 libedit openssh"
 

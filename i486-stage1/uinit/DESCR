@@ -1,2 +1,9 @@
 # uinit as temporary systemd replacement for PID 1, lives in the AUR
 NEEDS_YAOURT=1
+
+# prepare configure for cross-compilation
+sed -i "s/make /make CC=$TARGET_ARCH-gcc /g" PKGBUILD
+
+# remove git dependency
+sed -i "/makedepends=/s/'git'//" PKGBUILD
+
