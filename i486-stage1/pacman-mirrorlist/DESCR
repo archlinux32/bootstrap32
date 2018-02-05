@@ -1,0 +1,5 @@
+# append our local i486 only mirror for now
+cat >> mirrorlist <<EOF
+## Switzerland
+Server = https://archlinux32.andreasbaumann.cc/\$arch/\$repo
+EOF

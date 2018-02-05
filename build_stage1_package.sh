@@ -35,16 +35,26 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	PACKAGE_DIR="$SCRIPT_DIR/$TARGET_CPU-stage1/$PACKAGE"
 	PACKAGE_CONF="$PACKAGE_DIR/DESCR"	
 	if test -f $PACKAGE_CONF; then
-		if test $(grep -c NEEDS_YAOURT $PACKAGE_CONF) = 1; then
-			NEEDS_YAOURT=$(grep NEEDS_YAOURT $PACKAGE_CONF | cut -f 2 -d =)
+		if test $(grep -c FETCH_METHOD $PACKAGE_CONF) = 1; then
+			FETCH_METHOD=$(grep FETCH_METHOD $PACKAGE_CONF | cut -f 2 -d = | tr -d '"')
 		fi
 	fi
-	if test "$NEEDS_YAOURT"; then
-		yaourt -G "$PACKAGE"
-	else
-		asp export "$PACKAGE"
-	fi
-
+	case $FETCH_METHOD in
+		"asp")
+			asp export "$PACKAGE"
+			;;
+		"yaourt")
+			yaourt -G "$PACKAGE"
+			;;
+		"packages32")
+			# (we assume, we only take core packages)
+			cp -a $ARCHLINUX32_PACKAGES/core/$PACKAGE .
+			;;
+		*)
+			print "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >2
+			exit 1
+	esac
+			
 	cd "$PACKAGE" || exit 1
 
 	# attach our destination platform to be a supported architecture
@@ -57,6 +67,13 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		cat "$DIFF_PKGBUILD" >> PKGBUILD
 	fi
 
+	# copy all other files from Archlinux32, if they exist
+	# (we assume, we only take core packages during stage1)
+	if test -f "$DIFF_PKGBUILD"; then
+		find $ARCHLINUX32_PACKAGES/core/pacman-mirrorlist/* ! -name PKGBUILD \
+			-exec cp {} . \;
+	fi
+	
 	# source package descriptions, sets variables for this script
 	# and executes whatever is needed to build the package
 

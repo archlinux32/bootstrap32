@@ -166,7 +166,6 @@ su cross ./create_cdrom.sh
 
 # basic packages 
 PACKAGES=" \
-archlinux-keyring archlinux32-keyring pacman-mirrorlist pacman \
  fakeroot    \
 make mpfr gawk libmpc binutils gcc \
 glibc \
@@ -178,7 +177,7 @@ sysfsutils libidn nettle iputils"
 # mpfr for gawk, gcc
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
-file libmpc mpfr \
+libmpc mpfr \
 sysfsutils libidn"
 
 
@@ -187,43 +186,6 @@ sysfsutils libidn"
 ###################################
 
 
-
-
-
-# pacman-mirrorlist
-cp $HOME/packages32/core/pacman-mirrorlist/mirrorlist pacman-mirrorlist/.
-./update-list
-cat > pacman-mirrorlist/mirrorlist >> pacman-mirrorlist/mirrorlist <<EOF
-## Switzerland
-Server = https://archlinux32.andreasbaumann.cc/$arch/$repo
-EOF
-
-# archlinux-keyring
-
-# archlinux32-keyring
-cp -R $HOME/packages32/core/archlinux32-keyring .
-
-# pacman
-# append archlinux32 keyring
-cat ~/packages32/core/pacman/PKGBUILD >> pacman/PKGBUILD 
-# craft a temporary i486 pacman.conf (no gpg and hard-coded architecture)
-cp pacman.conf.i686 pacman.conf.i486
-sed -i 's@^\(SigLevel\)@#\1@' pacman.conf.i486
-sed -i 's@^\(LocalFileSigLevel\)@#\1@' pacman.conf.i486
-# TODO: ADAPT sed -i 's@i686@i486@' pacman/PKGBUILD
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pacman/PKGBUILD
-# asciidoc is a makedepend, we can use the one on the host (this means
-# also we can pacman only rebuild on i486 itself after the whole python
-# zoo is installed)
-sed -i "/makedepends=/s/'asciidoc'//" pacman/PKGBUILD
-# minimal dependencies, we don't sign anything yet, gpgme and gnupg have
-# far too many dependencies which cannot be easily cross-compiled
-sed -i "s/'gpgme'//" pacman/PKGBUILD
-sed -i 's@./configure@./configure --without-gpgme@' pacman/PKGBUILD
-# use 486 config and not 686 one
-sed -i 's@pacman.conf.i686@pacman.conf.i486@' pacman/PKGBUILD
-# some more architecture patching
-sed -i 's@i686@i486@g' pacman/PKGBUILD
 
 
 # fakeroot
