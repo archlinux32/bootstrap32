@@ -17,9 +17,9 @@ sed -i "/makedepends=/s/'asciidoc'//" PKGBUILD
 cp pacman.conf.i686 pacman.conf.i486
 sed -i 's@^\(SigLevel\)@#\1@' pacman.conf.i486
 sed -i 's@^\(LocalFileSigLevel\)@#\1@' pacman.conf.i486
-# TODO: ADAPT sed -i 's@i686@i486@' pacman/PKGBUILD
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' pacman/PKGBUILD
-# use 486 config and not 686 one
-sed -i 's@pacman.conf.i686@pacman.conf.i486@' pacman/PKGBUILD
+
+# use the 486 config and not 686 one
+sed -i 's@pacman.conf.i686@pacman.conf.i486@' PKGBUILD
+
 # some more architecture patching
-sed -i 's@i686@i486@g' pacman/PKGBUILD
+sed -i 's@i686@i486@g' PKGBUILD

@@ -70,7 +70,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	# copy all other files from Archlinux32, if they exist
 	# (we assume, we only take core packages during stage1)
 	if test -f "$DIFF_PKGBUILD"; then
-		find $ARCHLINUX32_PACKAGES/core/pacman-mirrorlist/* ! -name PKGBUILD \
+		find $ARCHLINUX32_PACKAGES/core/$PACKAGE/* ! -name PKGBUILD \
 			-exec cp {} . \;
 	fi
 	
@@ -82,8 +82,10 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	fi
 	
 	# copy all files into the build area (but the package DESCR file)
-	cp $PACKAGE_DIR/* .
-	rm -f DESCR
+	if test -d $PACKAGE_DIR; then
+		find $PACKAGE_DIR/* ! -name DESCR \
+			-exec cp {} . \;
+	fi
 
 	# disable or enable parallel builds
 	

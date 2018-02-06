@@ -5,4 +5,3 @@
 - makepkg with an 'alternate root' option (which doens't collide with
   pacman's options), avoids patching -r and --config into makepkg for
   stage1
-  

@@ -6,12 +6,15 @@
 # no ramdisk, no modules, no fancy startup, just a shell script
 
 sudo rm -rf $STAGE1_ISOLINUX
+
+# copy chroot to ISOlinux dir
 mkdir $STAGE1_ISOLINUX
 sudo cp -a $STAGE1_CHROOT/* $STAGE1_ISOLINUX/.
 sudo chown -R cross:cross $STAGE1_ISOLINUX/.
 cd $STAGE1_ISOLINUX
+
+# simple ISOlinux menu, with options for fast choosing a root device
 mkdir boot/isolinux
-sudo chown cross:cross boot/isolinux/isolinux.cfg
 cat >boot/isolinux/isolinux.cfg <<EOF
 UI menu.c32
 TIMEOUT 300
@@ -35,7 +38,10 @@ LABEL sr1
 	KERNEL /boot/vmlinuz-linux
 	APPEND root=/dev/sr1 init=/sbin/init console=ttyS0 console=tty0'
 EOF
+sudo chown cross:cross boot/isolinux/isolinux.cfg
+
 mkdir -p etc/init
+
 cat >etc/init/boot <<EOF
 #!/bin/sh
 mount -t proc proc /proc

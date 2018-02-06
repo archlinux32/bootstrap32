@@ -8,11 +8,6 @@ ADDITIONAL_INSTALL_PACKAGE=linux-headers
 # we currently build a monolitic kernel for the basic stuff which was
 # available since 25 years. :-)
 
-# use the i486 configuration file
-# (TODO: adapt to config.$CARCH method later)
-sed -i 's@config.i686@config.i486@g' PKGBUILD
-sed -i 's@\.\./config@../config.i486@g' PKGBUILD
-
 # the Linux kernel has it's own way for cross compilation
 sed -i "s@make prepare@make prepare ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD
 sed -i "s@make config@make config ARCH=$KERNEL_ARCH CROSS_COMPILE=$XTOOLS_ARCH_PREFIX@g" PKGBUILD
