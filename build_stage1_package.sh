@@ -41,7 +41,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	fi
 	case $FETCH_METHOD in
 		"asp")
-			asp export "$PACKAGE"
+			$ASP export "$PACKAGE"
 			;;
 		"yaourt")
 			yaourt -G "$PACKAGE"
