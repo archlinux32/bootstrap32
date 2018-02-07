@@ -1,0 +1,8 @@
+# prepare configure for cross-compilation
+sed -i "/--prefix=\/usr/ a \     --host=$TARGET_ARCH --build=$BUILD_ARCH \\\\" PKGBUILD
+
+# TODO: this should work with glibc-shim providing glibc, but doesn't?
+sed -i "/depends=/s/glibc/glibc-shim/" PKGBUILD
+
+# git is still there as build dependency, not needed
+sed -i "/makedepends=/s/git//" PKGBUILD

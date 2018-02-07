@@ -5,3 +5,4 @@
 - makepkg with an 'alternate root' option (which doens't collide with
   pacman's options), avoids patching -r and --config into makepkg for
   stage1
+- shims and provides and depends don't work yet (binutils and glibc-shim)

@@ -1,0 +1,6 @@
+# prepare configure for cross-compilation
+sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# no guile
+sed -i "/depends=/s/'guile'//" PKGBUILD
+sed -i 's@./configure@./configure --without-guile@g' PKGBUILD

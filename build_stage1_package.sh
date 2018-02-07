@@ -73,7 +73,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		find $ARCHLINUX32_PACKAGES/core/$PACKAGE/* ! -name PKGBUILD \
 			-exec cp {} . \;
 	fi
-	
+		
 	# source package descriptions, sets variables for this script
 	# and executes whatever is needed to build the package
 
