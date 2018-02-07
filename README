@@ -203,27 +203,9 @@ sed -i 's@\(po4a\)@#\1@g' fakeroot/PKGBUILD
 
 
 
-# make
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' make/PKGBUILD
-# no guile
-sed -i "/depends=/s/'guile'//" make/PKGBUILD
-sed -i 's@./configure@./configure --without-guile@g' make/PKGBUILD
 
-# mpfr
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' mpfr/PKGBUILD
 
-# gawk
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' gawk/PKGBUILD
-# we don't have a valid locale yet, disable NLS
-sed -i 's@./configure@./configure --disable-nls@g' gawk/PKGBUILD
 
-# libmpc
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libmpc/PKGBUILD
-
-# binutils
-sed -i '/--prefix=\/usr/ a \     --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu \\' binutils/PKGBUILD
-# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
-sed -i "/makedepends/s/git//g" binutils/PKGBUILD
 
 # libunwind
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libunwind/PKGBUILD
@@ -232,43 +214,6 @@ sed -i "/makedepends=/s/'texlive-core'//g" libunwind/PKGBUILD
 
 # strace
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' strace/PKGBUILD
-
-# gcc
-sed -i '/--prefix=\/usr/ a \     --target=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu \\' gcc/PKGBUILD
-# no doxygen documentation
-sed -i "/makedepends=/s/doxygen//" gcc/PKGBUILD
-# no ADA
-sed -i "/makedepends=/s/gcc-ada//" gcc/PKGBUILD
-sed -i '/pkgname/ s/gcc-ada//g' gcc/PKGBUILD
-sed -i '/enable-languages/ s/ada//g' gcc/PKGBUILD
-# do not build git versions or from git!
-sed -i 's/pkgver=7.2.1/pkgver=7.2.0/' gcc/PKGBUILD
-sed -i "/makedepends=/s/git//" gcc/PKGBUILD
-sed -i 's@git+https://gcc.gnu.org/git/gcc.git#commit=${_commit}@https://ftp.gnu.org/gnu/${pkgname}/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz@g' gcc/PKGBUILD
-sed -i 's@cd gcc$@cd ${pkgname}-${pkgver}@g' gcc/PKGBUILD
-sed -i 's@$srcdir/gcc/configure@$srcdir/${pkgname}-${pkgver}/configure@g' gcc/PKGBUILD
-# send bugs to the right place
-sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' gcc/PKGBUILD
-# no LTO and plugins, they break and we don't need them
-sed -i 's@--enable-plugin@--disable-plugin@' gcc/PKGBUILD
-sed -i 's@--enable-lto@--disable-lto@' gcc/PKGBUILD
-sed -i '/enable-languages/ s/lto,//g' gcc/PKGBUILD
-# no other languages (Fortran, go, objc, etc)
-sed -i '/pkgname/ s/gcc-fortran//g' gcc/PKGBUILD
-sed -i '/enable-languages/ s/,fortran//g' gcc/PKGBUILD
-sed -i '/pkgname/ s/gcc-go//g' gcc/PKGBUILD
-sed -i '/enable-languages/ s/go,//g' gcc/PKGBUILD
-sed -i '/pkgname/ s/gcc-objc//g' gcc/PKGBUILD
-sed -i '/enable-languages/ s/objc,//g' gcc/PKGBUILD
-sed -i '/enable-languages/ s/,obj-c++//g' gcc/PKGBUILD
-# disable some libraries (libgomp doesn't cross compile, NLS we don't need)
-sed -i "/--disable-libssp/ a \      --disable-libgomp \\" gcc/PKGBUILD
-sed -i "/--disable-libssp/ a \      --disable-nls \\" gcc/PKGBUILD
-# disable threads
-sed -i 's@--enable-threads=posix@--disable-threads@' gcc/PKGBUILD
-=> current use PKGBUILD-gcc-cross, sorry, too many changes!
-# disable all languages but C and C++
-use gcc-cross-PKGBUILD
 
 
 

@@ -1,4 +1,4 @@
-# mpc is needed by gcc
+# mpfr is needed by gcc
 SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation
