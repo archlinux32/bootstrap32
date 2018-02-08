@@ -16,4 +16,9 @@
 - removing all pacman databases and recreating them with repo-add, also
   removing all installed pacman packages seem a little bit paranoic. Find
   out how to speed this up and do it properly.
+- as soon as asp32 creates a combined PKGBUILD when exporting a package,
+  we can remove the git repo packages32 and the cat of the diff-PKGBUILD
+  in build_stage1_package.sh
+- when uninstalling pacman in the chroot, you must rename pacman.pacsave
+  back to pacman.conf as it is used for building packages
   

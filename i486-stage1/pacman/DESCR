@@ -7,11 +7,9 @@ sed -i "1!N;/depends=/s/'gpgme'//" PKGBUILD
 sed -i 's@./configure@./configure --without-gpgme@' PKGBUILD
 
 # asciidoc is a makedepend, we can use the one on the host (this means
-# also we can pacman only rebuild on i486 itself after the whole python
-# zoo is installed)
+# also we can pacman only rebuild on i486 itself after python has been
+# installed)
 sed -i "/makedepends=/s/'asciidoc'//" PKGBUILD
-
-#TODO FROM HERE
 
 # craft a temporary i486 pacman.conf (no gpg and hard-coded architecture)
 cp pacman.conf.i686 pacman.conf.i486

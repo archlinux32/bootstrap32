@@ -184,26 +184,6 @@ sysfsutils libidn"
 
 
 
-
-# fakeroot
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' fakeroot/PKGBUILD
-# disable makedepends and take out po4a
-sed -i 's@\(cd doc\)@#\1@g' fakeroot/PKGBUILD
-sed -i 's@\(po4a\)@#\1@g' fakeroot/PKGBUILD
-# we have no ld.so.conf, so we can ignore this:
-#/tmp/alpm_va2bmk/.INSTALL: line 2: usr/bin/ldconfig: No such file or directory
-#error: command failed to execute correctly
-
-
-
-
-
-
-
-
-
-
-
 # libunwind
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libunwind/PKGBUILD
 # no TeX, no docu
@@ -234,23 +214,6 @@ sed -i 's@\(install -m644 doc\)@#\1@' iputils/PKGBUILD
 sed -i 's@\("${pkgdir}"/usr/share\)@#\1@' iputils/PKGBUILD
 
 
-# special operations
-####################
-
-# archlinux32-keyring
-cd $HOME/build
-cp -a $HOME/packages32/core/archlinux32-keyring .
-cd archlinux32-keyring
-$HOME/build/makepkg-i486 -C --config $HOME/build/makepkg-i486.conf --skipchecksums --skippgpcheck --nocheck > $p.log 2>&1
-
-# aftermatch for gcc/binutils
-#collect2: unable to find ld
-=> this is the cross compiled gcc for i486 inside the chroot, it expects
-   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
-=> we can temporarily fix this:
-sudo ln -s /usr/bin/ld $STAGE1_CHROOT/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
-
-
 #######################################
 ##### TODO FROM HERE
 #######################################
@@ -276,7 +239,6 @@ export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sy
 TODO FROM HERE
 
 	# TODO:
-	# openssl for linux
 	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)\
 	# libunistring for gettext
 	# libffi for glib2
@@ -313,215 +275,6 @@ chmod u+w /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysr
 sed -i 's@^#/bin/perl@/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/perl@g' \
 	/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
 
-# curl
-######
-# curl needs asciidoc and p11-kit, don't build them, use them from the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' curl/PKGBUILD
-# build with minimal features, enough to make pacman download packages
-sed -i 's@depends\(.*\)@depends=('ca-certificates' 'openssl' 'zlib')@g' curl/PKGBUILD
-# zsh, perl is used to create a completion file for curl and zsh?
-sed -i 's@--with-gssapi@--with-gssapi --without-zsh-functions-dir@g' curl/PKGBUILD
-
-# pacman
-########
-# pacman's tests mostly fail on non-Archlinux, so skip them
-# asciidoc is a makedepend, we can use the one on the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' pacman/PKGBUILD
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' pacman/PKGBUILD
-# minimal dependencies, we don't sign anything yet
-sed -i "s/'gpgme'//g" pacman/PKGBUILD
-# we need pkg-config, otherwise pacman find libarchive in the wrong
-# place, but pkg-config needs glib2 and glib2 is built using meson (urgh!)
-# when we take the host version, lets patch the host pkgconfig file to
-# use the sysroot of the toolchain
-sed -i 's/exit 1 # \$E_USER_ABORT/# exit 1 # $E_USER_ABORT/g' /home/cross/i486-root/usr/bin/makepkg
-
-# libarchive/libtool fuckups:
-# for expat and lzma: /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/
-
-# mpfr
-######
-# builds against host gmp, we want it to build against our version!
-sed -i 's@./configure@./configure --with-gmp=/home/cross/i486-root/usr/@g' mpfr/PKGBUILD
-# disable checks for cross-compilation
-# hack libmpfr.la otherwise libmpc links against the host gmp!:
-# dependency_libs=' -L/home/cross/i486-root/usr/lib /usr/lib/libgmp.la'
-# to dependency_libs='/home/cross/i486-root/usr/lib/libgmp.la'
-
-# libmpc
-########
-# builds against host gmp and mpfr, we want it to build against our version!
-sed -i 's@./configure@./configure --with-gmp=/home/cross/i486-root/usr/@g' libmpc/PKGBUILD
-sed -i 's@./configure@./configure --with-mpfr=/home/cross/i486-root/usr/@g' libmpc/PKGBUILD
-# hack libmpc.la (libtool generates a disaster!):
-# dependency_libs=' -L/home/cross/i486-root/usr//lib /usr/lib/libmpfr.la /usr/lib/libgmp.la /usr/lib/libgmp.la -lm'
-# dependency_libs='/home/cross/i486-root/usr/lib/libmpfr.la /home/cross/i486-root/usr/lib/libgmp.la -lm'
-
-# binutils
-##########
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' binutils/PKGBUILD
-sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' binutils/PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' binutils/PKGBUILD
-#configure: error: in `/home/cross/build/binutils/src/binutils-build/gold':
-#configure: error: C++ preprocessor "/lib/cpp" fails sanity check
-#See `config.log' for more details.
-#make: *** [Makefile:5995: configure-gold] Error 1
-# this is in gold, so let's disable gold! We don't have C++ (yet), so this should not matter..
-;ln -s ~/x-tools/i486-unknown-linux-gnu/bin/cpp ~/x-tools/i486-unknown-linux-gnu/lib/cpp
-export CPP=/home/cross/x-tools/i486-unknown-linux-gnu/lib/cpp
-sed -i 's@--enable-gold@--disable-gold@g' binutils/PKGBUILD
-
-# glibc
-#######
-# building glibc, again, we get the 'glibc/csu install operand' bug, really annoying 
-# remove the git download hack, use vanilla tarball
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' glibc/PKGBUILD
-=> breaks, use the shim created out of crosstool-ng in the meantime
-dl-sysdep.c:(.text+0x9c): undefined reference to `__memcmp_ia32'
-dl-sysdep.c:(.text+0xc0): undefined reference to `__memcmp_ia32'
-dl-sysdep.c:(.text+0xe1): undefined reference to `__memcmp_ia32'
-dl-sysdep.c:(.text+0x105): undefined reference to `__memcmp_ia32'
-dl-sysdep.c:(.text+0x130): undefined reference to `__memcmp_ia32'
-/home/cross/build/glibc/src/glibc-build/libc.a(dl-sysdep.o):dl-sysdep.c:(.text+0x15f): more undefined references to `__memcmp_ia32' follow
-collect2: error: ld returned 1 exit status
-make[2]: *** [../Rules:224: /home/cross/build/glibc/src/glibc-build/elf/sln] Error 1
-make[2]: Leaving directory '/home/cross/build/glibc/src/glibc-2.26/elf'
-=> again, sounds familiar, this sound like a missing libgcc_s stub for memcmp
-
-# gcc
-#####
-# needs tons of fixes, most importantly, don't download the who git repo!!
---disable-multilib --disable-bootstrap \
- --with-gmp=/home/cross/i486-root/usr \
-      --with-mpfr=/home/cross/i486-root/usr \
-      --with-mpc=/home/cross/i486-root/usr \
-git -> tarball
-only c language
-no checkdepdns, makedepnds
-
-why the hell, I switched off c++, so wy are still cpp probes being done!?
-/lib/cpp hardcoded, seriosly!!
-# in prepare()
-ln -s ../bin/cpp /home/cross/x-tools/i486-unknown-linux-gnu/lib/cpp
-find . -name configure -exec sed -i 's@/lib/cpp@/home/cross/x-tools/i486-unknown-linux-gnu/bin/cpp@g' {} \;
-
-since 4.8 gcc is written in C++, fine. so we have to have a crosstool-ng C++ or
-we must bootstrap gcc
-=> we add C++ to the crosstool-ng toolchain, easier and more secure
-
- included from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:0:
-/home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:540:34: error: declaration of C function ‘const cha
-r* strsignal(int)’ conflicts with
- extern const char *strsignal (int);
-                                  ^
-In file included from /usr/include/c++/4.8.2/cstring:42:0,
-                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/system.h:235,
-                 from /home/cross/build/gcc/src/gcc-7.2.0/gcc/genmddeps.c:19:
-/usr/include/string.h:562:14: error: previous declaration ‘char* strsignal(int)’ here
- extern char *strsignal (int __sig) __THROW;             ^
-In file included from ./bconfig.h:5:0,
-=> so, we get to an end here, c++ is taken from the host while cross-compiling?!
--> remove glibc-devel on the host!
--> draw the g++ link, autoconf fails in gcc in funny ways (not finding uint64_t)
--> carefull, we build a gcc over a crossng-gcc, not sure, this is supported..
--> aha. if mpfr, mpc and gmp are not installed and taken from sysroot but from i486-root
-   some pathes get messed up.
-
-https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82590
-https://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg550065.html
-https://gcc.gnu.org/bugzilla/show_bug.cgi?format=multiple&id=54692
-
-https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65863
--> huh?
-https://gcc.gnu.org/ml/gcc-help/2016-06/msg00016.html
-- > yes, this is the inicatition I needed, mpfr, gmp and mpc point to a weird location
-
-The stage one compiler doesn't find the shared library, o well:
-/home/cross/build/gcc/src/gcc-build/./gcc/cc1: error while loading shared libraries: libmpc.so.3: cannot open shared object file: No such file or directory
--> export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib
-
-And it never ends:
-In file included from /home/cross/build/gcc/src/gcc-7.2.0/libgcc/libgcc2.c:27:0:
-/home/cross/build/gcc/src/gcc-7.2.0/libgcc/../gcc/tsystem.h:87:10: fatal error: stdio.h: No such file or directory
- #include <stdio.h>
-          ^~~~~~~~~
-compilation terminated.
-make[2]: *** [Makefile:491: _muldi3.o] Error 1
--> https://gcc.gnu.org/ml/gcc-help/2012-04/msg00088.html
--> so, let's try giving it a --with-sysroot to the crosstool-ng dirs
--> and this means also it got past stage 1 compilers :-)
-
-/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: error loading plugin: /home/cross/build/gcc/src/gcc-build/./gcc/liblto_plugin.so: wrong ELF class: ELFCLASS32
-collect2: error: ld returned 1 exit status
-make[2]: *** [Makefile:982: libgcc_s.so] Error 1
-=> for now, remove LTO stuff in PKGBUILD
-
-make: *** i486-unknown-linux-gnu/libstdc++-v3/doc: No such file or directory.  Stop.
-==> ERROR: A failure occurred in build().
-    Aborting...
-=> remove the PKGBUILD line #  make -C $CHOST/libstdc++-v3/doc DESTDIR="$pkgdir" doc-install-man
-libstdc++-v3/
-=> # make documentation
-  #make -C $CHOST/libstdc++-v3/doc doc-man-doxygen
-
-install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
-=> gcc auto-probed itself into i486-pc-linux-gnu, so the installed files are there
-CHOST="i486-pc-linux-gnu"    
-make: Leaving directory '/home/cross/build/gcc/src/gcc-build/gcc'
-install: failed to access ‘/home/cross/build/gcc/pkg/gcc/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/’: No such file or directory
-=> sweet, let's try a symlink
-
-_libdir=usr/lib/gcc/$CHOST/$pkgver
-=> hard-code: to _libdir=usr/lib/gcc/i486-pc-linux-gnu/$pkgver
-=> nope, now others break
-this is hardly the ArchLinux way: vanilla and upstream
-
-again CHOST set to  i486-pc-linux-gnu
-=> this package is a disaster!
-=> we have a mess with two CHOSTS, one for crosstool-ng (unknown) and
-   one for our chroot
-
-# remove traces of ADA
-  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
-
-# rm: cannot remove ‘/home/cross/build/gcc/pkg/gcc/usr/share/info/gccgo’: No such file or directory
-#  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
-
-/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: cannot find -lquadmath
-collect2: error: ld returned 1 exit status
-libtool: install: error: relink `libgfortran.la' with the above command before installing it
-make: *** [Makefile:1331: install-toolexeclibLTLIBRARIES] Error 1
-make: Leaving directory '/home/cross/build/gcc/src/gcc-build/i486-unknown-linux-gnu/libgfortran'
-==> ERROR: A failure occurred in package_gcc-libs().
-    Aborting...
-=> libquadmath must be retooled before libfortran
-=> nope libfortran simply fails to relink => remove it
-
-install: cannot stat ‘/home/cross/build/gcc/src/gcc/COPYING.RUNTIME’: No such file or directory
-=> sweet, remove it
-
-error: failed to commit transaction (conflicting files)
-gcc: /home/cross/i486-root/usr/lib/libstdc++.a exists in filesystem (owned by gcc-libs)
-gcc: /home/cross/i486-root/usr/lib/libstdc++.la exists in filesystem (owned by gcc-libs)
-Errors occurred, no packages were upgraded.
-=> well, force the package
-
-test.c:1:10: fatal error: stdio.h: No such file or directory
-
-# fakeroot
-##########
-# disable makedepends and take out po4a
-# checkdepends use shareutils
-
-# make
-######
-# no guile
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' make/PKGBUILD
-# remove guile, guile patching as it needs autotools!
-
-# libffi
-#######
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' libffi/PKGBUILD
 
 # glib2
 #######

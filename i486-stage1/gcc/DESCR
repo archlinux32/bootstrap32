@@ -1,6 +1,15 @@
 # prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
 
+# TODO: how to make this a hook for the stage1 builder?
+# aftermatch for gcc/binutils
+#collect2: unable to find ld
+#=> this is the cross compiled gcc for i486 inside the chroot, it expects
+#   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
+#=> we can temporarily fix this:
+#sudo ln -s /usr/bin/ld $STAGE1_CHROOT/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
+
+
 # TODO from here: make it all patches, once  our own PKGBUILD works
 
 # gcc
@@ -40,3 +49,22 @@ sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKG
 # disable all languages but C and C++
 #use gcc-cross-PKGBUILD
 
+# more TODOs:
+#rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+# rm: cannot remove ???/home/cross/build/gcc/pkg/gcc/usr/share/info/gccgo???: No such file or directory
+#  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+#https://bugs.archlinux.org/task/57421
+#/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: cannot find -lquadmath
+#collect2: error: ld returned 1 exit status
+#libtool: install: error: relink `libgfortran.la' with the above command before installing it
+#make: *** [Makefile:1331: install-toolexeclibLTLIBRARIES] Error 1
+#make: Leaving directory '/home/cross/build/gcc/src/gcc-build/i486-unknown-linux-gnu/libgfortran'
+#==> ERROR: A failure occurred in package_gcc-libs().
+#    Aborting...
+#=> libquadmath must be retooled before libfortran
+#=> nope libfortran simply fails to relink => remove it
+#
+#install: cannot stat ???/home/cross/build/gcc/src/gcc/COPYING.RUNTIME???: No such file or directory
+#=> sweet, remove it
+#
+#test.c:1:10: fatal error: stdio.h: No such file or directory

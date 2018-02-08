@@ -15,6 +15,7 @@ sed -i '/--prefix=\/usr/ a \      --without-libpsl \\' PKGBUILD
 sed -i "/depends=/s/'libnghttp2'//" PKGBUILD
 sed -i '/--prefix=\/usr/ a \      --without-nghttp2 \\' PKGBUILD
 sed -i '/--prefix=\/usr/ a \      --without-gssapi \\' PKGBUILD
+sed -i 's/--with-gssapi/--without-gssapi/g' PKGBUILD
 
 # no ca-certificates, needs tons of tools to build (like p11-kit), so we 
 # create a fake one with certificates from the host (the ca crts from
@@ -24,3 +25,6 @@ sed -i "/depends=/s/'ca-certificates'//" PKGBUILD
 
 # zsh, perl is used to create a completion file for curl and zsh
 sed -i '/--prefix=\/usr/ a \      --without-zsh-functions-dir \\' PKGBUILD
+
+# don't build the manual
+sed -i 's/--enable-manual/--disable-manual/g' PKGBUILD
