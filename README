@@ -166,8 +166,6 @@ su cross ./create_cdrom.sh
 
 # basic packages 
 PACKAGES=" \
- fakeroot    \
-make mpfr gawk libmpc binutils gcc \
 glibc \
 # TODO: iputils is for ping only, a little bit too many packages for
 # that.

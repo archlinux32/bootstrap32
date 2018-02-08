@@ -25,15 +25,13 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/gcc-libs-shim-7.2.0-1-$TARGET_C
 	size=$(du -sk --apparent-size pkg/)
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/gcc-libs-shim/.PKGINFO <<EOF
-pkgname = gcc-libs-shim
+pkgname = gcc-libs
 pkgver = 4.9.4-1
 pkgdesc = Runtime libraries shipped by GCC (from crosstool-ng sysroot)
 url = http://gcc.gnu.org
 builddate = $BUILDDATE
 size = $size
 arch = $TARGET_CPU
-provides = gcc-libs
-conflict = gcc-libs
 EOF
 
 	cd pkg/gcc-libs-shim || exit 1
@@ -45,7 +43,7 @@ EOF
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
 	repo-add -R $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
-	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy gcc-libs-shim
+	sudo pacman --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy gcc-libs
 fi
 
 echo "gcc-lib shim exists."

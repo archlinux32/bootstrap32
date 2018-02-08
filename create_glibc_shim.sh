@@ -55,15 +55,13 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/glibc-shim-2.26-1-$TARGET_CPU.p
 	size=`du -sk --apparent-size pkg/`
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/glibc-shim/.PKGINFO <<EOF
-pkgname = glibc-shim
+pkgname = glibc
 pkgver = 2.26-1
 pkgdesc = GNU C Library (from crosstool-ng sysroot)
 url = http://www.gnu.org/software/libc
 builddate = $BUILDDATE
 size = $size
 arch = $TARGET_CPU
-provides = glibc
-conflict = glibc
 EOF
 
 	cd pkg/glibc-shim
@@ -75,7 +73,7 @@ EOF
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
 	repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
-	sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy glibc-shim
+	sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy glibc
 
 fi
 

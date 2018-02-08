@@ -18,15 +18,13 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/ca-certificates-utils-shim-2017
 	size=$(du -sk --apparent-size pkg/)
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/ca-certificates-utils-shim/.PKGINFO <<EOF
-pkgname = ca-certificates-utils-shim
+pkgname = ca-certificates-utils
 pkgver = 20170307-1
 pkgdesc = Common CA certificates (utilities, from host machine)
 url = http://pkgs.fedoraproject.org/cgit/rpms/ca-certificates.git
 builddate = $BUILDDATE
 size = $size
 arch = any
-provides = ca-certificates-utils
-conflict = ca-certificates-utils
 EOF
 
 	cd pkg/ca-certificates-utils-shim || exit 1
@@ -38,7 +36,7 @@ EOF
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
 	rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
 	repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
-	sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy ca-certificates-utils-shim
+	sudo pacman --force --noconfirm --config $STAGE1_CHROOT/etc/pacman.conf -r $STAGE1_CHROOT -Syy ca-certificates-utils
 
 fi
 

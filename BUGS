@@ -1,4 +1,0 @@
-bsdtar: /home/cross/i486-root/packages/i486/linux-docs-4.15.1-2-i486.pkg.tar.xz: Not found in archive
-bsdtar: /home/cross/i486-root/packages/i486/linux-headers-4.15.1-2-i486.pkg.tar.xz: Not found in archive
-bsdtar: Error exit delayed from previous errors.
-Built package linux.
