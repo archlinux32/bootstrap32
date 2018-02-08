@@ -152,6 +152,8 @@ su cross ./create_ca-certificates-utils_shim.sh
 
 su cross ./create_cdrom.sh
 
+# or easier for direct testing, build stage 1 hard disk image
+su cross ./create_hdd.sh
 
 # TODO FROM HERE:
 
@@ -171,10 +173,8 @@ PACKAGES=" \
 sysfsutils libidn nettle iputils"
 # libunwind and systrace for debugging
 
-# mpfr for gawk, gcc
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
-libmpc mpfr \
 sysfsutils libidn"
 
 
@@ -346,99 +346,6 @@ testing:
 # common issues
 ###############
 
-bash, backspace and cursor keys are not working:
-=> tty erase '^?'
-
-
-# create virtual HD
-###################
-
-rm -f arch486.img
-qemu-img create arch486.img 4g
-chmod 666 arch486.img
-sudo /sbin/losetup /dev/loop2 arch486.img
-sudo dd if=/dev/zero of=/dev/loop2 bs=512 count=32130
-echo ';' | sudo /sbin/sfdisk --no-reread /dev/loop2
-sudo sfdisk -A /dev/loop2 1
-sudo partx --show /dev/loop2
-sudo partx -v --add /dev/loop2
-sudo mkfs.ext4 -O ^64bit /dev/loop2p1
-sudo mount /dev/loop2p1 mnt
-sudo cp -a i486-root/* mnt/.
-sudo chown -R cross:cross mnt/.
-cd mnt
-mkdir boot/syslinux
-echo 'default /boot/vmlinuz-linux root=/dev/hda1 init=/sbin/init console=ttyS0 console=tty0' \
-	> boot/syslinux/syslinux.cfg
-sudo dd bs=440 count=1 if=/usr/lib/syslinux/bios/mbr.bin of=/dev/loop2
-cp /usr/lib/syslinux/bios/*.c32 boot/syslinux/.
-sudo extlinux --install boot/syslinux/
-mkdir -p etc/init
-cat >etc/init/boot <<EOF
-#!/bin/sh
-mount -t proc proc /proc
-ln -s /proc/self/fd /dev/fd
-mkdir /dev/pts
-mount -t devpts devpts /dev/pts
-mount -t sysfs sys /sys
-mount -o remount,rw /
-ip link set up dev eth0
-ip addr add 192.168.1.127/24 dev eth0
-ip route add default via 192.168.1.1 dev eth0
-/usr/sbin/sshd
-exec /usr/bin/bash
-EOF
-cat > etc/resolv.conf <<EOF
-nameserver 192.168.1.1
-EOF
-cat >> etc/group <<EOF
-nobody:x:99:
-EOF
-cat >> etc/passwd <<EOF
-nobody:x:99:99:nobody:/:/usr/bin/nologin
-EOF
-cat >> etc/ssh/sshd_config <<EOF
-PermitRootLogin yes
-EOF
-ssh-keygen -b 2048 -t rsa -f etc/ssh/ssh_host_rsa_key -N ''
-ssh-keygen -b 1024 -t dsa -f etc/ssh/ssh_host_dsa_key -N ''
-ssh-keygen -b 521 -t ecdsa -f etc/ssh/ssh_host_ecdsa_key -N ''
-ssh-keygen -b 2048 -t ed25519 -f etc/ssh/ssh_host_ed25519_key -N ''
-chmod 0400 etc/ssh/ssh_host_*_key
-mkdir root/.ssh
-cp $HOME/.ssh/id_rsa.pub root/.ssh/authorized_keys
-chmod 0700 root/.ssh
-sudo chown -R root:root .
-sudo chmod 0775 etc/init/boot
-cd ..
-sudo umount mnt
-sudo partx -v --delete /dev/loop2
-sudo losetup -d /dev/loop2
-
-
-cat > mnt/test.c <<EOF
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-int main( int argc, char *argv[] )
-{
-	puts( "hello" );
-	exit( EXIT_SUCCESS );
-}
-EOF
-
-cat > mnt/test.cpp <<EOF
-#include <iostream>
-#include <cstdlib>
-
-int main( void )
-{
-	std::cout << "hello" << std::endl;
-	std::exit( EXIT_FAILURE );
-}
-EOF
-
 
 TODOS: in linux package makepkg
 https://github.com/libarchive/libarchive/issues/411
@@ -463,104 +370,6 @@ qemu-system-i386 --enable-kvm -cpu 486 -m 32 \
 # very funny: uvesafb: failed to execute /sbin/v86d
 # Intel and ARM DRM modules:
 # BUG: unable to handle kernel NULL pointer dereference at   (null)
-
-# libarchive wants to autoretool, kick the author
-# fails in:
-==> Starting prepare()...
-libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, 'build/autoconf'.
-libtoolize: copying file 'build/autoconf/ltmain.sh'
-libtoolize: putting macros in AC_CONFIG_MACRO_DIRS, 'build/autoconf'.
-libtoolize: copying file 'build/autoconf/libtool.m4'
-libtoolize: copying file 'build/autoconf/ltoptions.m4'
-libtoolize: copying file 'build/autoconf/ltsugar.m4'
-libtoolize: copying file 'build/autoconf/ltversion.m4'
-libtoolize: copying file 'build/autoconf/lt~obsolete.m4'
-configure.ac:136: error: possibly undefined macro: AC_MSG_FAILURE
-      If this token and others are legitimate, please use m4_pattern_allow.
-      See the Autoconf documentation.
-configure.ac:310: error: possibly undefined macro: AC_CHECK_LIB
-autoreconf: /home/cross/x-tools/i486-unknown-linux-gnu/bin/autoconf failed with exit status: 1
-==> ERROR: A failure occurred in prepare().
-    Aborting...
-
-librarchive: checking size of wchar_t... configure: error: in `/home/cross/build/libarchive/src/libarchive-3.3.2':
-configure: error: cannot compute sizeof (wchar_t)
-See `config.log' for more details
-==> ERROR: A failure occurred in build().
-    Aborting...
-configure:13828: checking windows.h usability
-configure:13828: gcc -c -O2 -pipe  conftest.c >&5
-conftest.c:109:21: fatal error: windows.h: No such file or directory
- #include <windows.h>
-                     ^
-compilation terminated.
-configure:13828: $? = 1
-configure: failed program was:
-| /* confdefs.h */
-| #define PACKAGE_NAME "libarchive"
-| #define PACKAGE_TARNAME "libarchive"
-| #define PACKAGE_VERSION "3.3.2"
-=> seriously!!
-
-=> wchar_t on Linux, without probing?!
-
-TODO:
-ca-certificates for curl:
-ERROR: ld.so: object 'libfakeroot-tcp.so' from LD_PRELOAD cannot be preloaded: ignored.
-bsdtar: /lib/libc.so.6: version `GLIBC_2.25' not found (required by /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/libexpat.so.1)
-  -> Compressing package...
-ERROR: ld.so: object 'libfakeroot-tcp.so' from LD_PRELOAD cannot be preloaded: ignored.
-bsdtar: /lib/libc.so.6: version `GLIBC_2.25' not found (required by /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/libexpat.so.1)
-==> ERROR: Failed to create package file.
-=> bsdtar, libexpat linked to host libc?
-=> using the Centos 7 version for now, renamed bsdtar in x-tools so it cannot be found
-
-util-linux:
-###########
-configure: error: /bin/sh config/config.sub \ failed
-==> ERROR: A failure occurred in build().
-    Aborting...
-
-total mess in util-linux, the problem is "Stripping unneeded symbols from binaries and libraries"
-in makepkg
-mount: error while loading shared libraries: libmount.so.1: cannot open shared object file: No such file or directory
-[root@xs13 /]# ldd /usr/lib/libmount.la 
-
-and again, I don't seem to be able to compile a running pacman!
-debug: returning error 6 from _alpm_db_register_sync : wrong or NULL argument passed
-error: could not register 'temp' database (wrong or NULL argument passed)
-error: no usable package repositories configured.
-debug: unregistering database 'local'
-=> pacman -Syy seems broken, put -U -R -Q work, this is enough to continue to build
-   packages and to install them :-)
-
-
-gcc aftermatch:
-
-SPECFILE=`dirname $(gcc -print-libgcc-file-name)`/specs
-gcc -dumpspecs > $SPECFILE
-*cpp:
-%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT} -isystem/usr/include
-=> C works
-
-g++ -o test test.cpp
-In file included from /usr/include/c++/7.2.0/ext/string_conversions.h:41:0,
-                 from /usr/include/c++/7.2.0/bits/basic_string.h:6159,
-                 from /usr/include/c++/7.2.0/string:52,
-                 from /usr/include/c++/7.2.0/bits/locale_classes.h:40,
-                 from /usr/include/c++/7.2.0/bits/ios_base.h:41,
-                 from /usr/include/c++/7.2.0/ios:42,
-                 from /usr/include/c++/7.2.0/ostream:38,
-                 from /usr/include/c++/7.2.0/iostream:39,
-                 from test.cpp:1:
-/usr/include/c++/7.2.0/cstdlib:75:15: fatal error: stdlib.h: No such file or directory
- #include_next <stdlib.h>
-               ^~~~~~~~~~
-export CPLUS_INCLUDE_PATH=/usr/include/c++/7.2.0
-=> doens't help
-
-/etc/bash.bashrc:
-PS1='(chroot) \u:\w\$ '
 
 PHASE 2
 #######

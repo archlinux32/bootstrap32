@@ -2,7 +2,7 @@
 
 . "./default.conf"
 
-# builds a small ISO image for stage 1 system:
+# builds a small ISO image for installing a stage 1 system:
 # no ramdisk, no modules, no fancy startup, just a shell script
 
 sudo rm -rf $STAGE1_ISOLINUX

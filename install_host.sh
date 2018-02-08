@@ -31,6 +31,9 @@ pacman --noconfirm --needed -S flex
 # for a bootable ISO image
 pacman --noconfirm --needed -S syslinux cdrtools
 
+# for building a hard disk image
+pacman --noconfirm --needed -S qemu
+
 # some packages come from the AUR
 if test "$(grep -c '\[archlinuxfr\]' /etc/pacman.conf)" = 0; then
 	cat >> /etc/pacman.conf <<EOF
