@@ -230,6 +230,9 @@ package_gcc() {
   #install -d "$pkgdir/usr/share/licenses/$pkgname/"
   #ln -s /usr/share/licenses/gcc-libs/RUNTIME.LIBRARY.EXCEPTION \
   #  "$pkgdir/usr/share/licenses/$pkgname/"
+  
+  #collect2: unable to find ld
+  ln -s /usr/bin/ld $pkgdir/usr/lib/gcc/i486-unknown-linux-gnu/$pkgver/ld
 }
 
 package_gcc-fortran() {
