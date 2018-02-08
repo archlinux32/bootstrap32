@@ -19,9 +19,9 @@ export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
 . "$SCRIPT_DIR/$TARGET_CPU-stage1/template/DESCR"
 
-if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$") = 0; then
+if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$") = 0 -o $(find $STAGE1_PACKAGES/$PACKAGE-*pkg.tar.xz 2>/dev/null | grep -v shim | wc -l) = 0; then
 	echo "Building package $PACKAGE."
-
+	
 	cd $STAGE1_BUILD || exit 1
 	
 	# clean up old build

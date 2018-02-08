@@ -166,7 +166,6 @@ su cross ./create_cdrom.sh
 
 # basic packages 
 PACKAGES=" \
-glibc \
 # TODO: iputils is for ping only, a little bit too many packages for
 # that.
 sysfsutils libidn nettle iputils"
@@ -212,28 +211,6 @@ sed -i "/makedepends=/s/'texlive-core'//g" libunwind/PKGBUILD
 
 # strace
 sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' strace/PKGBUILD
-
-
-
-# glibc
-sed -i 's@/configure"@/configure" --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
-# change bug reporting
-sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' PKGBUILD
-# disable multilib, we are on 32-bit only
-sed -i 's@--enable-multi-arch@--disable-multi-arch@g' PKGBUILD
-# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
-sed -i "/makedepends/s/git//g" PKGBUILD
-# gd for memory profiles, no please
-sed -i "/makedepends/s/gd//g" PKGBUILD
-cat ~/packages32/core/glibc/PKGBUILD >> PKGBUILD
-sed -i "/makedepends/s/lib32-gcc-libs//g" PKGBUILD
-sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
-
-
-
-
-
-
 
 
 

@@ -15,7 +15,7 @@ util-linux e2fsprogs
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl
 pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman fakeroot
 elfutils
-make mpfr gawk libmpc binutils gcc
+make mpfr gawk libmpc binutils gcc glibc
 sed texinfo grep findutils file diffutils ed patch
 kbd procps-ng shadow
 inetutils bc kmod linux uinit

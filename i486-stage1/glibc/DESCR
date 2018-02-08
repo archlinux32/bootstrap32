@@ -1,0 +1,17 @@
+# prepare configure for cross-compilation
+sed -i "s@/configure\"@/configure\" --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
+
+# disable multilib, we are on 32-bit only
+sed -i 's@--enable-multi-arch@--disable-multi-arch@g' PKGBUILD
+sed -i "/makedepends=/s/lib32-gcc-libs//g" PKGBUILD
+sed -i "/pkgname/s/lib32-glibc//g" PKGBUILD
+
+# change bug reporting
+sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' PKGBUILD
+
+# git for release checkouts, a bad idea IMHO, current git+https is commented out in trunk anyway
+sed -i "/makedepends=/s/git//" PKGBUILD
+
+# no gd for memory profiles
+sed -i "/makedepends=/s/gd//" PKGBUILD
+
