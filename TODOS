@@ -21,4 +21,11 @@
   in build_stage1_package.sh
 - when uninstalling pacman in the chroot, you must rename pacman.pacsave
   back to pacman.conf as it is used for building packages
-  
+- pacman has some issues with the sync databases (pacman -Syyu results
+  in):
+  debug: returning error 6 from _alpm_db_register_sync : wrong or NULL argument passed
+  error: could not register 'temp' database (wrong or NULL argument passed)
+  error: no usable package repositories configured.
+  installing and listing packages by hand works without problems.
+  debug: unregistering database 'local'
+

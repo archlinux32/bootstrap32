@@ -153,6 +153,7 @@ su cross ./create_ca-certificates-utils_shim.sh
 su cross ./create_cdrom.sh
 
 # or easier for direct testing, build stage 1 hard disk image
+
 su cross ./create_hdd.sh
 
 # TODO FROM HERE:

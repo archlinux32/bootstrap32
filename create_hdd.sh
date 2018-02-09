@@ -8,8 +8,8 @@
 cd $CROSS_HOME
 
 umount mnt
+rm -rf mnt
 sudo /sbin/losetup -d /dev/loop2
-rmdir mnt
 sudo rm -f arch486.img
 
 # prepare a plain image
@@ -26,9 +26,12 @@ sudo mkfs.ext4 -O ^64bit /dev/loop2p1
 mkdir mnt
 sudo mount /dev/loop2p1 mnt
 sudo cp -a i486-root/* mnt/.
-
 sudo chown -R cross:cross mnt/.
 cd mnt
+
+# A simple ISOlinux boot loader booting from first partition, starting
+# uinit wich start /etc/init/boot
+
 mkdir boot/syslinux
 echo 'default /boot/vmlinuz-linux root=/dev/hda1 init=/sbin/init console=ttyS0 console=tty0' \
 	> boot/syslinux/syslinux.cfg
@@ -36,6 +39,10 @@ sudo dd bs=440 count=1 if=/usr/lib/syslinux/bios/mbr.bin of=/dev/loop2
 cp /usr/lib/syslinux/bios/*.c32 boot/syslinux/.
 sudo extlinux --install boot/syslinux/
 mkdir -p etc/init
+
+# the unit boot script configuring virtual filesystems, the network
+# and starts an SSH daemon
+
 cat >etc/init/boot <<EOF
 #!/bin/sh
 mount -t proc proc /proc
@@ -53,6 +60,9 @@ EOF
 cat > etc/resolv.conf <<EOF
 nameserver 192.168.1.1
 EOF
+
+# SSH confiuration: nobody user and host keys, keys for key based login
+
 cat >> etc/group <<EOF
 nobody:x:99:
 EOF
@@ -69,16 +79,10 @@ ssh-keygen -b 2048 -t ed25519 -f etc/ssh/ssh_host_ed25519_key -N ''
 chmod 0400 etc/ssh/ssh_host_*_key
 mkdir root/.ssh
 cp $HOME/.ssh/id_rsa.pub root/.ssh/authorized_keys
-chmod 0700 root/.ssh
-sudo chown -R root:root .
-sudo chmod 0775 etc/init/boot
-cd ..
-sudo umount mnt
-sudo partx -v --delete /dev/loop2
-sudo losetup -d /dev/loop2
 
+# add some test programs to test the C and C++ compiler
 
-cat > mnt/test.c <<EOF
+cat > root/test.c <<EOF
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -90,7 +94,7 @@ int main( int argc, char *argv[] )
 }
 EOF
 
-cat > mnt/test.cpp <<EOF
+cat > root/test.cpp <<EOF
 #include <iostream>
 #include <cstdlib>
 
@@ -101,3 +105,15 @@ int main( void )
 }
 EOF
 
+# fix permissions (we only have root on the image)
+
+chmod 0700 root/.ssh
+sudo chown -R root:root .
+sudo chmod 0775 etc/init/boot
+
+# umount and clean up partitions and loopback devices
+
+cd ..
+sudo umount mnt
+sudo partx -v --delete /dev/loop2
+sudo losetup -d /dev/loop2
