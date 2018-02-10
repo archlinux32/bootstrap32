@@ -13,14 +13,15 @@ attr acl gmp gdbm db perl openssl
 zlib pambase cracklib libtirpc pam libcap coreutils
 util-linux e2fsprogs
 expat bzip2 lz4 xz pcre less gzip tar libarchive curl
-pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman fakeroot
+pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
 elfutils
-make mpfr gawk libmpc binutils gcc glibc
 sed texinfo grep findutils file diffutils ed patch
+fakeroot
 kbd procps-ng shadow
 inetutils bc kmod linux uinit
 net-tools libmnl libnfnetlink iptables iproute2
-libedit openssh"
+libedit openssh
+make mpfr gawk libmpc binutils gcc glibc"
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage1_package.sh" "$p" || exit 1
