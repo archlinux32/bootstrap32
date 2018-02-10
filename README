@@ -172,7 +172,7 @@ PACKAGES=" \
 # TODO: iputils is for ping only, a little bit too many packages for
 # that.
 sysfsutils libidn nettle iputils"
-# libunwind and systrace for debugging
+# systrace for debugging
 
 # sysfsutils and libidn, nettle for iputils
 SYSROOT_PACKAGES=" \
@@ -182,19 +182,6 @@ sysfsutils libidn"
 
 # special patches for some packages
 ###################################
-
-
-
-# libunwind
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libunwind/PKGBUILD
-# no TeX, no docu
-sed -i "/makedepends=/s/'texlive-core'//g" libunwind/PKGBUILD
-
-# strace
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' strace/PKGBUILD
-
-
-
 
 
 # libidn

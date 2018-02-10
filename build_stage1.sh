@@ -21,7 +21,8 @@ kbd procps-ng shadow
 inetutils bc kmod linux uinit
 net-tools libmnl libnfnetlink iptables iproute2
 libedit openssh
-make mpfr gawk libmpc binutils gcc glibc"
+make mpfr gawk libmpc binutils gcc glibc
+libunwind strace"
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage1_package.sh" "$p" || exit 1
