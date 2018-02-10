@@ -28,4 +28,6 @@
   error: no usable package repositories configured.
   installing and listing packages by hand works without problems.
   debug: unregistering database 'local'
-
+- pacman problem: ca-certificates-utils-shim-20170307-1-any definityely contains
+  the /etc/ssl/certs/ and the ca-certificates.crt, but it doens't get installed?!
+  
