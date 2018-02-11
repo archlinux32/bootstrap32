@@ -31,8 +31,10 @@
 - pacman problem: ca-certificates-utils-shim-20170307-1-any definityely contains
   the /etc/ssl/certs/ and the ca-certificates.crt, but it doens't get installed?!
 - make: recursive tarkets like all-recursive don't work, neither with cross-compiled
-  make nor with the recompiled make on the stage1 system. No clue why?!
-- some packages get build more than onces (linux-api-headers, pacman-mirrorlist)
+  make nor with the recompiled make on the stage1 system.
+  => rebuilding bash on the target works, but it's a workaround:
+  https://unix.stackexchange.com/questions/389022/make-unable-to-recurse-for-autoconf-like-projects/423448#423448
+- some packages get build more than once in stage1 (linux-api-headers, pacman-mirrorlist)
 - make a wrapper for sed in DESCR, which is actually able to detect whether
   the patch was successful or not. Avoid hard to detect errors, when the
   upstream PKGBUILD(s) change.
