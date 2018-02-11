@@ -1,0 +1,12 @@
+# prepare configure for cross-compilation
+sed -i "/build/,/}/ s/.\/configure/.\/configure --host=$TARGET_ARCH --target=$TARGET_ARCH --build=$BUILD_ARCH/" PKGBUILD
+
+# disable python
+sed -i "/makedepends=/s/python//" PKGBUILD
+sed -i "/depends=/s/python//" PKGBUILD
+sed -i "s@--with-python=/usr/bin/python3@--without-python@g" PKGBUILD
+
+# disable guile
+sed -i "/makedepends=/s/guile2.0//" PKGBUILD
+sed -i "/depends=/s/guile2.0//" PKGBUILD
+sed -i "s@--with-guile=guile-2.0@--without-guile@g" PKGBUILD

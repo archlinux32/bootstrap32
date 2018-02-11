@@ -33,3 +33,11 @@
 - make: recursive tarkets like all-recursive don't work, neither with cross-compiled
   make nor with the recompiled make on the stage1 system. No clue why?!
 - some packages get build more than onces (linux-api-headers, pacman-mirrorlist)
+- make a wrapper for sed in DESCR, which is actually able to detect whether
+  the patch was successful or not. Avoid hard to detect errors, when the
+  upstream PKGBUILD(s) change.
+- gdb uses cross-compiler source files for debugging:
+  Temporary breakpoint 1, 0x004005b0 in main ()
+  (gdb) list
+  1       /home/cross/.build/i486-unknown-linux-gnu/src/gcc/libgcc/libgcc2.c: No such file or directory.
+
