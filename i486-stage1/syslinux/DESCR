@@ -1,0 +1,15 @@
+# disable python
+sed -i "/makedepends=/s/python2//" PKGBUILD
+sed -i "s/make PYTHON=python2/make/" PKGBUILD
+
+# take git from the host
+sed -i "/makedepends=/s/git//" PKGBUILD
+
+# no documentation
+sed -i "/makedepends=/s/asciidoc//" PKGBUILD
+
+# no upx compression
+sed -i "/makedepends=/s/upx//" PKGBUILD
+
+# use the cross compiler
+sed -i "s/\(make \$_targets\)/\1 CC=$TARGET_ARCH-gcc AS=$TARGET_ARCH-as LD=$TARGET_ARCH-ld AR=$TARGET_ARCH-ar/" PKGBUILD

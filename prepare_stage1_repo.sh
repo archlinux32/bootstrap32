@@ -85,6 +85,7 @@ if test ! -d $STAGE1_BUILD; then
 	CPUS=$(nproc)
 	sed -i "s@^#MAKEFLAGS=.*@MAKEFLAGS=\"-j$CPUS\"@" makepkg-i486.conf
 	sed -i "s@-march=x86-64 -mtune=generic @@" makepkg-i486.conf
+	sed -i "s@-march=i686 -mtune=generic @@" makepkg-i486.conf
 
 	echo "Prepared the stage 1 build environment."
 fi

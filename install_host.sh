@@ -34,6 +34,13 @@ pacman --noconfirm --needed -S syslinux cdrtools
 # for building a hard disk image
 pacman --noconfirm --needed -S qemu
 
+# for building syslinux (Intel only)
+case $BUILD_CPU in
+	i*86|x86_64)
+		pacman --noconfirm --needed -S nasm
+		;;
+esac
+
 # some packages come from the AUR
 if test "$(grep -c '\[archlinuxfr\]' /etc/pacman.conf)" = 0; then
 	cat >> /etc/pacman.conf <<EOF

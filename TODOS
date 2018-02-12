@@ -12,7 +12,8 @@
   bsdtar: /home/cross/i486-root/packages/i486/linux-headers-4.15.1-2-i486.pkg.tar.xz: Not found in archive
   bsdtar: Error exit delayed from previous errors.
   Built package linux.
-- gcc PKGBUILD instead of diff
+- currently gcc has a PKGBUILD modified by hand instead of diff seds in DESCR
+  (the diff is very big and complex)
 - removing all pacman databases and recreating them with repo-add, also
   removing all installed pacman packages seem a little bit paranoic. Find
   out how to speed this up and do it properly.
@@ -42,4 +43,10 @@
   Temporary breakpoint 1, 0x004005b0 in main ()
   (gdb) list
   1       /home/cross/.build/i486-unknown-linux-gnu/src/gcc/libgcc/libgcc2.c: No such file or directory.
+- stage1
+  - stage1: cdrom installs keyrings without having a gpg binary
+  - 32 MB is not enough when installing packages => add a swap as first action!
+  - stage1 has no bootloader package (syslinux) to install
+  - do we really want to install stage1 via a CDROM?
+- using the cross compiler for syslinux is most likely overkill
 

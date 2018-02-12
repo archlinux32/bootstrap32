@@ -18,7 +18,7 @@ elfutils
 sed texinfo grep findutils file diffutils ed patch
 fakeroot
 kbd procps-ng shadow
-inetutils bc kmod linux uinit
+inetutils bc kmod linux uinit nasm syslinux
 net-tools libmnl libnfnetlink iptables iproute2
 libedit openssh
 make mpfr gawk libmpc binutils gcc glibc
