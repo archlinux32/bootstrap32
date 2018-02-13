@@ -7,7 +7,7 @@
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz; then
 
 	cd $STAGE1_BUILD || exit 1
-	rm -rf ca-certificates-utils-shim
+	sudo rm -rf ca-certificates-utils-shim
 	
 	mkdir ca-certificates-utils-shim
 	cd ca-certificates-utils-shim || exit 1
@@ -28,7 +28,7 @@ arch = any
 EOF
 
 	cd pkg/ca-certificates-utils-shim || exit 1
-	tar cJvf - .PKGINFO ./* | xz > ../../ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz
+	tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz
 	cd ../.. || exit 1
 
 	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.

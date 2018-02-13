@@ -7,7 +7,7 @@
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/glibc-shim-2.26-1-$TARGET_CPU.pkg.tar.xz; then
 
 	cd $STAGE1_BUILD
-	rm -rf glibc-shim
+	sudo rm -rf glibc-shim
 	mkdir glibc-shim
 	cd glibc-shim
 	mkdir -p pkg/glibc-shim/usr/include
@@ -51,7 +51,7 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/glibc-shim-2.26-1-$TARGET_CPU.p
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/usr/share/i18n pkg/glibc-shim/usr/share/.
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/usr/share/locale pkg/glibc-shim/usr/share/.
 
-	BUILDDATE=`date '+%s'`
+	BUILDDATE=$(date '+%s')
 	size=`du -sk --apparent-size pkg/`
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/glibc-shim/.PKGINFO <<EOF

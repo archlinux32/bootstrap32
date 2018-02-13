@@ -7,7 +7,7 @@
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz; then
 
 	cd $STAGE1_BUILD || exit 1
-	rm -rf gcc-libs-shim
+	sudo rm -rf gcc-libs-shim
 	mkdir gcc-libs-shim
 	cd gcc-libs-shim || exit 1
 	mkdir -p pkg/gcc-libs-shim/usr/lib
@@ -35,7 +35,7 @@ arch = $TARGET_CPU
 EOF
 
 	cd pkg/gcc-libs-shim || exit 1
-	tar cJvf - .PKGINFO ./* | xz > ../../gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz
+	tar cJvf - .PKGINFO * | xz > ../../gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz
 	cd ../.. || exit 1
 
 	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.

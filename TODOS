@@ -29,8 +29,6 @@
   error: no usable package repositories configured.
   installing and listing packages by hand works without problems.
   debug: unregistering database 'local'
-- pacman problem: ca-certificates-utils-shim-20170307-1-any definityely contains
-  the /etc/ssl/certs/ and the ca-certificates.crt, but it doens't get installed?!
 - make: recursive tarkets like all-recursive don't work, neither with cross-compiled
   make nor with the recompiled make on the stage1 system.
   => rebuilding bash on the target works, but it's a workaround:
@@ -49,4 +47,5 @@
   - stage1 has no bootloader package (syslinux) to install
   - do we really want to install stage1 via a CDROM?
 - using the cross compiler for syslinux is most likely overkill
-
+- some packages still build more than really needed:
+  - syslinux: builds docu with asciidoc and build EFI stuff from gnu-efi
