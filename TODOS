@@ -49,3 +49,4 @@
 - using the cross compiler for syslinux is most likely overkill
 - some packages still build more than really needed:
   - syslinux: builds docu with asciidoc and build EFI stuff from gnu-efi
+- net-tools, redo the patch
