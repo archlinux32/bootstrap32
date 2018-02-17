@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # Prepare the cross-compiler for the destination platform, in our

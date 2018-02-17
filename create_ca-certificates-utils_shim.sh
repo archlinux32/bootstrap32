@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # the ca-certificates-utils-shim shim
@@ -28,6 +29,7 @@ arch = any
 EOF
 
 	cd pkg/ca-certificates-utils-shim || exit 1
+	# shellcheck disable=SC2035
 	tar cJvf - .PKGINFO * | xz > ../../ca-certificates-utils-shim-20170307-1-any.pkg.tar.xz
 	cd ../.. || exit 1
 

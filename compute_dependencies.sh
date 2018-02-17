@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # Compute dependencies and make-dependencies to build packages in stage1,
@@ -21,7 +22,11 @@ ALL_PACKAGES=$(cat ${tmp_dir}/dependencies | sort | uniq)
 
 export CARCH='x86_64'
 
-for package in $ALL_PACKAGES; do
+get_dependencies( )
+{
+	package=$1
+	mode=$2
+	
 	asp show $package >${tmp_dir}/$package.PKGBUILD
 	# temporary hotfix for FS#57524
 	if test "$(head -n1 ${tmp_dir}/$package.PKGBUILD | grep -c '^\$Id\$$' )" == 1; then
@@ -34,18 +39,29 @@ for package in $ALL_PACKAGES; do
 		ADD_PACKAGE=$(echo $_tmp | rev | cut -f 1 -d ' ' | rev)
 		# TODO: we should map sub packages to packages everywhere
 		echo "WARN: seen a redirect from $SUB_PACKAGE to $ADD_PACKAGE" >&2
-		continue
+		return
 	fi
-	depends=$(. ${tmp_dir}/$package.PKGBUILD; echo "${depends[@]}")
-	makedepends=$(. ${tmp_dir}/$package.PKGBUILD; echo "${makedepends[@]}")
+	_depends=$(. ${tmp_dir}/$package.PKGBUILD; echo "${depends[@]}")
+	for subpackage in "${_depends[@]}"; do
+		get_dependencies "$subpackage" "$mode"
+	done
+	depends+=( "${_depends[@]}" )
+	#makedepends=$(. ${tmp_dir}/$package.PKGBUILD; echo "${makedepends[@]}")
 	# TODO handle version constraints
 	#checkdepends=$(. ${tmp_dir}/$package.PKGBUILD; echo "${checkdepends[@]}")
 	#echo $package
 	#printf "\tdepends: $depends\n"
 	#printf "\tmakedepends: $makedepends\n"
 	#printf "\tcheckdepends: $checkdepends\n"
-#	echo "${depends[@]}"
-	echo "${makedepends[@]}"
+	#echo "${depends[@]}"
+	#echo "${makedepends[@]}"
+}
+
+for package in $ALL_PACKAGES; do
+	unset depends
+	declare -a depends
+	get_dependencies "$package" "depends"
+	echo "$package" "${depends[@]}"
 done
 
 # ./compute_dependencies.sh | tr -s ' ' '\n' | sort | uniq > depends

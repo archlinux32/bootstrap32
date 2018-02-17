@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # build all packages for stage 1 using the cross-compiler

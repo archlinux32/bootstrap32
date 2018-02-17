@@ -1,18 +1,21 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # the glibc-shim shim
 
 if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/glibc-shim-2.26-1-$TARGET_CPU.pkg.tar.xz; then
 
-	cd $STAGE1_BUILD
+	cd $STAGE1_BUILD || exit 1
 	sudo rm -rf glibc-shim
 	mkdir glibc-shim
-	cd glibc-shim
+	cd glibc-shim || exit 1
 	mkdir -p pkg/glibc-shim/usr/include
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/usr/include/* pkg/glibc-shim/usr/include
-	sudo rm -rf pkg/glibc-shim/usr/include/{linux,misc,mtd,rdma,scsi,sound,video,xen,asm,asm-generic}
+	for dir in linux misc mtd rdma scsi sound video xen asm asm-generic; do
+		sudo rm -rf pkg/glibc-shim/usr/include/$dir
+	done
 	mkdir -p pkg/glibc-shim/etc
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/etc/rpc pkg/glibc-shim/etc/.
 	mkdir -p pkg/glibc-shim/usr/bin
@@ -52,7 +55,7 @@ if test ! -f $STAGE1_CHROOT/packages/$TARGET_CPU/glibc-shim-2.26-1-$TARGET_CPU.p
 	cp -a $XTOOLS_ARCH/$TARGET_ARCH/sysroot/usr/share/locale pkg/glibc-shim/usr/share/.
 
 	BUILDDATE=$(date '+%s')
-	size=`du -sk --apparent-size pkg/`
+	size=$(du -sk --apparent-size pkg/)
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 	cat > pkg/glibc-shim/.PKGINFO <<EOF
 pkgname = glibc
@@ -64,9 +67,10 @@ size = $size
 arch = $TARGET_CPU
 EOF
 
-	cd pkg/glibc-shim
+	cd pkg/glibc-shim || exit 1
+	# shellcheck disable=SC2035	
 	tar cJvf - .PKGINFO * | xz > ../../glibc-shim-2.26-1-$TARGET_CPU.pkg.tar.xz
-	cd ../..
+	cd ../.. || exit 1
 
 	cp -v ./*.pkg.tar.xz $STAGE1_CHROOT/packages/$TARGET_CPU/.
 	rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*

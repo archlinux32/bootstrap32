@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # prepare the i486-chroot for stage 1

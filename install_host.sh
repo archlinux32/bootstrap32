@@ -2,6 +2,7 @@
 
 # Install necessary tools
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # development stuff

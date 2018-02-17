@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # the gcc-lib shim
@@ -35,6 +36,7 @@ arch = $TARGET_CPU
 EOF
 
 	cd pkg/gcc-libs-shim || exit 1
+	# shellcheck disable=SC2035
 	tar cJvf - .PKGINFO * | xz > ../../gcc-libs-shim-7.2.0-1-$TARGET_CPU.pkg.tar.xz
 	cd ../.. || exit 1
 

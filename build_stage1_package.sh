@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # builds and installs one package for stage 1
@@ -19,7 +20,7 @@ export PATH="$XTOOLS_ARCH/bin:${PATH}"
 
 . "$SCRIPT_DIR/$TARGET_CPU-stage1/template/DESCR"
 
-if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$") = 0 -o $(find $STAGE1_PACKAGES/$PACKAGE-*pkg.tar.xz 2>/dev/null | grep -v shim | wc -l) = 0; then
+if test "$(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Q | cut -f 1 -d ' ' | grep -c "^${PACKAGE}$")" = 0 -o "$(find "$STAGE1_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | grep -cv shim)" = 0; then
 	echo "Building package $PACKAGE."
 	
 	cd $STAGE1_BUILD || exit 1
@@ -27,16 +28,16 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	# clean up old build
 	
 	sudo rm -rf "$PACKAGE"
-	rm -f $STAGE1_PACKAGES/$PACKAGE-*pkg.tar.xz
+	rm -f "$STAGE1_PACKAGES/$PACKAGE"-*pkg.tar.xz
 
 	# check out the package build information from the upstream git rep
 	# using asp (or from the AUR using yaourt)
 	
 	PACKAGE_DIR="$SCRIPT_DIR/$TARGET_CPU-stage1/$PACKAGE"
 	PACKAGE_CONF="$PACKAGE_DIR/DESCR"	
-	if test -f $PACKAGE_CONF; then
-		if test $(grep -c FETCH_METHOD $PACKAGE_CONF) = 1; then
-			FETCH_METHOD=$(grep FETCH_METHOD $PACKAGE_CONF | cut -f 2 -d = | tr -d '"')
+	if test -f "$PACKAGE_CONF"; then
+		if test "$(grep -c FETCH_METHOD "$PACKAGE_CONF")" = 1; then
+			FETCH_METHOD=$(grep FETCH_METHOD "$PACKAGE_CONF" | cut -f 2 -d = | tr -d '"')
 		fi
 	fi
 	case $FETCH_METHOD in
@@ -48,10 +49,10 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 			;;
 		"packages32")
 			# (we assume, we only take core packages)
-			cp -a $ARCHLINUX32_PACKAGES/core/$PACKAGE .
+			cp -a "$ARCHLINUX32_PACKAGES/core/$PACKAGE" .
 			;;
 		*)
-			print "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >2
+			print "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >&2
 			exit 1
 	esac
 			
@@ -70,7 +71,7 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	# copy all other files from Archlinux32, if they exist
 	# (we assume, we only take core packages during stage1)
 	if test -f "$DIFF_PKGBUILD"; then
-		find $ARCHLINUX32_PACKAGES/core/$PACKAGE/* ! -name PKGBUILD \
+		find "$ARCHLINUX32_PACKAGES/core/$PACKAGE"/* ! -name PKGBUILD \
 			-exec cp {} . \;
 	fi
 		
@@ -82,8 +83,8 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 	fi
 	
 	# copy all files into the build area (but the package DESCR file)
-	if test -d $PACKAGE_DIR; then
-		find $PACKAGE_DIR/* ! -name DESCR \
+	if test -d "$PACKAGE_DIR"; then
+		find "$PACKAGE_DIR"/* ! -name DESCR \
 			-exec cp {} . \;
 	fi
 
@@ -130,9 +131,9 @@ if test $(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -
 		
 		if test "$SYSROOT_INSTALL" = 1; then
 			cd "$XTOOLS_ARCH/$TARGET_CPU-unknown-linux-gnu/sysroot" || exit 1
-			sudo bsdtar xf $STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+			sudo bsdtar xf "$STAGE1_CHROOT/packages/$TARGET_CPU/$PACKAGE"-*.pkg.tar.xz
 			if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
-				sudo bsdtar xf $STAGE1_CHROOT/packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+				sudo bsdtar xf "$STAGE1_CHROOT/packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE"-*.pkg.tar.xz
 			fi
 			cd "$STAGE1_BUILD/$PACKAGE" || exit 1
 		fi

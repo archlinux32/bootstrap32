@@ -1,11 +1,12 @@
 #!/bin/sh
 
+# shellcheck source=./default.conf
 . "./default.conf"
 
 # builds a hard disk image for a stage 1 system:
 # no ramdisk, no modules, no fancy startup, just a shell script
 
-cd $CROSS_HOME
+cd $CROSS_HOME || exit 1
 
 umount mnt
 rm -rf mnt
@@ -27,7 +28,7 @@ mkdir mnt
 sudo mount /dev/loop2p1 mnt
 sudo cp -a i486-root/* mnt/.
 sudo chown -R cross:cross mnt/.
-cd mnt
+cd mnt || exit 1
 
 # A simple ISOlinux boot loader booting from first partition, starting
 # uinit wich start /etc/init/boot
@@ -78,7 +79,7 @@ ssh-keygen -b 521 -t ecdsa -f etc/ssh/ssh_host_ecdsa_key -N ''
 ssh-keygen -b 2048 -t ed25519 -f etc/ssh/ssh_host_ed25519_key -N ''
 chmod 0400 etc/ssh/ssh_host_*_key
 mkdir root/.ssh
-cp $HOME/.ssh/id_rsa.pub root/.ssh/authorized_keys
+cp "$HOME/.ssh/id_rsa.pub" root/.ssh/authorized_keys
 
 # add some test programs to test the C and C++ compiler
 
@@ -113,7 +114,7 @@ sudo chmod 0775 etc/init/boot
 
 # umount and clean up partitions and loopback devices
 
-cd ..
+cd .. || exit 1
 sudo umount mnt
 sudo partx -v --delete /dev/loop2
 sudo losetup -d /dev/loop2
