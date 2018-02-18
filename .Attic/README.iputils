@@ -1,0 +1,36 @@
+# for ping only, takes to many packages and ping is broken after
+# cross-compilation anyway (at least for me)
+
+# build packages for the i486-chroot
+####################################
+
+# basic packages 
+PACKAGES=" \
+# TODO: iputils is for ping only, a little bit too many packages for
+# that.
+sysfsutils libidn nettle iputils"
+
+# sysfsutils and libidn, nettle for iputils
+SYSROOT_PACKAGES=" \
+sysfsutils libidn"
+
+# special patches for some packages
+###################################
+
+
+# libidn
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' libidn/PKGBUILD
+
+# sysfsutils
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' sysfsutils/PKGBUILD
+
+# nettle
+sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu@g' PKGBUILD
+
+# iputils
+# no documentation and use git from host
+sed -i 's@\(make doc man\)@#\1@' iputils/PKGBUILD
+sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iputils/PKGBUILD
+sed -i 's@make @make CC=i486-unknown-linux-gnu-cc LD=i486-unknown-linux-gnu-ld@g' iputils/PKGBUILD
+sed -i 's@\(install -m644 doc\)@#\1@' iputils/PKGBUILD
+sed -i 's@\("${pkgdir}"/usr/share\)@#\1@' iputils/PKGBUILD
