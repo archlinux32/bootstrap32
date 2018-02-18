@@ -53,7 +53,7 @@ mount -t devpts devpts /dev/pts
 mount -t sysfs sys /sys
 mount -o remount,rw /
 ip link set up dev eth0
-ip addr add 192.168.1.127/24 dev eth0
+ip addr add ${STAGE1_MACHINE_IP}/24 dev eth0
 ip route add default via 192.168.1.1 dev eth0
 /usr/sbin/sshd
 exec /usr/bin/bash
@@ -81,6 +81,21 @@ chmod 0400 etc/ssh/ssh_host_*_key
 mkdir root/.ssh
 cp "$HOME/.ssh/id_rsa.pub" root/.ssh/authorized_keys
 
+# install a build user and build directory
+cat >> etc/group <<EOF
+build:x:1001:
+EOF
+cat >> etc/passwd <<EOF
+build:x:1001:1001:build:/build:/bin/bash
+EOF
+mkdir -p build
+mkdir build/.ssh
+cp "$HOME/.ssh/id_rsa.pub" build/.ssh/authorized_keys
+chown 1001:1001 build
+# TODO: why does su require a password though we want to login via
+# SSH and key only!?
+#echo 'build:xx' | chpasswd
+
 # add some test programs to test the C and C++ compiler
 
 cat > root/test.c <<EOF
@@ -105,6 +120,9 @@ int main( void )
     std::exit( EXIT_FAILURE );
 }
 EOF
+
+# put proper pacman.conf in place
+mv etc/pacman.conf.pacnew etc/pacman.conf
 
 # fix permissions (we only have root on the image)
 

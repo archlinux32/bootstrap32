@@ -1,0 +1,20 @@
+# FETCH_METHOD = "asp" | "yaourt" | "packages32"
+# "asp" is the default tool to fetch the package description PKGBUILD and
+# associated patch and other files.
+# If the package exists only on AUR, then use "yaourt".
+# If you want the package from Archlinux32, use "packages32".
+# (this is only for where to get the base set of files from, the patches
+# from packages32 are always applied)
+FETCH_METHOD="asp"
+
+# NOPARALLEL_BUILD = 0 | 1
+# the -j<N> parameter to makepkg will be set to -j if
+# NOPARALLEL_PACKAGE=1. The default is to use all avaiable cores
+# and set -j<CPUS>
+NOPARALLEL_BUILD=0
+
+# ADDITIONAL_INSTALL_PACKAGE = <package name>
+# per default the package has the same name as the package file,
+# some packages generate additional package files to install
+# (for example util-linux also has a libutil-linux)
+ADDITIONAL_INSTALL_PACKAGE=
