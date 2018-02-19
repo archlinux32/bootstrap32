@@ -168,13 +168,14 @@ su cross ./create_hdd.sh
 # STAGE 2
 #########
 
-# Assume stage1 of the system is installed on the target architecture
+# Assuming stage1 of the system is installed on the target architecture
 # (virtual or a real machine), we have a key-based SSH connection to
 # the machine and can build packages there.
 
 # Build stage2 in $STAGE2_BUILD with the tools on the stage1 system
 # and modified PKGBUILDs and patches into the target system (replacing
-# stage 1 packages). Stage 1 serves now the same function as the sysroot.
+# stage 1 packages). Stage 1 serves now the same function as the sysroot
+# during cross-compilation of stage 1.
 
 # The goal is to get a self-hosting system on the target architecture,
 # not necesseraly containing all of base and base-devel, but enough to
@@ -183,6 +184,7 @@ su cross ./create_hdd.sh
 su cross ./prepare_stage2_repo.sh
 
 # Build stage 2 on the target architecture and install it onto the
-# stage 1 system. Resulting artifacts get stored in $STAGE2_BUILD.
+# stage 1 system. Resulting artifacts get stored also back
+# in $STAGE2_BUILD.
 
 ./build_stage2.sh

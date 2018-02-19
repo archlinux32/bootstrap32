@@ -92,10 +92,13 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz"n | wc -
 	# copy everything to the stage 1 machine
 	scp -i $CROSS_HOME/.ssh/id_rsa -rC "$STAGE2_BUILD/$PACKAGE" build@$STAGE1_MACHINE_IP:/build/.
 
-	# TODO:
 	# building the actual package
-	#$STAGE1_BUILD/makepkg-$TARGET_CPU -C --config $STAGE1_BUILD/makepkg-$TARGET_CPU.conf \
-#		--skipchecksums --skippgpcheck --nocheck > "$PACKAGE.log" 2>&1
-#	RES=$?
+	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck --nocheck'" > $PACKAGE.log 2>&1
+	RES=$?
+	
+	tail "$PACKAGE.log"
+
+	#~ if test $RES = 0; then
+	#~ fi
 
 fi

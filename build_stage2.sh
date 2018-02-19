@@ -11,6 +11,9 @@
 
 PACKAGES="bash"
 
+# build bash first as 'cd subpackage' in autoconf generated makefiles break
+# with cross-compiled bash
+
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage2_package.sh" "$p" || exit 1
 done

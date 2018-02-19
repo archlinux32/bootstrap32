@@ -50,6 +50,7 @@ stage1 issues:
   1       /home/cross/.build/i486-unknown-linux-gnu/src/gcc/libgcc/libgcc2.c: No such file or directory.
 - currently gcc has a PKGBUILD modified by hand instead of diff seds in DESCR
   (the diff is very big and complex)
+- there is really no need to copy stage 1 repo /packages/i486 onto the hdd
 
 stage2 issues:  
 - make: recursive tarkets like all-recursive don't work, neither with cross-compiled
