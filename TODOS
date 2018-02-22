@@ -33,7 +33,9 @@ general bugs:
 - make a wrapper for sed in DESCR, which is actually able to detect whether
   the patch was successful or not. Avoid hard to detect errors, when the
   upstream PKGBUILD(s) change.
-
+- stage 1 and stage 2 scripts have things in common which should probably
+  be dealt with not by copy pasting code
+  
 stage1 issues:
   - stage1: cdrom installs keyrings without having a gpg binary
   - 32 MB is not enough when installing packages => add a swap as first action!
@@ -53,7 +55,11 @@ stage1 issues:
 - there is really no need to copy stage 1 repo /packages/i486 onto the hdd
 
 stage2 issues:  
-- make: recursive tarkets like all-recursive don't work, neither with cross-compiled
-  make nor with the recompiled make on the stage1 system.
-  => rebuilding bash on the target works, but it's a workaround:
-  https://unix.stackexchange.com/questions/389022/make-unable-to-recurse-for-autoconf-like-projects/423448#423448
+- make: recursive targets like all-recursive don't work, the root cause is bash,
+  see https://unix.stackexchange.com/questions/389022/make-unable-to-recurse-for-autoconf-like-projects/423448#423448
+  => rebuilding bash on the target as first package works, but it's a workaround
+- cross-compiled pacman has issues with repos:
+  error: could not register 'temp' database (wrong or NULL argument passed)
+  error: no usable package repositories configured.
+  => we cannot install via the [temp] repo
+  

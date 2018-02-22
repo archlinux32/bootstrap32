@@ -20,7 +20,14 @@ if test ! -d $STAGE2_BUILD; then
 	# TODO: check makepkg in stage1 hdd
 	# TODO: makepkg patch to run as root or add a build user to hdd
 	# TODO: we assume we have on cpu for now on the target
-	
+	# TODO: fix pacman.conf in stage1:
+	# architecture?
+	# mirrorlist
+	# pacman.conf: remove standard repos, add temp repo:
+	#	[temp]
+	#SigLevel = Never
+	#Server = file:///packages/$arch
+
 	echo "Prepared the stage 2 build environment."
 fi
 

@@ -116,8 +116,8 @@ if test "$(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" 
 		# there, packages seem to reappear in old versions)
 		
 		rm -rf $STAGE1_CHROOT/var/cache/pacman/pkg/*
-		rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
-		rm -rf  $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
+		rm -rf $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db*
+		rm -rf $STAGE1_CHROOT/packages/$TARGET_CPU/temp.files*
 		repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
 	
 		# install into chroot via pacman

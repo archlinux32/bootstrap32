@@ -16,9 +16,9 @@ PACKAGE=$1
 
 . "$SCRIPT_DIR/$TARGET_CPU-stage2/template/DESCR"
 
-if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz"n | wc -l)" = 0; then
+if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
 	echo "Building package $PACKAGE."
-
+		
 	cd $STAGE2_BUILD || exit 1
 	
 	# clean up old build
@@ -98,7 +98,59 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz"n | wc -
 	
 	tail "$PACKAGE.log"
 
-	#~ if test $RES = 0; then
-	#~ fi
+	if test $RES = 0; then
 
+		# copy to our package folder in the first stage chroot
+		
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'
+			cd /build/$PACKAGE
+			rm -f ./*debug*.pkg.tar.xz
+			cp -v ./*.pkg.tar.xz /packages/$TARGET_CPU/.
+		'"
+
+		# redo the whole pacman cache and repo (always running into trouble
+		# there, packages seem to reappear in old versions)
+
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'
+			rm -rf /var/cache/pacman/pkg/*
+			rm -rf /packages/$TARGET_CPU/temp.db*
+			rm -rf /packages/$TARGET_CPU/temp.files*
+			repo-add /packages/$TARGET_CPU/temp.db.tar.gz /packages/$TARGET_CPU/*pkg.tar.xz
+		'"
+		
+		# install onto stage 1 system via pacman
+
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'		
+			# TODO: broken [temp] repo
+			#pacman --noconfirm -Syy $PACKAGE
+			pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+			if test $ADDITIONAL_INSTALL_PACKAGE != ""; then
+				#pacman --noconfirm -Syy $ADDITIONAL_INSTALL_PACKAGE
+				pacman --noconfirm -U /packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+			fi		
+		'"
+		
+		# copy packages from target machine and replace our local version with it
+
+		tmp_dir=$(mktemp -d 'tmp.compute-dependencies.0.XXXXXXXXXX' --tmpdir)
+		trap 'rm -rf --one-file-system "${tmp_dir}"' EXIT
+		
+		mv "$STAGE2_BUILD/$PACKAGE/$PACKAGE.log" "$tmp_dir"
+		cd "$STAGE2_BUILD" || exit 1
+		rm -rf "$PACKAGE"
+		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE" "$STAGE2_BUILD/."
+		mv "$tmp_dir/$PACKAGE.log" "$STAGE2_BUILD/$PACKAGE/."
+		mv -vf "$STAGE2_BUILD/$PACKAGE/"*.pkg.tar.xz "$STAGE2_PACKAGES/."
+
+		echo "Built package $PACKAGE."
+		
+	else	
+		echo "ERROR building package $PACKAGE"
+		exit 1
+	fi
+
+	cd $STAGE2_BUILD || exit 1
+
+else
+	echo "$PACKAGE exists."
 fi
