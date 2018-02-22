@@ -81,18 +81,25 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 	# copy all files into the build area on the target machine 
 	# (but the package DESCR file)
+	
 	if test -d "$PACKAGE_DIR"; then
 		find "$PACKAGE_DIR"/* ! -name DESCR \
 			-exec cp {} . \;
 	fi
 	
 	# execute makepkg on the host, we don't have git on the stage 1 machine (yet)
+	# we would actually like to have a mode like 'download, and noextract' but
+	# makepkg is not doing that (see -e and -o options)
+	
 	makepkg --nobuild
+	rm -rf "$STAGE2_BUILD/$PACKAGE/src"
 
 	# copy everything to the stage 1 machine
+	
 	scp -i $CROSS_HOME/.ssh/id_rsa -rC "$STAGE2_BUILD/$PACKAGE" build@$STAGE1_MACHINE_IP:/build/.
 
 	# building the actual package
+	
 	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck --nocheck'" > $PACKAGE.log 2>&1
 	RES=$?
 	
@@ -135,10 +142,15 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		tmp_dir=$(mktemp -d 'tmp.compute-dependencies.0.XXXXXXXXXX' --tmpdir)
 		trap 'rm -rf --one-file-system "${tmp_dir}"' EXIT
 		
+		cd $STAGE2_BUILD || exit 1
 		mv "$STAGE2_BUILD/$PACKAGE/$PACKAGE.log" "$tmp_dir"
 		cd "$STAGE2_BUILD" || exit 1
 		rm -rf "$PACKAGE"
-		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE" "$STAGE2_BUILD/."
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && tar zcf $PACKAGE.tar.gz $PACKAGE/'"		
+		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE.tar.gz" "$STAGE2_BUILD/."
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && rm -f $PACKAGE.tar.gz'"		
+		tar zxf "$PACKAGE.tar.gz"
+		rm -f "$PACKAGE.tar.gz"
 		mv "$tmp_dir/$PACKAGE.log" "$STAGE2_BUILD/$PACKAGE/."
 		mv -vf "$STAGE2_BUILD/$PACKAGE/"*.pkg.tar.xz "$STAGE2_PACKAGES/."
 

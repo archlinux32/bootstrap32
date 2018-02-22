@@ -15,12 +15,7 @@
 PACKAGES=          \
      \
  \
-libffi glib2 libunistring gettext"
-
-# some binaries in the cross tools (also known as perl) have really
-# weird library pathes (and no rpath it seems)
-export LD_LIBRARY_PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/lib/perl5/5.26/core_perl/CORE
-export PATH=/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/bin:/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin:${PATH}
+libffi"
 
 ###
 TODO FROM HERE
@@ -30,11 +25,9 @@ TODO FROM HERE
 	# libunistring for gettext
 	# libffi for glib2
 	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-	bsdtar xf $STAGE1_CHROOT/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
 	popd
 
 	cd ..
@@ -85,10 +78,6 @@ Native dependency 'libffi' not found
     Aborting...
 => this is all very wrong!
 
-# gettext
-#########
-# remove glib2 from depends, not needed (why the hell is there anyway then?!?! just for fun?)
-
 # libarchive calls autoreconf, this is quite annoying as perl in crosstool-nt or
 ###
 # stil in phase two, no proper autotools, let's apply the out-of-chroot trick once more..
@@ -117,12 +106,7 @@ for p in $PACKAGES
 	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)
 	# libunistring for gettext
 	# libffi for glib2
-	bsdtar xf $STAGE1_CHROOT/packages/i486/m4-1.4.18-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/mpfr-3.1.6.p1-1-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libmpc-1.0.3-2-i486.pkg.tar.gz
-	bsdtar xf $STAGE1_CHROOT/packages/i486/gawk-4.1.4-2-i486.pkg.tar.gz 
 	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libunistring-0.9.7-1-i486.pkg.tar.gz
 	popd
 
 	cd ..
@@ -154,10 +138,6 @@ qemu-system-i386 --enable-kvm -cpu 486 -m 32 \
 	-netdev user,id=net0,net=10.0.0.0/24,host=10.0.0.2,dhcpstart=10.0.0.16,hostfwd=tcp::2222-:22 \
 	-device rtl8139,netdev=net0
 
-# very funny: uvesafb: failed to execute /sbin/v86d
-# Intel and ARM DRM modules:
-# BUG: unable to handle kernel NULL pointer dereference at   (null)
-
 PHASE 2
 #######
 
@@ -183,24 +163,6 @@ arch-chroot /home/cross/i486-root/
 
 # package specific things
 
-# iana-etc:
-download error https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xml
-=> we miss /etc/ssl/certs/ca-certificates.crt from  ca-certificates-utils, we
-   can copy it from an existing archlinux
-
-# hack /usr/bin/makepkg, run_pacman again, this time set
-# --config /etc/pacman-i486.conf -r /
-
-# tzdata
-/build/tzdata/PKGBUILD: line 25: zic: command not found
-==> ERROR: A failure occurred in package().
-    Aborting...
-=> forgot zig in the shim
-
-# ncurses
-# dlsym errors and we don't have a C++ compiler (yet)
-sed -i 's@./configure@./configure --without-dlsym@g' ncurses/PKGBUILD
-sed -i 's@--with-cxx-binding --with-cxx-shared@--without-cxx  --without-cxx-binding --without-cxx-shared@g' ncurses/PKGBUILD
 
 # perl
 ######

@@ -1,0 +1,2 @@
+# stage 1 has no gettext yet
+sed -i "s@./configure@./configure --enable-gettext=no@g" PKGBUILD

@@ -1,0 +1,4 @@
+# remove dependency on glib2 (which needs meson to build) and use
+# supplied one
+sed -i "/depends=/s/'glib2'//" PKGBUILD
+sed -i "s@./configure@./configure --with-included-glib@" PKGBUILD
