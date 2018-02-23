@@ -50,6 +50,11 @@ mount -t proc proc /proc
 ln -s /proc/self/fd /dev/fd
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
+ln -s /proc/self/fd /dev/fd
+ln -s /proc/self/fd/0 /dev/stdin
+ln -s /proc/self/fd/1 /dev/stdout
+ln -s /proc/self/fd/2 /dev/stderr
+ln -s /proc/kcore /dev/core
 mount -t sysfs sys /sys
 mount -o remount,rw /
 ip link set up dev eth0

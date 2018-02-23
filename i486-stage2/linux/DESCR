@@ -1,0 +1,28 @@
+# install two packages: linux and linux-headers
+# TODO: split this, linux kernel doesn't make sense in sysroot!
+ADDITIONAL_INSTALL_PACKAGE=linux-headers
+
+# we currently build a monolitic kernel for the basic stuff which was
+# available since 25 years. :-)
+
+# remove make dependencies, currently we build without module support
+# (TODO: though we can easily build kmod, but we are missing a simple ramdisk for stage1)
+sed -i "s@make bzImage modules@make bzImage@g" PKGBUILD
+sed -i "s@make modules_install@#make modules_install@g" PKGBUILD
+
+# disable documentation
+sed -i "/depends=/s/xmlto//" PKGBUILD
+
+# remove dependency on binary blob firmare (which we don't expect to
+# have for a non-module kernel anyway, given KVM is not enabled:
+# careful about AMD and Intel DRM driveres, they simply segfault in the 
+# kernel when they don't have proper access to their firmware
+# warning: cannot resolve "linux-firmware", a dependency of "linux"
+# warning: cannot resolve "mkinitcpio>=0.7", a dependency of "linux"
+sed -i "/depends=/s/'linux-firmware'//" PKGBUILD
+sed -i "/depends=/s/'mkinitcpio.*'//" PKGBUILD
+
+# No harm: no initramdisk to build
+# (2/2) Updating linux initcpios...
+# call to execv failed (No such file or directory)
+# error: command failed to execute correctly

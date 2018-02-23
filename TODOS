@@ -74,3 +74,5 @@ stage2 issues:
   strip: /usr/lib/libz.so.1: no version information available (required by /usr/lib/libbfd-2.29.1.so)
   => this is because some tools are built with other versions (toolchain vs. chroot)
   => so we must not install zlib before we rebuild binutils
+- better "package already built" test (example pacman and pacman-mirrorlist)
+  dito linux and linux-api-headers

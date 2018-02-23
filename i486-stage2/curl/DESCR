@@ -1,0 +1,24 @@
+# build with minimal features, we don't need support for those protocols
+# in stage1, basic http(s), ftp is enough (other protocols draw in quite
+# some dependencies otherwise)
+sed -i "/depends=/s/'krb5'//" PKGBUILD
+sed -i "/depends=/s/'libssh2'//" PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-libssh2 \\' PKGBUILD
+sed -i "/depends=/s/'libpsl'//" PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-libpsl \\' PKGBUILD
+sed -i "/depends=/s/'libnghttp2'//" PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-nghttp2 \\' PKGBUILD
+sed -i '/--prefix=\/usr/ a \      --without-gssapi \\' PKGBUILD
+sed -i 's/--with-gssapi/--without-gssapi/g' PKGBUILD
+
+# no ca-certificates, needs tons of tools to build (like p11-kit), so we 
+# create a fake one with certificates from the host (the ca crts from
+# ca-certificates-utils should be enough actually)
+# TODO: is this LE/BE-safe?
+sed -i "/depends=/s/'ca-certificates'//" PKGBUILD
+
+# zsh, perl is used to create a completion file for curl and zsh
+sed -i '/--prefix=\/usr/ a \      --without-zsh-functions-dir \\' PKGBUILD
+
+# don't build the manual
+sed -i 's/--enable-manual/--disable-manual/g' PKGBUILD

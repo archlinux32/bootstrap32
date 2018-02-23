@@ -1,0 +1,4 @@
+# no systemd for now
+sed -i "/makedepends=/s/'systemd'//" PKGBUILD
+sed -i "/depends=/s/'libsystemd'//" PKGBUILD
+sed -i 's@--with-systemd@--without-systemd@' PKGBUILD

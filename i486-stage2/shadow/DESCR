@@ -1,6 +1,3 @@
-# prepare configure for cross-compilation
-sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@" PKGBUILD
-
 # remove docu and git dependencies
 sed -i "/makedepends=/s/'git'//" PKGBUILD
 sed -i "/makedepends=/s/'libxslt'//" PKGBUILD

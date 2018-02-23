@@ -74,18 +74,6 @@ arch-chroot /home/cross/i486-root/
 # no /usr/lib32
 # ./fbc -c ./libmath.b </dev/null >libmath.h
 
-
-# libelf 
-########
-In file included from /usr/include/error.h:52:0,
-                 from xmalloc.c:33:
-/usr/include/bits/error.h: In function 'error':
-/usr/include/bits/error.h:40:5: error: format not a string literal, argument types not checked [-Werror=format-nonliteral]
-     __error_noreturn (__status, __errnum, __format, __va_arg_pack ());
-     ^~~~~~~~~~~~~~~~
-=> -isystem in gcc specfile needed, not -I
-
-
 # 
 # libxml2
 # go without icu for now, icu needs C++
@@ -195,45 +183,6 @@ sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
 
 # for now we don't rebuild ca-certificates, we had to copy them funilly anyway, and it's
 # just a bunch of certs. So, in phase 3 or 4 then..
-
-# curl
-######
-# curl needs asciidoc and p11-kit, don't build them, use them from the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' curl/PKGBUILD
-# build with minimal features, enough to make pacman download packages
-sed -i 's@depends\(.*\)@depends=('ca-certificates' 'openssl' 'zlib')@g' curl/PKGBUILD
-# zsh, perl is used to create a completion file for curl and zsh?
-sed -i 's@--with-gssapi@--with-gssapi --without-zsh-functions-dir@g' curl/PKGBUILD
-
-# pacman
-########
-# pacman's tests mostly fail on non-Archlinux, so skip them
-# asciidoc is a makedepend, we can use the one on the host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' pacman/PKGBUILD
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' pacman/PKGBUILD
-# minimal dependencies, we don't sign anything yet
-sed -i "s/'gpgme'//g" pacman/PKGBUILD
-sed -i "s/'pacman-mirrorlist'//g" pacman/PKGBUILD
-sed -i "s/'archlinux-keyring'//g" pacman/PKGBUILD
-# we need pkg-config, otherwise pacman find libarchive in the wrong
-# place, but pkg-config needs glib2 and glib2 is built using meson (urgh!)
-# when we take the host version, lets patch the host pkgconfig file to
-# use the sysroot of the toolchain
-# we simply set LIBARCHIVE_CFLAGS and LIBARCHIVE_LIBS to get rid of pkg-config probing
-sed -i 's@./configure@LIBARCHIVE_CFLAGS=-I/usr/include LIBARCHIVE_LIBS=-larchive ./configure@g' pacman/PKGBUILD
-# --nocheck still, as we don't have python yet
-# and of course :-)
-sed -i 's/exit 1 # \$E_USER_ABORT/# exit 1 # $E_USER_ABORT/g' /home/cross/i486-root/usr/bin/makepkg
-# TODO
-install: cannot stat '/build/pacman/src/pacman.conf.i486': No such file or directory
-==> ERROR: A failure occurred in package().
-    Aborting...
-=> use the /etc/pacman-i486.conf from the chroot as pacman.conf.i486 (we still have the temp
-   repo and we force the Architecture)
-sed -i "s/686)/486)/g" pacman/PKGBUILD
-sed -i 's/mycarch="i686"/mycarch="i486")/g' pacman/PKGBUILD
-sed -i 's/mychost="i686-pc-linux-gnu"/mychost="i486-pc-linux-gnu"/g' pacman/PKGBUILD
-sed -i 's/myflags="-march=i686"/myflags=-march=i486/g' pacman/PKGBUILD
 
 # gmp
 #####
@@ -495,14 +444,11 @@ https://git.busybox.net/buildroot/diff/package/glibc/0005-fix-binutils-2-29-buil
 make[2]: *** [../o-iterator.mk:9: /build/glibc/src/glibc-build/misc/regexp.os] Error 1
 
 PACKAGES=" \
-bzip2 xz flex bc elfutils \
-libtool libxml2 libgpg-error libgcrypt libxslt \
-docbook-xml docbook-xsl xmlto libcap libtirpc pambase pam inetutils bison iproute2 kmod \
+libxml2 libgpg-error libgcrypt libxslt \
+docbook-xml docbook-xsl xmlto libcap inetutils bison iproute2 kmod \
 sysfsutils libidn iputils \
-expat acl attr lz4 tar libarchive curl pacman \
-joe coreutils util-linux pcre grep findutils file diffutils ed patch \
-autoconf automake libedit openssh libunwind strace wget \
-gmp mpfr gawk libmpc zlib tcl expect dejagnu binutils gcc libtool glibc"
+libedit openssh libunwind strace wget \
+gmp mpfr gawk libmpc tcl expect dejagnu binutils gcc libtool glibc"
 for p in $PACKAGES; do
 	asp export $p   
 done
@@ -514,14 +460,11 @@ for p in $PACKAGES
 
 	# for some packages we cannot execute tests (because the dependencies to install in
 	# the toolchain environment would be too much)
-	# libelf: --nocheck
 	# libtool: --nocheck
 	# libxml2: --nocheck
 	# libxslt: --nocheck
 	# inetutils: --nocheck
 	# bison: --nocheck
-	# pacman: --nocheck
-	# util-linux: --nocheck
 	# gawk: --nocheck
 	# tcl: --nocheck
 
