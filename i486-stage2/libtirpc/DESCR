@@ -1,0 +1,5 @@
+# disable Kerberos
+sed -i "/depends=/s/'krb5'//" PKGBUILD
+
+# gssapi seems also to be a dependency, not in PKBUILD, disable it
+sed -i 's@./configure@./configure --disable-gssapi@g' PKGBUILD

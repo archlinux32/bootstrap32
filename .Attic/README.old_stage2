@@ -1,106 +1,11 @@
 # old stage 2 based on a broken stage 1, so carefull what to pick
 # into the next version..
 
-#######################################
-##### TODO FROM HERE
-#######################################
-
-# TODO: m4. autoconf, automake, libtool are not really bootstrappable in x-tools
-# basic packages, non-virtual one from above: kernel, shell, pacman, editor, coreutils, development
-# tools (some of them can be bootstrapped inside like the autotools, perl; and they also should!)
-
-# linux-headers is important so we can build kmod inside the chroot
-# linux itself is tricky. For now we will boot with direct kernel parameters and binary in libvirt/qemu
-
-PACKAGES=          \
-     \
- \
-libffi"
-
-###
-TODO FROM HERE
-
-	# TODO:
-	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)\
-	# libunistring for gettext
-	# libffi for glib2
-	pushd $HOME/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot
-	bsdtar xf $STAGE1_CHROOT/packages/i486/autoconf-2.69-4-any.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/automake-1.15.1-1-any.pkg.tar.gz 
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	popd
-
-	cd ..
-done
-
-
-# special patches for some packages
-###################################
-
-# autoconf needs help2man, checks need fortan (wow. that package is old!)
-# depends contains base-devel stuff?! diffutils
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' autoconf/PKGBUILD
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' autoconf/PKGBUILD
-sed -i 's@depends\(.*\)@#depends=\1@g' autoconf/PKGBUILD
-
-# automake needs dejagnu for testing, not now, disabling checks
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' automake/PKGBUILD
-
-# libool: trusting the toolchain here, no silly checks :-)
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' libtool/PKGBUILD
-
-# afterpatching; autreconf has a hard-coded #! /bin/perl -w bang,
-# seriously!
-chmod u+w /home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
-sed -i 's@^#/bin/perl@/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/perl@g' \
-	/home/cross/x-tools/i486-unknown-linux-gnu/i486-unknown-linux-gnu/sysroot/usr/bin/autoreconf
-
-
-# glib2
-#######
-# take gettext from host
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' glib2/PKGBUILD
-# get arch-meson wrapper, doens't build without it!
-# ok, forget meson, completly broken, resorting to autotools.
-# autoreconf: running: /home/cross/x-tools/i486-unknown-linux-gnu/bin/autoconf --force
-# configure.ac:88: error: possibly undefined macro: AC_DEFINE
-# huh?
-# retooling seems to be near impossible! ok, autoconf broken, meson unusable.. sweet
-Found pkg-config: /bin/pkg-config (0.27.1)
-Dependency libpcre found: NO
-Library m found: YES
-Not looking for a fallback subproject for the dependency libffi because:
-Automatic wrap-based fallback dependency downloading is disabled.
-
-Meson encountered an error in file meson.build, line 1439, column 0:
-Native dependency 'libffi' not found
-==> ERROR: A failure occurred in build().
-    Aborting...
-=> this is all very wrong!
-
-# libarchive calls autoreconf, this is quite annoying as perl in crosstool-nt or
-###
-# stil in phase two, no proper autotools, let's apply the out-of-chroot trick once more..
-# do the autoreconf -fi outside, create a package libarchive-3.3.2-retooled.tgz
-# libarchive has trouble with wchar_t (and has quite some other trouble around autoconf it seems)
-# remove the wchar_t and wchar_t sizeof test in configure.ac manutally before retooling
-# and of course tests fail!
-# no checks again
-sed -i "s@^source=.*@source=('libarchive-3.3.2-retooled.tgz')@g" libarchive/PKGBUILD
-sed -i "s@^sha256sums=.*@sha256sums=('1f856e6f5cc0e1479f381e381a031ba19d09f80b51ac88e74b2c140fc78606e8')@g" libarchive/PKGBUILD
-sed -i 's@autoreconf@#autoreconf@g' libarchive/PKGBUILD
 
 # generic build
 ###############
 
 for p in $PACKAGES
-
-	# for some packages we cannot execute tests (because the dependencies to install in
-	# the toolchain environment would be too much)
-	# autoconf: --nocheck
-	# automake: --nockeck
-	# pacman: --nocheck
-	# mpfr: --nocheck
 
 	# for ncurses, readline for bash
 	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)
@@ -163,11 +68,6 @@ arch-chroot /home/cross/i486-root/
 
 # package specific things
 
-
-# xz
-# with gcc 7.2 we get new errors
-sed -i 's@--enable-werror@--disable-werror@g' xz/PKGBUILD
-
 # bc
 # requires texinfo, is this part of base-devel?
 # bootstrap --force
@@ -225,17 +125,6 @@ zlib for now.
 # gtk-doc draws in Gnome bullshit again
 sed -i 's@^makedepends\(.*\)@#makedepends\1@g' kmod/PKGBUILD
 
-# libtirpc: break the cyrcle with systemd (via krb5)
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libtirpc/PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' libtirpc/PKGBUILD
-# configure: error: gssapi.h not found. Use --disable-gssapi, or install GSS-API.
-# --disable-gssapi
-
-# pam:
-# dependency w3m is for documentation, let's remove it
-rm: cannot remove '/build/pam/pkg/pam/usr/share/doc/Linux-PAM/sag-pam_userdb.html': No such file or directory
-also remove section in PKGBUILD
-
 # inetutils:
 # disable checks
 
@@ -292,18 +181,6 @@ sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' perl-error/PKGBUILD
 # no docu
 # --disable-man
 
-# git
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' git/PKGBUILD
-# no make doc
-# disable most things in build
-# disable doc in install-doc
-# NO_GETTEXT=1
-# --nocheck
-=> no luck
-
-# lz4:
-# git tweaking again, use 1.8.0 tarball
-
 # tar:
 # checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
 # configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
@@ -312,14 +189,9 @@ sed -i 's@^makedepends\(.*\)@#makedepends\1@g' git/PKGBUILD
 sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
 
 #TODO:
-# lz4
-# git package again
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' lz4/PKGBUILD
 
-#TODO: cracklib util-linux e2fsprogs libldap keyutils krb5 they end in circlejerk with systemd!
+#TODO: libldap keyutils krb5 they end in circlejerk with systemd!
 # we will solve that later by building a non-systemd version and then bootstrapping first systemd
-# git: out of reach for now, far too many dependencies
-perl-error git
 
 # for now we don't rebuild ca-certificates, we had to copy them funilly anyway, and it's
 # just a bunch of certs. So, in phase 3 or 4 then..
@@ -363,57 +235,6 @@ sed -i 's/mycarch="i686"/mycarch="i486")/g' pacman/PKGBUILD
 sed -i 's/mychost="i686-pc-linux-gnu"/mychost="i486-pc-linux-gnu"/g' pacman/PKGBUILD
 sed -i 's/myflags="-march=i686"/myflags=-march=i486/g' pacman/PKGBUILD
 
-# coreutils
-###########
-sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' coreutils/PKGBUILD
-
-# TODO: needed in stage 2?
-# apply man generation patch (one has to wonder, is it maintained at all?)
-# help2man errors: help2man: can't get `--help' info from man/chmod.td/chmod
-# http://ftp.lfs-matrix.net/pub/clfs/conglomeration/coreutils/coreutils-8.28-noman.patch
-# based on a patch by William Harrington (kb0iic at cross-lfs dot org) 2014-10-30 for coreutils 8.23
-#sed -i 's@source=(@source=(coreutils-8.28-noman.patch @' PKGBUILD
-#sed -i "s@md5sums=(@md5sums=('SKIP' @" PKGBUILD
-#sed -i '/build()/ i \  prepare() { \n\  cd ${pkgname}-${pkgver}\n\ patch -Np1 < ${srcdir}/coreutils-8.28-noman.patch \n }' PKGBUILD
-
-# zlib
-######
-strip: /lib/libz.so.1: no version information available (required by /lib/libbfd-2.29.1.so)
-=> this is because some tools are built with other versions (toolchain vs. chroot)
-=> so we must not install zlib before we rebuild binutils
-
-# util-linux
-############
-# disable some dependencies on systemd, python, PAM (chfn_chsh)
-# and other stuff we don't need
-# libtool seems broken
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' PKGBUILD
-sed -i 's@ \+depends\(.*\)@#depends\1@g' PKGBUILD
-sed -i 's@--with-python=3@--without-python \\@g' PKGBUILD
-sed -i '/--without-python/ a \ --without-systemd --without-systemdsystemunitdir' PKGBUILD
-sed -i 's@./configure@./configure --host=i486-unknown-linux-gnu@g' PKGBUILD
-sed -i '/--without-python \\/ a \ --disable-chfn-chsh \\' PKGBUILD
-sed -i '/--without-python \\/ a \ --disable-shared --enable-static \\' PKGBUILD
-sed -i 's@\(chmod 4755 "$pkgdir"/usr/bin/{newgrp,ch{sh,fn}}\)@#\1@g' PKGBUILD
-sed -i "s@\(sed -i '/ListenStream.*\)@#\1@g" PKGBUILD
-sed -i 's@\(rm "$pkgdir.*\)@#\1@g' PKGBUILD
-# chgrp: chgrp: invalid group: 'tty'invalid group: 'tty'
-# /etc/group belongs to filesystem, but has only a root entry when installed
-=> filesystem package: post.install hook has not been executed (filesystem.install)
-=> for now do it manually
-groupadd -g 5 tty
-# IMPORTANT DNAGER: the test suite is crazzy and destroys the host!! use --nocheck
-# packaging generates tons of errors, lets hope, they are not critical.
-# cp: omitting directory ‘/’
-# => at least util-linux needs !strip OPTIONS (makepkg-i486.conf)
-#rm "$pkgdir"/usr/lib/lib*.{a,so}*
-
-# pcre
-######
-# no C++
-sed -i 's@./configure@./configure --disable-cpp@g' pcre/PKGBUILD
-# --nocheck as we have trouble to find shared libraries
-
 # gmp
 #####
 # no C++
@@ -440,53 +261,13 @@ sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD
 # git
 #####
 # manual PKGBUILD fix
-# install: cannot stat 'contrib/credential/libsecret/git-credential-libsecret': No such file or directory
-# => PKGBUILD is a mess, sorry!
-# no asciidoc, as this needs python2
-#asciidoc -b docbook -d manpage -f ../../Documentation/asciidoc.conf \
-#        -agit_version=2.15.0  git-subtree.txt
-# disable make install-doc
 #make: pkg-config: Command not found
 #make: pkg-config: Command not found
 #make: Leaving directory '/build/git/src/git-2.15.0/contrib/subtree'
-#mv: cannot stat '/build/git/pkg/git/usr/share/perl5/site_perl/Git/*': No such file or directory
-=> hack away python, perl, systemd, contrib, docu and other things we don't need right now
-
-git clone...
-Cloning into 'strusBase'...
-fatal: cannot run ssh: No such file or directory
-fatal: unable to fork
-fatal: Unable to find remote helper for 'https'
-fatal: Unable to find remote helper for 'http'
-=> we need ssh
 
 # tcl
 #####
 # disable tests: cynical, disable unit tests of a software needed for testing
-
-# autoconf
-##########
-# checks need fortan (wow. that package is old!)
-# depends contains base-devel stuff?! diffutils
-sed -i 's@makedepends\(.*\)@#makedepends\1@g' autoconf/PKGBUILD
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' autoconf/PKGBUILD
-# not bad, but lets disable testing for now:
-# ERROR: 455 tests were run,
-# 5 failed (4 expected failures).
-# 48 tests were skipped.
-
-# automake
-##########
-# automake needs dejagnu for testing, not now, disabling checks
-sed -i 's@checkdepends\(.*\)@#checkdepends\1@g' automake/PKGBUILD
-# TOTAL: 2901
-# PASS:  2673
-# SKIP:  164
-# XFAIL: 41
-# FAIL:  21
-# XPASS: 0
-# ERROR: 2
-=> ok, but let's disable testing
 
 # dejagnu
 #########
@@ -676,10 +457,6 @@ test.c:1:10: fatal error: stdio.h: No such file or directory
 
 # END TODO: gcc
 
-# libtool
-#########
-# patched heavily again, git version cannot be bootstrapped use official tarball
-
 # glibc
 #######
 # use 2.25 version, not 2.26. Keep the ABI intact!
@@ -743,10 +520,8 @@ for p in $PACKAGES
 	# libxslt: --nocheck
 	# inetutils: --nocheck
 	# bison: --nocheck
-	# libarchive: --nocheck
 	# pacman: --nocheck
 	# util-linux: --nocheck
-	# pcre: --nocheck
 	# gawk: --nocheck
 	# tcl: --nocheck
 
@@ -782,9 +557,6 @@ done
 => we can temporarily fix this:
 ln -s /usr/bin/ld /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
 etc.
-
-# libz.so missing?
-ln -s libz.so.1 /usr/lib/libz.so
 
 # aftermatch for glibc
 
@@ -830,32 +602,3 @@ git: https helpers
 chmod 0777 /usr/lib/git-core/git-remote-*
 
 later: for inside the chroot
-
-# uname module hack
-###################
-
-# as root
-# we need i486, so setarch doesn't work for us, because it emulates only,
-# a i686, use the hacked uname kernel module:
-wget http://clfs.org/files/extras/uname_hack-20080713.tar.bz2
-tar xf uname_hack-20080713.tar.bz2 
-cd uname_hack
-# swap memset arguments:
-# /root/uname_hack/uname_hack.c:50:2: warning: 'memset' used with constant zero length parameter; this could be due to transposed parameters [-Wmemset-transposed-args]
-#  memset(uname_hack_uts_machine, uname_hack_uts_machine_len, '\0');
-#  ^~~~~~
-#  Building modules, stage 2.
-make uname_hack_fake_machine=i486
-insmod  uname_hack.ko
-#lib/config.guess in automake returns i486-pc-linux-gnu
-# uname -m returns i486
-cd ..
-
-# patch our hosts pacman.conf, so it doesn't get fooled by the architecture hack
-sed -i 's@^Architecture.*@Architecture = x86_64@g' /etc/pacman.conf
-
-# optional packages for stage 1
-# TODO: do we need this for old machines?
-# linux-firmware
-# use git from the host for now
-#sed -i 's@makedepends\(.*\)@#makedepends\1@g' linux-firmware/PKGBUILD

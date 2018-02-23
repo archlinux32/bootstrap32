@@ -1,3 +1,7 @@
+design bugs:
+- we build now on VMs or real hardware via SSH, we should also try to
+  build with chroots and bin_fmt (thanks to oaken-source mentioning it)
+  
 general bugs:
 
 - how to clean up sysroot nicely without having to rebuild the cross-compiler?
@@ -66,3 +70,7 @@ stage2 issues:
   => we cannot install via the [temp] repo
   => on the long term, debug pacman and libalpm and see what could be the root cause
 - our expectiation is makepkg -o -e would do the trick, but it doesn't
+- cracklib and other packages: something is broken in zlib and thwe way libtool is used there:
+  strip: /usr/lib/libz.so.1: no version information available (required by /usr/lib/libbfd-2.29.1.so)
+  => this is because some tools are built with other versions (toolchain vs. chroot)
+  => so we must not install zlib before we rebuild binutils

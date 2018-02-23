@@ -1,0 +1,4 @@
+# use internal glib as we cannot possibly have meson build glib!
+sed -i "/makedepends=/s/'glib2'//" PKGBUILD
+sed -i "/depends=/s/'glib2'//" PKGBUILD
+sed -i "s@./configure@./configure --with-internal-glib@g" PKGBUILD

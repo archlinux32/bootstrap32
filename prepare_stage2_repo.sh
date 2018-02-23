@@ -28,6 +28,9 @@ if test ! -d $STAGE2_BUILD; then
 	#SigLevel = Never
 	#Server = file:///packages/$arch
 
+	# tty group for util-linux
+	getent group tty >/dev/null || groupadd -g 5 tty
+	
 	echo "Prepared the stage 2 build environment."
 fi
 
