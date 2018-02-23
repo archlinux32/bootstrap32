@@ -64,10 +64,5 @@ stage2 issues:
   error: could not register 'temp' database (wrong or NULL argument passed)
   error: no usable package repositories configured.
   => we cannot install via the [temp] repo
-- copying every single file is not a really smart idea:
-  do not copy expanded sources in 'src' from host to target
-  (our expectiation is makepkg -o -e would do the trick, but it doesn't)
-- git sources are a problem. we must package 'src' on the host and scp
-  it to a named package-git.tar.gz, then patch PKGBUILD to make it use
-  this local file instead of trying to checkout from git
-  
+  => on the long term, debug pacman and libalpm and see what could be the root cause
+- our expectiation is makepkg -o -e would do the trick, but it doesn't

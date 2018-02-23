@@ -42,6 +42,9 @@ case $BUILD_CPU in
 		;;
 esac
 
+# for building git (stage 2)
+pacman --noconfirm --needed -S libgnome-keyring xmlto
+
 # some packages come from the AUR
 if test "$(grep -c '\[archlinuxfr\]' /etc/pacman.conf)" = 0; then
 	cat >> /etc/pacman.conf <<EOF

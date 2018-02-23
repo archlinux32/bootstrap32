@@ -1,3 +1,0 @@
-# we checkout on the host and scp to the target and don't use git on the target
-# (because we don't have it yet)
-sed -i "/makedepends=/s/git//" PKGBUILD

@@ -1,0 +1,23 @@
+# no python2
+sed -i "/makedepends=/s/'python2'//" PKGBUILD
+
+# no Gnome integration
+sed -i "/makedepends=/s/'libgnome-keyring'//" PKGBUILD
+sed -i "s@\(make -C contrib/credential/gnome-keyring\)@#\1@" PKGBUILD
+
+# no Emacs
+sed -i "/makedepends=/s/'emacs'//" PKGBUILD
+sed -i "s@\(make -C contrib/emacs prefix=/usr\)@#\1@" PKGBUILD
+
+# no documentation
+sed -i "/makedepends=/s/'xmlto'//" PKGBUILD
+sed -i "/makedepends=/s/'asciidoc'//" PKGBUILD
+sed -i "s/all doc/all/g" PKGBUILD
+sed -i "s/install install-doc/install/g" PKGBUILD
+
+# git-credential-libsecret.c:29:10: fatal error: glib.h: No such file or directory
+# include <glib.h>
+sed -i "s@\(make -C contrib/credential/libsecret\)@#\1@" PKGBUILD
+sed -i "/# gnome credentials helper/,/make -C contrib\/credential\/libsecret clean/s/\(.*\)/#\1/g" PKGBUILD
+
+# not configured with configure? weird..

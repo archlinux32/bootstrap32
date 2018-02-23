@@ -164,27 +164,9 @@ arch-chroot /home/cross/i486-root/
 # package specific things
 
 
-# perl
-######
-perl: warning: Please check that your locale settings:
-        LANGUAGE = (unset),
-        LC_ALL = (unset),
-        LANG = "en_US.UTF-8"
-    are supported and installed on your system.
-
-# openssl
-sed -i 's@i686@i486@g' openssl/PKGBUILD
-sed -i 's@no-ssl3-method@no-sse2 no-ssl3-method@g' openssl/PKGBUILD
-
 # xz
 # with gcc 7.2 we get new errors
 sed -i 's@--enable-werror@--disable-werror@g' xz/PKGBUILD
-
-# help2man
-# needs perl-locale-gettext, which needs gettext, which needs glib2
-# which needs meson (so a big nogo currently!)
-# obviously it builds also without gettext..
-sed -i 's@^depends\(.*\)@#depends\1@g' help2man/PKGBUILD
 
 # bc
 # requires texinfo, is this part of base-devel?
@@ -735,14 +717,14 @@ https://git.busybox.net/buildroot/diff/package/glibc/0005-fix-binutils-2-29-buil
 {standard input}: Error: `locs@GLIBC_2.0' can't be versioned to common symbol 'locs'
 make[2]: *** [../o-iterator.mk:9: /build/glibc/src/glibc-build/misc/regexp.os] Error 1
 
-PACKAGES="iana-etc filesystem linux-api-headers tzdata ncurses readline bash \
-gdbm perl openssl bzip2 xz m4 help2man flex bc elfutils \
+PACKAGES=" \
+bzip2 xz flex bc elfutils \
 libtool libxml2 libgpg-error libgcrypt libxslt \
 docbook-xml docbook-xsl xmlto libcap libtirpc pambase pam inetutils bison iproute2 kmod \
 sysfsutils libidn iputils \
 expat acl attr lz4 tar libarchive curl pacman \
 joe coreutils util-linux pcre grep findutils file diffutils ed patch \
-autoconf automake libedit openssh pcre2 git libunwind strace wget \
+autoconf automake libedit openssh libunwind strace wget \
 gmp mpfr gawk libmpc zlib tcl expect dejagnu binutils gcc libtool glibc"
 for p in $PACKAGES; do
 	asp export $p   
@@ -755,8 +737,6 @@ for p in $PACKAGES
 
 	# for some packages we cannot execute tests (because the dependencies to install in
 	# the toolchain environment would be too much)
-	# perl: --nocheck
-	# openssl: --nocheck
 	# libelf: --nocheck
 	# libtool: --nocheck
 	# libxml2: --nocheck

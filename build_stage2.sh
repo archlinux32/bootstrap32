@@ -14,10 +14,11 @@ iana-etc filesystem linux-api-headers tzdata
 ncurses readline joe
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
-autoconf automake libtool
+autoconf automake perl-error pcre2 git
 "
 
-#~ zlib pambase cracklib libtirpc pam libcap coreutils
+#~ git
+#~ libtool zlib pambase cracklib libtirpc pam libcap coreutils
 #~ util-linux e2fsprogs
 #~ expat bzip2 lz4 xz pcre less gzip tar libarchive curl
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
