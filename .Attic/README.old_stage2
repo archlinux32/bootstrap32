@@ -1,3 +1,5 @@
+# maybe some hints to be integrated into stage3..
+
 # old stage 2 based on a broken stage 1, so carefull what to pick
 # into the next version..
 
@@ -39,64 +41,8 @@ sed -i '/configure.ac/ a \  sed -i "s@\\(unit_SOURCES.*\\)@#\\1@g" Makefile.am' 
 sed -i '/configure.ac/ a \  sed -i "s@\\(check_PROGRAMS*\\)@#\\1@g" Makefile.am' dejagnu/PKGBUILD
 sed -i '/Makefile.am/ a \  autoreconf' dejagnu/PKGBUILD
 
-# glibc
-#######
-# use 2.25 version, not 2.26. Keep the ABI intact!
-# endless loop? gawk -f ../scripts/gen-as-const.awk pthread-pi-defines.sym \
-# two reasons: clock and artifacts walk backwards or forward in time
-# chroot on server with chroot, hard to have an asynchronous clock?
-# or glibc is already installed on the system (where not?), so how the
-# hell can it be possibly built!
-# => oh, this would be cruel.
-# or 3rd reason, we have a glibc shim, maybe this one causes some trouble
-# => why?
-# or libtool fixing, whatever fixing means (https://forums.gentoo.org/viewtopic-t-496052-start-0.html)
-# => nope.
-# -isystem /usr/includ ein gcc spec? quite likely!
-# ah: old friend:
-build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L18':
-dl-sysdep.c:(.text+0x8c): undefined reference to `__memcmp_ia32'
-/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L87':
-dl-sysdep.c:(.text+0x11f): undefined reference to `__memcmp_ia32'
-/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L19':
-dl-sysdep.c:(.text+0x152): undefined reference to `__memcmp_ia32'
-/build/glibc/src/glibc-build/libc.a(dl-sysdep.o): In function `.L85':
-dl-sysdep.c:(.text+0x19c): undefined reference to `__memcmp_ia32'
-dl-sysdep.c:(.text+0x1b7): undefined reference to `__memcmp_ia32'
-/build/glibc/src/glibc-build/libc.a(dl-sysdep.o):dl-sysdep.c:(.text+0x202): more undefined references to `__memcmp_ia32' follow
-elf/sln
-=> USE_MULTIARCH
-=> --disable-multi-arch
-=> let's test this time, too dangerous to loose the chroot otherwise!
-# older 2.25 misses a binutils 2.29 patch:
-https://git.busybox.net/buildroot/diff/package/glibc/0005-fix-binutils-2-29-build.patch?id=cf821efbd0b24690b52f379d4a9934a16073762e
-{standard input}: Assembler messages:
-{standard input}: Error: `loc1@GLIBC_2.0' can't be versioned to common symbol 'loc1'
-{standard input}: Error: `loc2@GLIBC_2.0' can't be versioned to common symbol 'loc2'
-{standard input}: Error: `locs@GLIBC_2.0' can't be versioned to common symbol 'locs'
-make[2]: *** [../o-iterator.mk:9: /build/glibc/src/glibc-build/misc/regexp.os] Error 1
-
 PACKAGES=" \
-libgpg-error   \
-      \
-sysfsutils libidn iputils \
-  tcl expect dejagnu  gcc  glibc"
-
-# aftermatch for gcc/binutils
-
-#collect2: unable to find ld: this sounds bad, like an archicture mismatch somewhere
-#in binutils/gcc
-=> this is the cross compiled gcc for i486 inside the chroot, it expects
-   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
-=> we can temporarily fix this:
-ln -s /usr/bin/ld /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
-etc.
-
-# aftermatch for glibc
-
-# bacause pacman cannot set file permissions
-chmod u+x /usr/bin/* /lib/*.so*
-
+  tcl expect dejagnu"
 
 # in 'real' 486
 ###############

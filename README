@@ -191,3 +191,14 @@ su cross ./prepare_stage2_repo.sh
 # (we gave it 512 MB)
 
 ./build_stage2.sh
+
+#########
+# STAGE 3
+#########
+
+# Use stage 2 to build base and base-devel. In this phase we don't care
+# yet much about testing the packages (as this draws in still too many
+# dependencies). But we try to be as close to base + base-devel as possible
+# with minimal patching of PKGBUILDs.
+
+su cross ./prepare_stage3_repo.sh

@@ -80,4 +80,7 @@ stage2 issues:
   make it a build requirement!
 - syslinux: linking issues, header section too small in ld linker script
 - syslinux: shouldn't we switch to another easier boot manager? or to grub?
+- we lack a hdd and iso creator, for now we just take stage1 for stage2 and stage2
+  for stage3
 
+stage 3 issues:
