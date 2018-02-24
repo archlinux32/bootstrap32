@@ -1,27 +1,8 @@
 # old stage 2 based on a broken stage 1, so carefull what to pick
 # into the next version..
 
-
-# generic build
-###############
-
-for p in $PACKAGES
-
-	# for ncurses, readline for bash
-	# autoreconf needs autotools/m4 and dependencies (crosstool-ng autotools are broken for me)
-	# libunistring for gettext
-	# libffi for glib2
-	bsdtar xf $STAGE1_CHROOT/packages/i486/libffi-3.2.1-2-i486.pkg.tar.gz 
-	popd
-
-	cd ..
-done
-
-testing:
-
 # common issues
 ###############
-
 
 TODOS: in linux package makepkg
 https://github.com/libarchive/libarchive/issues/411
@@ -46,174 +27,6 @@ qemu-system-i386 --enable-kvm -cpu 486 -m 32 \
 PHASE 2
 #######
 
-Test what we can build inside the chroot.
-When we get all dependencies right, we go into the real environment (which is
-i486 and thus not SMP and slow- ok, we could use distcc, but anyway)
-
-Main problem: we have trouble to run fakeroot in a chroot
-fakeroot: nested operation not yet supported
-makepkf -F takes care of that (thanks for providing minial fakeroot support)
-but pacman also takes an -F parameter
--> INFAKEROOT=1 in /usr/bin/makepkg
-
-As pacman seems to have some trouble, we overwrite the temp packages inside
-the chroot and replace the files on the filesystem forcefully:
-error: could not register 'temp' database (wrong or NULL argument passed)
-
-In this round don't skip dependencies and tests if possible.
-
-cp pkg/arch-install-scripts/usr/bin/arch-chroot /usr/local/bin/.
-
-arch-chroot /home/cross/i486-root/
-
-# package specific things
-
-# bc
-# requires texinfo, is this part of base-devel?
-# bootstrap --force
-# no /usr/lib32
-# ./fbc -c ./libmath.b </dev/null >libmath.h
-
-# 
-# libxml2
-# go without icu for now, icu needs C++
-# also, python bindings and git are not really needed
-sed -i 's@^depends\(.*\)@#depends\1@g' libxml2/PKGBUILD
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libxml2/PKGBUILD
-build()
-{
-  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' libtool
-  make
-}
-sed -i 's@--with-icu@@' libxml2/PKGBUILD
-# dito package
-# really, what is it with people!
-# take: ftp://xmlsoft.org/libxml2/libxml2-2.9.7.tar.gz
-#source=(git+https://git.gnome.org/browse/libxml2#commit=$_commit
-# no tests, c++ tests would fail
-./configure: line 13042: syntax error near unexpected token `Z,zlib,'
-./configure: line 13042: `    PKG_CHECK_MODULES(Z,zlib,'
-==> ERROR: A failure occurred in build().
-    Aborting...
--> zlib probing needs pkg-config, which is it's own disaster, so disable
-zlib for now.
-=> hack out the broken PKG_CHECK_MODULES out of configure!
--> same trick for LZMA (equally broken) and ICU
--> disable testing for now, either it takes long or it hangs
-
-# libgcrypt
-# download location broken, download by hand, adapt PKGBUILD
-
-# libxslt: same disaster as libxml2
-# no python, no check
-
-# kmod: circular dependency on linux-headers, let's build
-# linux/linux-headers correctly outside the chroot and install
-# them here (at least linux-headers)
-# gtk-doc draws in Gnome bullshit again
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' kmod/PKGBUILD
-
-# inetutils:
-# disable checks
-
-# iroute2
-# trying with iptables, as iptables draws in tons of things
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iproute2/PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' iproute2/PKGBUILD
-
-# bison
-# --nocheck: fails miserably to compile tests (C++ missing?)
-
-# linux-headers: fails hapilly and has tons of weird stuff in it
-install: failed to access ‘/home/cross/build/linux/pkg/linux-headers/usr/lib/modules/4.13.13-1/build’: No such file or directory
-_package-headers()
-=>  mkdir -p "${_builddir}" everywhere, the problem is install -D on Centos, obviously broken!
-
-# kmod
-configure: error: The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables liblzma_CFLAGS
-and liblzma_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See `config.log' for more details
-==> ERROR: A failure occurred in build().
-    Aborting...
-=> let's try to set lzma ourselves or disable it, get around pkg-config probing
-# no pkg-config, no docu, try to work around
-sed -i 's@--enable-gtk-doc@--disable-gtk-doc@g' kmod/PKGBUILD
-sed -i 's@./configure@liblzma_CFLAGS=-I/usr/include liblzma_LIBS=-llzma ./configure@g' kmod/PKGBUILD
-sed -i 's@./configure@zlib_CFLAGS=-I/usr/include zlib_LIBS=-lz ./configure@g' kmod/PKGBUILD
-=> ok heck: linking errors
-sed -i 's@--with-xz@--without-xz@g' kmod/PKGBUILD
-sed -i 's@--with-zlib@--without-zlib@g' kmod/PKGBUILD
-
-# libidn
-# --nocheck, testing hangs
-
-# iputils
-# remove git again
-# no docu, hack out manually 
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' iptuils/PKGBUILD
-
-# perl-error
-# no checks, needs perl test-pod
-sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' perl-error/PKGBUILD
-
-
-# shadow
-# git treatment again.
-# no docu
-# --disable-man
-
-# tar:
-# checking whether mknod can create fifo without root privileges... configure: error: in `/build/tar/src/tar-1.29':
-# configure: error: you should not run configure as root (set FORCE_UNSAFE_CONFIGURE=1 in environment to bypass this check)
-# See `config.log' for more details
-=> oh, please, bugger off!
-sed -i 's@./configure@FORCE_UNSAFE_CONFIGURE=1 ./configure@g' tar/PKGBUILD
-
-#TODO:
-
-#TODO: libldap keyutils krb5 they end in circlejerk with systemd!
-# we will solve that later by building a non-systemd version and then bootstrapping first systemd
-
-# for now we don't rebuild ca-certificates, we had to copy them funilly anyway, and it's
-# just a bunch of certs. So, in phase 3 or 4 then..
-
-# gmp
-#####
-# no C++
-sed -i 's@--enable-cxx@--disable-cxx@g' gmp/PKGBUILD
-
-# gawk
-######
-# we don't have a valid locale yet, disable NLS
-# and disable testing
-sed -i 's@./configure@./configure --disable-nls@g' PKGBUILD
-
-# openssh
-#########
-# package suffers from featuritis
-# remove ldns and kerberos5 support, keep libedit (as it's easy to build)
-# ssh => not good, openssl <> unbound <> openssl cycle and mess
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' PKGBUILD
-sed -i 's@^depends\(.*\)@#depends\1@g' PKGBUILD
-sed -i 's@--with-ldns@--without-ldns@g' PKGBUILD
-sed -i 's@--with-kerberos5=/usr@--without-kerberos5@g' PKGBUILD
-#ln: failed to create symbolic link '/build/openssh/pkg/openssh/usr/share/man/man1/slogin.1.gz': No such file or directory
-sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD
-
-# git
-#####
-# manual PKGBUILD fix
-#make: pkg-config: Command not found
-#make: pkg-config: Command not found
-#make: Leaving directory '/build/git/src/git-2.15.0/contrib/subtree'
-
 # tcl
 #####
 # disable tests: cynical, disable unit tests of a software needed for testing
@@ -225,31 +38,6 @@ sed -i '/.\/configure/ i \  sed -i "s@AC_PROG_CXX@#AC_PROG_CXX@" configure.ac' d
 sed -i '/configure.ac/ a \  sed -i "s@\\(unit_SOURCES.*\\)@#\\1@g" Makefile.am' dejagnu/PKGBUILD
 sed -i '/configure.ac/ a \  sed -i "s@\\(check_PROGRAMS*\\)@#\\1@g" Makefile.am' dejagnu/PKGBUILD
 sed -i '/Makefile.am/ a \  autoreconf' dejagnu/PKGBUILD
-
-# wget
-######
-# no gnutls, no libpsl
-sed -i 's@^depends\(.*\)@#depends\1@g' PKGBUILD
-sed -i 's@--enable-nls@--disable-nls@g' PKGBUILD
-sed -i 's@--with-ssl=gnutls@--with-ssl=openssl@g' PKGBUILD
-sed -i '/.\/configure/ a \    --without-libpsl \\' PKGBUILD
-# work around pkg-config
-sed -i 's@./configure@OPENSSL_CFLAGS=-I/usr/include OPENSSL_LIBS="-lssl lcrypto" ./configure@g' PKGBUILD
-# needs myriads of perl modules for testing => --nocheck
-sed -i 's@^checkdepends\(.*\)@#checkdepends\1@g' PKGBUILD
-
-# binutils
-##########
-# risky, risky
-sed -i 's/glibc>=2.26/glib/g' binutils/PKGBUILD
-# this is in gold, so let's disable gold! We don't have C++ (yet), so this should not matter..
-sed -i 's@--enable-gold@--disable-gold@g' binutils/PKGBUILD
-
-# libunwind
-###########
-# no TeX, no docu
-sed -i 's@^makedepends\(.*\)@#makedepends\1@g' libunwind/PKGBUILD
-
 
 # TODO: gcc
 #####
@@ -290,10 +78,6 @@ make: *** i486-pc-linux-gnu/libgo: No such file or directory.  Stop.
     Aborting...
 => fails, oh well, nobody needs go :-)
 
-
-
-only c language
-no checkdepdns, makedepnds
 
 why the hell, I switched off c++, so wy are still cpp probes being done!?
 /lib/cpp hardcoded, seriosly!!
@@ -444,52 +228,10 @@ https://git.busybox.net/buildroot/diff/package/glibc/0005-fix-binutils-2-29-buil
 make[2]: *** [../o-iterator.mk:9: /build/glibc/src/glibc-build/misc/regexp.os] Error 1
 
 PACKAGES=" \
-libxml2 libgpg-error libgcrypt libxslt \
-docbook-xml docbook-xsl xmlto libcap inetutils bison iproute2 kmod \
+libgpg-error   \
+      \
 sysfsutils libidn iputils \
-libedit openssh libunwind strace wget \
-gmp mpfr gawk libmpc tcl expect dejagnu binutils gcc libtool glibc"
-for p in $PACKAGES; do
-	asp export $p   
-done
-
-for p in $PACKAGES
-	cd $p
-
-	sed -i "s/^arch=.*/arch=('i486')/" PKGBUILD
-
-	# for some packages we cannot execute tests (because the dependencies to install in
-	# the toolchain environment would be too much)
-	# libtool: --nocheck
-	# libxml2: --nocheck
-	# libxslt: --nocheck
-	# inetutils: --nocheck
-	# bison: --nocheck
-	# gawk: --nocheck
-	# tcl: --nocheck
-
-	makepkg -C --config /etc/makepkg.conf --skipchecksums --skippgpcheck > $p.log 2>&1
-
-	# TODO: 
-	# some package break in parallel builds or produce really funky
-	# error messages or/and results
-	# binutils: use makepkg-noparallel.conf
-        # gcc: use makepkg-noparallel.conf for debuging, the real build works fine in parallel
-        
-	cp -v *.pkg.tar.gz /packages/i486/.
-
-	pacman --noconfirm --config /etc/pacman-i486.conf -U *.pkg.tar.gz 
-
-	# replace all pacman articats and clean caches
-	rm -rf /packages/i486/temp* /var/cache/pacman/pkg/*
-	repo-add /packages/i486/temp.db.tar.gz /packages/i486/*pkg.tar.gz
-	
-	#repo-add -n /packages/i486/temp.db.tar.gz /packages/i486/*pkg.tar.gz
-
-	pacman --noconfirm --config /etc/pacman-i486.conf -r / -S $p
-
-	pacman --config /etc/pacman-i486.conf -r / -Q | grep $p
-done
+  tcl expect dejagnu  gcc  glibc"
 
 # aftermatch for gcc/binutils
 
@@ -506,30 +248,6 @@ etc.
 # bacause pacman cannot set file permissions
 chmod u+x /usr/bin/* /lib/*.so*
 
-# kernel headers:
-#/usr/include/linux/errno.h missing
-#/usr/include/adm/errno.h missing
-=> a libarchive compression issue, files missing, because they are in pkg of
-  linux-api-headers?!
-
-remove debug packages
-
-error: failed to commit transaction (conflicting files)
-/usr/lib/libstdc++.a exists in both 'gcc-libs' and 'gcc'
-/usr/lib/libstdc++.la exists in both 'gcc-libs' and 'gcc'
-/usr/lib/libblkid.a exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libblkid.la exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libfdisk.a exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libfdisk.la exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libmount.a exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libmount.la exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libsmartcols.a exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libsmartcols.la exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libuuid.a exists in both 'util-linux' and 'libutil-linux'
-/usr/lib/libuuid.la exists in both 'util-linux' and 'libutil-linux'
-Errors occurred, no packages were upgraded.
-
-=> ok, we loose files and permissions
 
 # in 'real' 486
 ###############
@@ -540,8 +258,5 @@ error: could not register 'temp' database (wrong or NULL argument passed)
 
 installed binaries have wrong permissions (no execute permission), a pacman issue?
 shilly flags? libarchive problem?
-
-git: https helpers
-chmod 0777 /usr/lib/git-core/git-remote-*
 
 later: for inside the chroot

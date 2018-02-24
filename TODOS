@@ -76,3 +76,8 @@ stage2 issues:
   => so we must not install zlib before we rebuild binutils
 - better "package already built" test (example pacman and pacman-mirrorlist)
   dito linux and linux-api-headers
+- syslinux: python cmenu issues (a generator), python is out of reach for stage2 to
+  make it a build requirement!
+- syslinux: linking issues, header section too small in ld linker script
+- syslinux: shouldn't we switch to another easier boot manager? or to grub?
+

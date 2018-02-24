@@ -1,0 +1,2 @@
+# disable linux-atm (unlikely we still have some ATM based networks)
+sed -i "/makedepends=/s/'linux-atm'//" PKGBUILD

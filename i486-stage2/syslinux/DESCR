@@ -1,9 +1,6 @@
-# disable python (take it from the host for generating the menues)
+# disable python
 sed -i "/makedepends=/s/python2//" PKGBUILD
 sed -i "s/make PYTHON=python2/make/" PKGBUILD
-
-# take git from the host
-sed -i "/makedepends=/s/git//" PKGBUILD
 
 # no documentation
 sed -i "/makedepends=/s/asciidoc//" PKGBUILD
@@ -11,9 +8,11 @@ sed -i "/makedepends=/s/asciidoc//" PKGBUILD
 # no upx compression
 sed -i "/makedepends=/s/upx//" PKGBUILD
 
-# use the cross compiler
-sed -i "s/\(make \$_targets\)/\1 CC=$TARGET_ARCH-gcc AS=$TARGET_ARCH-as LD=$TARGET_ARCH-ld AR=$TARGET_ARCH-ar/" PKGBUILD
-
 # build BIOS version only for i486
 sed -i '/_targets/s/efi32//g' PKGBUILD
 sed -i '3!N; /prepare()/ a \  sed -i "/all_firmware :=/s/efi32 efi64//g" Makefile' PKGBUILD
+
+# precompute the menues which are generated with python
+sed -i 's@source=(@source=(syslinux-6.03-precomputed-python-menues.patch @' PKGBUILD
+sed -i "s@sha1sums=(@sha1sums=('4f92057c1dca02f8b6d4a71170183f89c7d4bd8f' @" PKGBUILD
+sed -i '/patch -p1/ a \  patch -Np1 -i "${srcdir}/syslinux-6.03-precomputed-python-menues.patch"' PKGBUILD

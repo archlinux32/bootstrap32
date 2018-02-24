@@ -1,0 +1,9 @@
+# remove ldns and kerberos5 support, keep libedit (as it's easy to build)
+# ssh => not good, openssl <> unbound <> openssl cycle
+sed -i "/depends=/s/krb5//" PKGBUILD
+sed -i "/depends=/s/ldns//" PKGBUILD
+sed -i 's@--with-ldns@--without-ldns@g' PKGBUILD
+sed -i 's@--with-kerberos5=/usr@--without-kerberos5@g' PKGBUILD
+
+#ln: failed to create symbolic link '/build/openssh/pkg/openssh/usr/share/man/man1/slogin.1.gz': No such file or directory
+sed -i 's@\(ln -sf ssh.1.gz.*\)@#\1@g' PKGBUILD

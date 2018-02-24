@@ -187,4 +187,7 @@ su cross ./prepare_stage2_repo.sh
 # stage 1 system. Resulting artifacts get stored also back
 # in $STAGE2_BUILD.
 
+# Most things compile just fine with 64 MB RAM, binutils ld gold needs more
+# (we gave it 512 MB)
+
 ./build_stage2.sh

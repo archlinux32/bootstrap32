@@ -1,0 +1,13 @@
+# disable Berkley Packet Filtering
+sed -i 's@--enable-bpf-compiler@--disable-bpf-compiler@g' PKGBUILD
+
+# disable nftable support, draws in more libraries, we need the xtables
+# depevelopment mainly now for iproute2
+sed -i "/depends=/s/libnftnl//" PKGBUILD
+sed -i 's@./configure@./configure --disable-nftables@' PKGBUILD
+
+# disable libpcap (tcpdump, draws in too many dependencies)
+sed -i "/depends=/s/libpcap//" PKGBUILD
+
+# disable connection tracking
+sed -i 's@./configure@./configure --disable-connlabel@' PKGBUILD

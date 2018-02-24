@@ -24,18 +24,18 @@ autoconf automake perl-error pcre2 git libtool
 zlib pambase cracklib libtirpc flex pam libcap coreutils
 util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
 tar libarchive curl
-archlinux-keyring archlinux32-keyring pacman
+pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
 elfutils sed texinfo grep findutils file diffutils ed patch
 fakeroot
 kbd procps-ng bison shadow
-inetutils bc kmod linux
+inetutils bc kmod linux uinit nasm 
+net-tools libmnl libnfnetlink iptables iproute2
+libedit openssh
+make mpfr gawk libmpc binutils
+libunwind strace gdb
 "
-#~ uinit nasm syslinux
-#~ net-tools libmnl libnfnetlink iptables iproute2
-#~ libedit openssh
-#~ make mpfr gawk libmpc binutils gcc glibc
-#~ libunwind strace gdb"
-#~ pacman-mirrorlist
+#TODO after nasm: syslinux
+#~ TODO: after binutils: gcc glibc
 
 
 for p in $PACKAGES; do
