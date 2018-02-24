@@ -1,0 +1,67 @@
+# TODO: how to make this a hook for the stage1 builder?
+# aftermatch for gcc/binutils
+#collect2: unable to find ld
+#=> this is the cross compiled gcc for i486 inside the chroot, it expects
+#   its platform dependend stuff in /usr/lib/gcc/i486-unknown-linux-gnu/7.2.0
+#=> we can temporarily fix this:
+#sudo ln -s /usr/bin/ld $STAGE1_CHROOT/usr/lib/gcc/i486-unknown-linux-gnu/7.2.0/ld
+
+
+# TODO from here: make it all patches, once  our own PKGBUILD works
+
+# gcc
+#sed -i '/--prefix=\/usr/ a \     --target=i486-unknown-linux-gnu --build=x86_64-pc-linux-gnu \\' gcc/PKGBUILD
+# no doxygen documentation
+#sed -i "/makedepends=/s/doxygen//" gcc/PKGBUILD
+# no ADA
+#sed -i "/makedepends=/s/gcc-ada//" gcc/PKGBUILD
+#sed -i '/pkgname/ s/gcc-ada//g' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/ada//g' gcc/PKGBUILD
+# do not build git versions or from git!
+#sed -i 's/pkgver=7.2.1/pkgver=7.2.0/' gcc/PKGBUILD
+#sed -i "/makedepends=/s/git//" gcc/PKGBUILD
+#sed -i 's@git+https://gcc.gnu.org/git/gcc.git#commit=${_commit}@https://ftp.gnu.org/gnu/${pkgname}/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz@g' gcc/PKGBUILD
+#sed -i 's@cd gcc$@cd ${pkgname}-${pkgver}@g' gcc/PKGBUILD
+#sed -i 's@$srcdir/gcc/configure@$srcdir/${pkgname}-${pkgver}/configure@g' gcc/PKGBUILD
+# send bugs to the right place
+#sed -i 's@https://bugs.archlinux.org/@https://bugs.archlinux32.org/@g' gcc/PKGBUILD
+# no LTO and plugins, they break and we don't need them
+#sed -i 's@--enable-plugin@--disable-plugin@' gcc/PKGBUILD
+#sed -i 's@--enable-lto@--disable-lto@' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/lto,//g' gcc/PKGBUILD
+# no other languages (Fortran, go, objc, etc)
+#sed -i '/pkgname/ s/gcc-fortran//g' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/,fortran//g' gcc/PKGBUILD
+#sed -i '/pkgname/ s/gcc-go//g' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/go,//g' gcc/PKGBUILD
+#sed -i '/pkgname/ s/gcc-objc//g' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/objc,//g' gcc/PKGBUILD
+#sed -i '/enable-languages/ s/,obj-c++//g' gcc/PKGBUILD
+# disable some libraries (libgomp doesn't cross compile, NLS we don't need)
+#sed -i "/--disable-libssp/ a \      --disable-libgomp \\" gcc/PKGBUILD
+#sed -i "/--disable-libssp/ a \      --disable-nls \\" gcc/PKGBUILD
+# disable threads
+#sed -i 's@--enable-threads=posix@--disable-threads@' gcc/PKGBUILD
+#=> current use PKGBUILD-gcc-cross, sorry, too many changes!
+# disable all languages but C and C++
+#use gcc-cross-PKGBUILD
+
+# more TODOs:
+#rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+# rm: cannot remove ???/home/cross/build/gcc/pkg/gcc/usr/share/info/gccgo???: No such file or directory
+#  rm "$pkgdir"/usr/share/info/{gccgo,gfortran.info}
+#https://bugs.archlinux.org/task/57421
+#/home/cross/x-tools/i486-unknown-linux-gnu/lib/gcc/i486-unknown-linux-gnu/4.9.4/../../../../i486-unknown-linux-gnu/bin/ld: cannot find -lquadmath
+#collect2: error: ld returned 1 exit status
+#libtool: install: error: relink `libgfortran.la' with the above command before installing it
+#make: *** [Makefile:1331: install-toolexeclibLTLIBRARIES] Error 1
+#make: Leaving directory '/home/cross/build/gcc/src/gcc-build/i486-unknown-linux-gnu/libgfortran'
+#==> ERROR: A failure occurred in package_gcc-libs().
+#    Aborting...
+#=> libquadmath must be retooled before libfortran
+#=> nope libfortran simply fails to relink => remove it
+#
+#install: cannot stat ???/home/cross/build/gcc/src/gcc/COPYING.RUNTIME???: No such file or directory
+#=> sweet, remove it
+#
+#test.c:1:10: fatal error: stdio.h: No such file or directory

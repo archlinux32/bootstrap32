@@ -31,12 +31,10 @@ kbd procps-ng bison shadow
 inetutils bc kmod linux uinit nasm 
 net-tools libmnl libnfnetlink iptables iproute2
 libedit openssh
-make mpfr gawk libmpc binutils
+make mpfr gawk libmpc binutils gcc glibc
 libunwind strace gdb
 "
 #TODO after nasm: syslinux
-#~ TODO: after binutils: gcc glibc
-
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage2_package.sh" "$p" || exit 1
