@@ -84,3 +84,7 @@ stage2 issues:
   for stage3
 
 stage 3 issues:
+- some packages don't install (also in stage 1): iana-etc, filesystem
+- withoud -x the messages of the build script are a little bit weird, add
+  some verbose output again
+  

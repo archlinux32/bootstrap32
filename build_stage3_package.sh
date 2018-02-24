@@ -119,10 +119,10 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		# there, packages seem to reappear in old versions)
 
 		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'
-			rm -rf /var/cache/pacman/pkg/*
-			rm -rf /packages/$TARGET_CPU/temp.db*
-			rm -rf /packages/$TARGET_CPU/temp.files*
-			repo-add /packages/$TARGET_CPU/temp.db.tar.gz /packages/$TARGET_CPU/*pkg.tar.xz
+#			rm -rf /var/cache/pacman/pkg/*
+#			rm -rf /packages/$TARGET_CPU/temp.db*
+#			rm -rf /packages/$TARGET_CPU/temp.files*
+#			repo-add /packages/$TARGET_CPU/temp.db.tar.gz /packages/$TARGET_CPU/*pkg.tar.xz
 		'"
 		
 		# install onto stage 1 system via pacman

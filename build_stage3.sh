@@ -9,12 +9,32 @@
 # to the $STAGE3_PACKAGES to speed up rebuild of the state of the stage 2
 # system in case of destroying it.
 
-PACKAGES="which"
+PACKAGES="iana-etc filesystem linux-api-headers tzdata
+ncurses readline bash joe
+attr acl"
+
+#~ stage2:
+#~  
+#~  m4 gmp gdbm db perl openssl
+#~ libunistring gettext perl-locale-gettext help2man
+#~ autoconf automake perl-error pcre2 git libtool
+#~ zlib pambase cracklib libtirpc flex pam libcap coreutils
+#~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
+#~ tar libarchive curl
+#~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
+#~ elfutils sed texinfo grep findutils file diffutils ed patch
+#~ fakeroot
+#~ kbd procps-ng bison shadow
+#~ inetutils bc kmod linux uinit nasm 
+#~ net-tools libmnl libnfnetlink iptables iproute2
+#~ libedit openssh
+#~ make mpfr gawk libmpc binutils gcc glibc
+#~ libunwind strace gdb
+#~ "
+#~ #TODO after nasm: syslinux
 
 # stage3 (from compute_dependencies.sh)
-#~ acl: attr 
 #~ argon2: glibc 
-#~ attr: glibc 
 #~ autoconf: awk m4 diffutils sh 
 #~ automake: perl bash 
 #~ bash: readline glibc ncurses 
@@ -37,7 +57,6 @@ PACKAGES="which"
 #~ expat: glibc 
 #~ fakeroot: glibc filesystem sed util-linux sh 
 #~ file: glibc zlib 
-#~ filesystem: iana-etc 
 #~ findutils: glibc sh 
 #~ flex: glibc m4 sh 
 #~ gawk: sh glibc mpfr 
@@ -146,27 +165,6 @@ PACKAGES="which"
 #~ xz: sh 
 #~ zlib: glibc 
 
-#~ stage2:
-#~ bash
-#~ iana-etc filesystem linux-api-headers tzdata
-#~ ncurses readline joe
-#~ attr acl m4 gmp gdbm db perl openssl
-#~ libunistring gettext perl-locale-gettext help2man
-#~ autoconf automake perl-error pcre2 git libtool
-#~ zlib pambase cracklib libtirpc flex pam libcap coreutils
-#~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
-#~ tar libarchive curl
-#~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
-#~ elfutils sed texinfo grep findutils file diffutils ed patch
-#~ fakeroot
-#~ kbd procps-ng bison shadow
-#~ inetutils bc kmod linux uinit nasm 
-#~ net-tools libmnl libnfnetlink iptables iproute2
-#~ libedit openssh
-#~ make mpfr gawk libmpc binutils gcc glibc
-#~ libunwind strace gdb
-#~ "
-#~ #TODO after nasm: syslinux
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage3_package.sh" "$p" || exit 1
