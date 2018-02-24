@@ -3,6 +3,3 @@ SYSROOT_INSTALL=1
 
 # prepare configure for cross-compilation
 sed -i "s@./configure@./configure --host=$TARGET_ARCH --build=$BUILD_ARCH@g" PKGBUILD
-
-# see FS#57420
-sed -i "s@http://www.mpfr.org/mpfr-current/@http://www.mpfr.org/mpfr-4.0.0/@" PKGBUILD
