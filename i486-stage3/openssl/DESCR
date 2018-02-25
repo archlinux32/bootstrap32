@@ -1,0 +1,5 @@
+sed -i "s@'i686'@'$TARGET_CPU'@g" PKGBUILD
+sed -i "s@'linux-elf'@'linux-generic32'@g" PKGBUILD
+sed -i 's@shared no-ssl3-method ${optflags}@shared ${optflags}@' PKGBUILD
+
+# pod2man fails during building of documentation, not dramatic, ignoring that.

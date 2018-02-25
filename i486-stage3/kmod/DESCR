@@ -1,0 +1,3 @@
+# don't build documentation
+sed -i "/depends=/s/gtk-doc//" PKGBUILD
+sed -i "s/--enable-gtk-doc/--disable-gtk-doc/" PKGBUILD

@@ -1,0 +1,11 @@
+# remove dependency python
+sed -i "/makedepends=/s/'python'//" PKGBUILD
+
+# no documentation
+sed -i "/makedepends=/s/'gtk-doc'//" PKGBUILD
+sed -i "s@--enable-gtk-doc@--disable-gtk-doc@" PKGBUILD
+
+# no man pages
+sed -i "/makedepends=/s/'libxslt'//" PKGBUILD
+sed -i "s@--enable-man@--disable-man@" PKGBUILD
+

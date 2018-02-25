@@ -99,6 +99,8 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 	scp -i $CROSS_HOME/.ssh/id_rsa -rC "$STAGE3_BUILD/$PACKAGE" build@$STAGE1_MACHINE_IP:/build/.
 
 	# building the actual package
+
+	echo "Building $PACKAGE on target.."
 	
 	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck --nocheck'" > $PACKAGE.log 2>&1
 	RES=$?
@@ -106,6 +108,8 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 	tail "$PACKAGE.log"
 
 	if test $RES = 0; then
+	
+		echo "Package $PACKAGE built sucessfully, installing on target.."
 
 		# copy to our package folder in the first stage chroot
 		
@@ -138,6 +142,8 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		'"
 		
 		# copy packages from target machine and replace our local version with it
+
+		echo "Salvaging build environment of $PACKAGE from target back to host.."
 
 		tmp_dir=$(mktemp -d 'tmp.compute-dependencies.0.XXXXXXXXXX' --tmpdir)
 		trap 'rm -rf --one-file-system "${tmp_dir}"' EXIT

@@ -201,4 +201,12 @@ su cross ./prepare_stage2_repo.sh
 # dependencies). But we try to be as close to base + base-devel as possible
 # with minimal patching of PKGBUILDs.
 
+# Also ommit most documentation building as it has heavy dependencies.
+
 su cross ./prepare_stage3_repo.sh
+
+# Build stage 3 on the target architecture and install it onto the
+# stage 1 system. Resulting artifacts get stored also back
+# in $STAGE3_BUILD.
+
+./build_stage3.sh

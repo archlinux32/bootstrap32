@@ -1,0 +1,2 @@
+# remove dependency python
+sed -i "/makedepends=/s/'python'//" PKGBUILD
