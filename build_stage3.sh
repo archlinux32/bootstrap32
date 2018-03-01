@@ -25,6 +25,8 @@ bison
 inetutils bc kmod
 net-tools libmnl
 libedit
+mpfr gawk libmpc binutils gcc
+libunwind strace
 argon2
 which
 "
@@ -60,18 +62,19 @@ which
 
 #~ linux build full with mkinitcpio and modules
 
+#~ gdb: python guile2.0
+
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman     
 #~ => kbd procps-ng <bison> shadow
 #~ <inetutils> <bc> <kmod> linux 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
 #~ <libedit> openssh
-#~ make mpfr gawk libmpc binutils gcc glibc
-#~ libunwind strace gdb
+#~ make <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
+#~ <libunwind> <strace> gdb
 #~ "
 #~ #TODO after nasm: syslinux
 
 # stage3 (from compute_dependencies.sh)
-#~ binutils: glibc zlib 
 #~ ca-certificates-cacert: ca-certificates-utils 
 #~ coreutils: glibc acl attr gmp libcap openssl 
 #~ cracklib: glibc zlib 
@@ -85,7 +88,6 @@ which
 #~ file: glibc zlib 
 #~ findutils: glibc sh 
 #~ flex: glibc m4 sh 
-#~ gawk: sh glibc mpfr 
 #~ gc: gcc-libs libatomic_ops 
 #~ glib2: pcre libffi libutil-linux zlib 
 #~ gmp: gcc-libs sh 
@@ -123,14 +125,12 @@ which
 #~ libssh2: openssl 
 #~ libtasn1: glibc 
 #~ libtirpc: krb5 
-#~ libunwind: glibc xz 
 #~ libusb: glibc libsystemd 
 #~ logrotate: popt gzip acl 
 #~ make: glibc guile 
 #~ man-db: bash gdbm zlib groff libpipeline less libseccomp 
 #~ mdadm: glibc 
 #~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
-#~ mpfr: gmp 
 #~ nano: ncurses file sh 
 #~ netctl: coreutils iproute2 openresolv systemd 
 #~ nettle: gmp 
@@ -149,7 +149,6 @@ which
 #~ reiserfsprogs: util-linux 
 #~ s-nail: openssl krb5 libidn 
 #~ shadow: bash pam acl 
-#~ strace: perl libunwind 
 #~ sudo: glibc libgcrypt pam libldap 
 #~ sysfsutils: glibc 
 #~ thin-provisioning-tools: expat gcc-libs libaio 

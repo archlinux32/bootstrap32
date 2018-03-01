@@ -1,0 +1,7 @@
+# no doxygen documentation
+sed -i "/makedepends=/s/doxygen//" PKGBUILD
+
+# no ADA
+sed -i "/makedepends=/s/gcc-ada//" PKGBUILD
+sed -i '/pkgname/ s/gcc-ada//g' PKGBUILD
+sed -i '/enable-languages/ s/ada//g' PKGBUILD
