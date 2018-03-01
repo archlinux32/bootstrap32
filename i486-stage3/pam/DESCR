@@ -1,0 +1,11 @@
+# no w3m, docboox-xml/xsl
+# tons of tools needed to build documentation, we ommit the documentation right now
+sed -i "/makedepends=/s/'w3m'//" PKGBUILD
+sed -i "/makedepends=/s/'docbook-xml.*'//" PKGBUILD
+sed -i "/makedepends=/s/'docbook-xsl'//" PKGBUILD
+
+# disable docu rebuilding
+sed -i 's@./configure@./configure --disable-regenerate-docu@' PKGBUILD
+
+# no documentation built, so nothing to remove
+sed -i '1!N; /# FS #40749\n \+rm/ s/rm/#rm/g' PKGBUILD

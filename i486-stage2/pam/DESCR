@@ -18,4 +18,4 @@ sed -i '/patch -Np/ a \  patch -Np1 -i "${srcdir}/pam-1.3.0-unix-passwd-no-yp.pa
 sed -i 's@./configure@./configure --disable-regenerate-docu@' PKGBUILD
 
 # no documentation built, so nothing to remove
-sed -i '2!N; /# FS #40749\n \+rm/ s/rm/#rm/g' PKGBUILD
+sed -i '1!N; /# FS #40749\n \+rm/ s/rm/#rm/g' PKGBUILD

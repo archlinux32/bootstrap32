@@ -14,7 +14,7 @@ ncurses readline bash joe
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
 autoconf automake perl-error pcre2 git libtool
-zlib pambase cracklib flex libcap
+zlib pambase cracklib flex pam libcap
 e2fsprogs expat bzip2 lz4 xz pcre less gzip
 tar libarchive
 icu
@@ -33,7 +33,6 @@ which
 
 #~ stage2:
 #~ 
-# 
 # git problem, not base of base-devel, but needed to checkout out via
 # https+git protocoll. For now using the stage2 one
 #
@@ -47,8 +46,7 @@ which
 #~ krb5: e2fsprogs libldap keyutils 
 #~ libtirpc: krb5
 
-#~ pam: w3m docbook-xml docbook-xsl
-#~         coreutils
+#~ coreutils
 #~ util-linux:
 #~ pkg-config: glib2
 
@@ -138,7 +136,6 @@ which
 #~ openssh: krb5 openssl libedit ldns 
 #~ p11-kit: glibc libtasn1 libffi 
 #~ pacman: bash glibc libarchive curl gpgme pacman-mirrorlist archlinux-keyring 
-#~ pam: glibc cracklib libtirpc pambase 
 #~ pciutils: glibc hwids kmod 
 #~ pcmciautils: systemd 
 #~ pinentry: ncurses libcap libassuan libsecret 

@@ -48,12 +48,11 @@ cat >etc/init/boot <<EOF
 #!/bin/sh
 mount -t proc proc /proc
 ln -s /proc/self/fd /dev/fd
-mkdir /dev/pts
-mount -t devpts devpts /dev/pts
-ln -s /proc/self/fd /dev/fd
 ln -s /proc/self/fd/0 /dev/stdin
 ln -s /proc/self/fd/1 /dev/stdout
 ln -s /proc/self/fd/2 /dev/stderr
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
 ln -s /proc/kcore /dev/core
 mount -t sysfs sys /sys
 mount -o remount,rw /
@@ -88,6 +87,7 @@ cp "$HOME/.ssh/id_rsa.pub" root/.ssh/authorized_keys
 
 # install a build user and build directory
 cat >> etc/group <<EOF
+tty:x:5:
 build:x:1001:
 EOF
 cat >> etc/passwd <<EOF
@@ -97,9 +97,8 @@ mkdir -p build
 mkdir build/.ssh
 cp "$HOME/.ssh/id_rsa.pub" build/.ssh/authorized_keys
 chown 1001:1001 build
-# TODO: why does su require a password though we want to login via
-# SSH and key only!?
-#echo 'build:xx' | chpasswd
+# default PAM rules expect a password to be set for su?
+echo 'build:xx' | chpasswd
 
 # add some test programs to test the C and C++ compiler
 
