@@ -5,3 +5,5 @@ sed -i "/makedepends=/s/doxygen//" PKGBUILD
 sed -i "/makedepends=/s/gcc-ada//" PKGBUILD
 sed -i '/pkgname/ s/gcc-ada//g' PKGBUILD
 sed -i '/enable-languages/ s/ada//g' PKGBUILD
+# rm "$pkgdir"/usr/share/info/{gccgo,gfortran,gnat-style,gnat_rm,gnat_ugn}.info
+sed -i 's/,gnat-style,gnat_rm,gnat_ugn//' PKGBUILD
