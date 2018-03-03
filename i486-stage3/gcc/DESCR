@@ -1,5 +1,7 @@
 # no doxygen documentation
 sed -i "/makedepends=/s/doxygen//" PKGBUILD
+sed -i 's/doc-man-doxygen//' PKGBUILD
+sed -i 's/doc-install-man//' PKGBUILD
 
 # no ADA
 sed -i "/makedepends=/s/gcc-ada//" PKGBUILD
