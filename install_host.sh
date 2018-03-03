@@ -42,6 +42,9 @@ case $BUILD_CPU in
 		;;
 esac
 
+# for groff
+pacman --noconfirm --needed -S xorg-util-macros
+
 # for building git (stage 2)
 pacman --noconfirm --needed -S libgnome-keyring xmlto
 

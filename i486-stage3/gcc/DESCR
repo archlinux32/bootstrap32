@@ -2,6 +2,8 @@
 sed -i "/makedepends=/s/doxygen//" PKGBUILD
 sed -i 's/doc-man-doxygen//' PKGBUILD
 sed -i 's/doc-install-man//' PKGBUILD
+sed -i '/# make documentation/{n;s/make/#make/}' PKGBUILD
+sed -i '/# install the libstdc++ man pages/{n;s/make/#make/}' PKGBUILD
 
 # no ADA
 sed -i "/makedepends=/s/gcc-ada//" PKGBUILD

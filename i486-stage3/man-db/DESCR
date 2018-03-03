@@ -1,0 +1,4 @@
+# disable makedepends and take out po4a
+sed -i "/makedepends=/s/po4a//" PKGBUILD
+#sed -i 's@\(cd doc\)@#\1@g' PKGBUILD
+#sed -i 's@\(po4a\)@#\1@g' PKGBUILD
