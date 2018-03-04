@@ -1,0 +1,17 @@
+# no libsecret (has cyrcles and far too many dependencies)
+sed -i "/depends=/s/'libsecret'//" PKGBUILD
+sed -i 's/--enable-libsecret/--disable-libsecret/' PKGBUILD
+
+# no emacs
+sed -i 's/--enable-pinentry-emacs/--disable-pinentry-emacs/' PKGBUILD
+
+# no GUI stuff
+sed -i "/makedepends=/s/gtk2//" PKGBUILD
+sed -i "/makedepends=/s/qt5-base//" PKGBUILD
+sed -i "/makedepends=/s/gtk2//" PKGBUILD
+sed -i 's/--enable-pinentry-gtk2/--disable-pinentry-gtk2/' PKGBUILD
+sed -i 's/--enable-pinentry-gnome3/--disable-pinentry-gnome3/' PKGBUILD
+sed -i 's/--enable-pinentry-qt/--disable-pinentry-qt/' PKGBUILD
+
+# no gcr
+sed -i "/makedepends=/s/gcr//" PKGBUILD

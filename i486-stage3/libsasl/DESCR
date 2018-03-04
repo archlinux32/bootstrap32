@@ -1,9 +1,13 @@
 # libsasl needs libdlap, but libldap can use libsasl? break the cyrcle..
 sed -i "/makedepends=/s/libldap//" PKGBUILD
+sed -i 's/--with-ldap/--without-ldap/' PKGBUILD
+sed -i 's/--enable-ldapdb/--disable-ldapdb/' PKGBUILD
 
 # breaking the krb5 needs libldap needs libsasl needs krb5 cycle..
 sed -i "/makedepends=/s/krb5//" PKGBUILD
 
 # no database bindings
 sed -i "/makedepends=/s/postgresql-libs//" PKGBUILD
+sed -i 's/--with-pgsql=.*/--without-pgsql \\/' PKGBUILD
 sed -i "/makedepends=/s/libmariadbclient//" PKGBUILD
+sed -i 's/--with-mysql=.*/--without-mysql \\/' PKGBUILD

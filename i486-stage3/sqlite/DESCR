@@ -1,4 +1,0 @@
-# TODO: or build tcl? we need it later for testing the toolchain anyway
-# no dependency on tcl
-sed -i "/makedepends=/s/tcl//" PKGBUILD
-

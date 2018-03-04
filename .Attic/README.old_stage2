@@ -29,10 +29,6 @@ qemu-system-i386 --enable-kvm -cpu 486 -m 32 \
 PHASE 2
 #######
 
-# tcl
-#####
-# disable tests: cynical, disable unit tests of a software needed for testing
-
 # dejagnu
 #########
 # has hard-wired AC_PROG_CXX in configure, remove internal C++ tests
@@ -43,15 +39,3 @@ sed -i '/Makefile.am/ a \  autoreconf' dejagnu/PKGBUILD
 
 PACKAGES=" \
   tcl expect dejagnu"
-
-# in 'real' 486
-###############
-
-next round: do those problems persist
-
-error: could not register 'temp' database (wrong or NULL argument passed)
-
-installed binaries have wrong permissions (no execute permission), a pacman issue?
-shilly flags? libarchive problem?
-
-later: for inside the chroot

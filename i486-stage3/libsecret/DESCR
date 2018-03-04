@@ -1,0 +1,10 @@
+# no documentation
+sed -i "/makedepends=/s/intltool//" PKGBUILD
+sed -i "/makedepends=/s/docbook-xsl//" PKGBUILD
+sed -i "/makedepends=/s/gtk-doc//" PKGBUILD
+
+# no gnome
+sed -i "/makedepends=/s/gobject-introspection//" PKGBUILD
+
+# no vala
+sed -i "/makedepends=/s/vala//" PKGBUILD

@@ -1,0 +1,7 @@
+# TODO: no ldap (openldap has a linking problem, can be removed later when
+# openldap builds)
+sed -i "/makedepends=/s/libldap//" PKGBUILD
+
+# no other dependencies
+sed -i "/makedepends=/s/libusb-compat//" PKGBUILD
+sed -i "/makedepends=/s/pcsclite//" PKGBUILD

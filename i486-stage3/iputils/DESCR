@@ -1,0 +1,5 @@
+# no documentation
+sed -i "/makedepends=/s/perl-sgmls//" PKGBUILD
+sed -i "/makedepends=/s/docbook-utils//" PKGBUILD
+sed -i 's/\(make -C doc man\)/#\1/' PKGBUILD
+sed -i '/install.*doc/,/pkgdir/s/\(.*\)/#\1/' PKGBUILD

@@ -19,37 +19,66 @@ e2fsprogs expat bzip2 lz4 xz pcre less gzip
 tar libarchive
 icu
 mpdecimal libffi 
-nettle libidn libtasn1 p11-kit gnutls libgpg-error
+nettle libidn libtasn1 p11-kit gnutls libgpg-error libassuan
+libksba libgcryt pinentry gnupg
 elfutils sed texinfo grep findutils file diffutils ed patch
 fakeroot
 check kbd bison shadow
 inetutils bc kmod
 net-tools libmnl
 libedit
-libatomic_ops gc mpfr gawk libmpc binutils
+mpfr gawk libmpc binutils
+libatomic_ops gc
 libunwind strace
 argon2
 groff
+jfsutils
 json-c
 libcap-ng
+libnftnl
 libpipeline libseccomp man-db man-pages
+libmicrohttpd
 mdadm
 nano
+npth
 popt logrotate
 hwids pciutils
 keyutils
-sqlite
+tcl sqlite libsasl chrpath unixodbc
+reiserfsprogs
+sysfsutils iputils
 vi
 which
+xfsprogs
 "
 
-#~ util-linux: libcap-ng
+#~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
 
-# guile, guile2_0: libtool fails to find gc
+#~ iptables: glibc bash  libpcap 
+#~ libpcap: glibc libnl sh libusbx dbus 
 
-# gnupg: libgcrypt 
-# libcgcryt: autodetection fails brilliantly, for instalce SSE 4.1
-# gets enabled!
+#~ util-linux: systemd, python
+
+# TODO: redo make with guile
+# guile, guile2_0: libtool fails to find gc (threading problem?),
+# --disable-threads in toolchain causes POSIX threads to be absent, we
+# wait for full toolchain to be around.
+
+#~ gdb: python guile2.0
+# wait for posix threads, gcc toolchain rebuild
+
+# openldap: 
+#/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lldap_r
+#collect2: error: ld returned 1 exit status
+#libtool: install: error: relink `accesslog.la' with the above command before installing it
+#make[2]: Leaving directory '/build/openldap/src/openldap-2.4.45/servers/slapd/overlays'
+
+# building toolchain (gcc): again, lobtool problems
+#/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
+#collect2: error: ld returned 1 exit status
+#libtool: install: error: relink `libgfortran.la' with the above command before installing it
+#make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
+
 
 #~ stage2:
 # 
@@ -61,8 +90,6 @@ which
 #~ xmlto: libxslt docbook-xsl
 #~ git: python2 emacs libgnome-keyring xmlto asciidoc
 #~
-#~ libsasl: postgresql-libs libmariadbclient libldap krb5
-#~ libsasl: sqlite
 #~ libldap: libsasl
 #~ krb5: e2fsprogs libldap keyutils
 #~ keyutils: glibc sh  
@@ -81,14 +108,15 @@ which
 
 #~ linux build full with mkinitcpio and modules
 
-#~ gdb: python guile2.0
+
+#  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
 
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman     
 #~ <kbd> procps-ng <bison> <shadow>
 #~ <inetutils> <bc> <kmod> linux 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
 #~ <libedit> openssh
-#~ <make> <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
+#~ make <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
 #~ <libunwind> <strace> gdb
 #~ "
 #~ #TODO after nasm: syslinux
@@ -99,21 +127,10 @@ which
 #~ dbus: libsystemd expat 
 #~ dhcpcd: glibc sh udev libsystemd 
 #~ glib2: pcre libffi libutil-linux zlib 
-#~ gnupg: npth libgpg-error libgcrypt libksba libassuan pinentry bzip2 readline gnutls sqlite 
 #~ guile2.0: gmp libltdl ncurses texinfo libunistring gc libffi 
-#~ iptables: glibc bash libnftnl libpcap 
-#~ iputils: openssl sysfsutils libcap libidn 
-#~ jfsutils: util-linux 
 #~ ldns: openssl dnssec-anchors 
-#~ libarchive: acl attr bzip2 expat lz4 openssl xz zlib 
-#~ libassuan: libgpg-error 
-#~ libgcrypt: libgpg-error 
-#~ libksba: bash libgpg-error glibc 
-#~ libnfnetlink: glibc 
-#~ libnftnl: libmnl 
+#~ dnssec-anchors: unbound
 #~ libnghttp2: glibc 
-#~ libnl: glibc 
-#~ libpcap: glibc libnl sh libusbx dbus 
 #~ libsecret: glib2 libgcrypt 
 #~ libssh2: openssl 
 #~ libtirpc: krb5 
@@ -125,34 +142,25 @@ which
 #~ openssh: krb5 openssl libedit ldns 
 #~ pacman: bash glibc libarchive curl gpgme pacman-mirrorlist archlinux-keyring 
 #~ pcmciautils: systemd 
-#~ pinentry: ncurses libcap libassuan libsecret 
 #~ pkg-config: glib2 
 #~ procps-ng: ncurses libsystemd 
 #~ psmisc: ncurses 
-#~ reiserfsprogs: util-linux 
 #~ s-nail: openssl krb5 libidn 
 #~ sudo: glibc libgcrypt pam libldap 
-#~ sysfsutils: glibc 
 #~ thin-provisioning-tools: expat gcc-libs libaio 
 #~ usbutils: libusb hwids 
-#~ xfsprogs: sh libutil-linux readline 
 
 #~ base cryptsetup
 #~ base device-mapper
 #~ base dhcpcd
-#~ base iputils
-#~ base jfsutils
 #~ base licenses
 #~ base lvm2
 #~ base netctl
-#~ base pciutils
 #~ base pcmciautils
 #~ base psmisc
-#~ base reiserfsprogs
 #~ base s-nail
 #~ base systemd-sysvcompat
 #~ base usbutils
-#~ base xfsprogs
 #~ base-devel sudo
 #~ base-devel systemd
 

@@ -1,0 +1,2 @@
+# no modern Intel assembly optimizations
+sed -i "s@./configure@./configure --disable-pclmul-support --disable-sse41-support --disable-drng-support --disable-avx-support --disable-avx2-support --disable-neon-support --disable-arm-crypto-support --disable-amd64-as-feature-detection@" PKGBUILD

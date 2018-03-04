@@ -203,6 +203,14 @@ su cross ./prepare_stage2_repo.sh
 
 # Also ommit most documentation building as it has heavy dependencies.
 
+# We break cycles by making the simpler dependency vanish in the more
+# complex packages:
+# - libsasl without openldap
+# - libgcrypt without libsecret
+
+# some packages are simply to hard to build:
+# - libsecret: needs glib2 which is not buildable in stage3
+
 su cross ./prepare_stage3_repo.sh
 
 # Build stage 3 on the target architecture and install it onto the
