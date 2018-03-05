@@ -20,7 +20,7 @@ tar libarchive
 icu
 mpdecimal libffi 
 nettle libidn libtasn1 p11-kit gnutls libgpg-error libassuan
-libksba libgcryt pinentry gnupg
+libksba libgcrypt pinentry gnupg
 elfutils sed texinfo grep findutils file diffutils ed patch
 fakeroot
 check kbd bison shadow
@@ -36,8 +36,10 @@ jfsutils
 json-c
 libcap-ng
 libnftnl
+libidn2 libnghttp2
 libpipeline libseccomp man-db man-pages
 libmicrohttpd
+libssh2
 mdadm
 nano
 npth
@@ -88,6 +90,7 @@ xfsprogs
 # libxml2: python2 and python as makedepends
 #~ libxslt: libxml2 libgcrypt python2
 #~ xmlto: libxslt docbook-xsl
+#~ asciidoc: python
 #~ git: python2 emacs libgnome-keyring xmlto asciidoc
 #~
 #~ libldap: libsasl
@@ -98,11 +101,9 @@ xfsprogs
 #~ util-linux:
 #~ pkg-config: glib2
 
-#~ libxml2: icu
 #~ libxslt: libxml2
-#~ libidn2 publicsuffix-list icu
-#~ libpsl: libidn2 libunistring libxslt python
-#~ curl: ca-certificates krb5 libssh2 libpsl libnghttp2
+#~ libpsl: => https://github.com/rockdaboot/libpsl/issues/92
+#~ curl: ca-certificates krb5 libpsl 
 
 #~ python: expat bzip2 gdbm openssl libffi zlib 
 
@@ -130,9 +131,7 @@ xfsprogs
 #~ guile2.0: gmp libltdl ncurses texinfo libunistring gc libffi 
 #~ ldns: openssl dnssec-anchors 
 #~ dnssec-anchors: unbound
-#~ libnghttp2: glibc 
 #~ libsecret: glib2 libgcrypt 
-#~ libssh2: openssl 
 #~ libtirpc: krb5 
 #~ libusb: glibc libsystemd 
 #~ make: glibc guile 
