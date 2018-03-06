@@ -9,3 +9,12 @@ sed -i "s@--enable-gtk-doc@--disable-gtk-doc@" PKGBUILD
 sed -i "/makedepends=/s/'libxslt'//" PKGBUILD
 sed -i "s@--enable-man@--disable-man@" PKGBUILD
 
+# patching xsltproc in --disable-man fix, see https://github.com/rockdaboot/libpsl/issues/92
+sed -i 's@source=(@source=(libpsl-0.19.1-configure-disable-man-no-xsltproc.patch @' PKGBUILD
+sed -i "s@sha512sums=(@sha512sums=('48f2d7c407f42e8b6ddfbbacad757c1ed916c8ae2062d85af2365821f3d9cb028fa3b43b5a4e8eb807034eb812ea0ecb1c727243307b09e01f1ddb55cff5368b' @" PKGBUILD
+sed -i '/autoreconf/ i \  patch -Np1 -i "${srcdir}/libpsl-0.19.1-configure-disable-man-no-xsltproc.patch"' PKGBUILD
+
+# TODO: # src/psl-make-dafsa needs python 2.7+, AM_PATH_PYTHON([2.7]),
+# can this be precomputed?
+# psl-make-dafsa using PSL file /usr/share/publicsuffix/effective_tld_names.dat
+

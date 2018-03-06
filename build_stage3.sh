@@ -109,7 +109,6 @@ xfsprogs
 
 #~ linux build full with mkinitcpio and modules
 
-
 #  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
 
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman     
