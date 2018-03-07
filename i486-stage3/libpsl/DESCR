@@ -1,6 +1,3 @@
-# remove dependency python
-sed -i "/makedepends=/s/'python'//" PKGBUILD
-
 # no documentation
 sed -i "/makedepends=/s/'gtk-doc'//" PKGBUILD
 sed -i "s@--enable-gtk-doc@--disable-gtk-doc@" PKGBUILD
@@ -14,7 +11,15 @@ sed -i 's@source=(@source=(libpsl-0.19.1-configure-disable-man-no-xsltproc.patch
 sed -i "s@sha512sums=(@sha512sums=('48f2d7c407f42e8b6ddfbbacad757c1ed916c8ae2062d85af2365821f3d9cb028fa3b43b5a4e8eb807034eb812ea0ecb1c727243307b09e01f1ddb55cff5368b' @" PKGBUILD
 sed -i '/autoreconf/ i \  patch -Np1 -i "${srcdir}/libpsl-0.19.1-configure-disable-man-no-xsltproc.patch"' PKGBUILD
 
-# TODO: # src/psl-make-dafsa needs python 2.7+, AM_PATH_PYTHON([2.7]),
-# can this be precomputed?
-# psl-make-dafsa using PSL file /usr/share/publicsuffix/effective_tld_names.dat
-
+# remove dependency on python
+# src/psl-make-dafsa needs python 2.7+, AM_PATH_PYTHON([2.7]),
+# => we precompute it outside and add it as patch
+# generated with libpsql 0.19.1 with psl-make-dafsa using PSL file
+# /usr/share/publicsuffix/effective_tld_names.dat
+sed -i "/makedepends=/s/'python'//" PKGBUILD
+sed -i 's@source=(@source=(libpsl-0.19.1-prebuilt-dafsa-no-python.patch @' PKGBUILD
+sed -i "s@sha512sums=(@sha512sums=('134450657e08bf2474ca7c860c7e041d61e709c30681fdab790132b1e9f64dea6f55c668a20b78f5b36b412d23e51fc091905e0e9a2aa9aae9b67f6f006809ab' @" PKGBUILD
+sed -i '/autoreconf/ i \  patch -Np1 -i "${srcdir}/libpsl-0.19.1-prebuilt-dafsa-no-python.patch"' PKGBUILD
+sed -i '/autoreconf/ i \  sed -i "s/\\(AM_PATH_PYTHON\\)/dnl \\1/" configure.ac' PKGBUILD
+# tests are in SUBDIRS, cannot disable testing
+sed -i '/autoreconf/ i \  sed -i "/^SUBDIRS/s/tests//" Makefile.am' PKGBUILD

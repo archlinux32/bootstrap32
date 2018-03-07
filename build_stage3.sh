@@ -36,7 +36,7 @@ jfsutils
 json-c
 libcap-ng
 libnftnl
-libidn2 libnghttp2
+libidn2 libnghttp2 libpsl
 libpipeline libseccomp man-db man-pages
 libmicrohttpd
 libssh2
@@ -102,8 +102,7 @@ xfsprogs
 #~ pkg-config: glib2
 
 #~ libxslt: libxml2
-#~ libpsl: => https://github.com/rockdaboot/libpsl/issues/92
-#~ curl: ca-certificates krb5 libpsl 
+#~ curl: ca-certificates krb5  
 
 #~ python: expat bzip2 gdbm openssl libffi zlib 
 
