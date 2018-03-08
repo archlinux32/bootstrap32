@@ -57,15 +57,11 @@ xfsprogs
 psmisc
 gpgme
 sudo
+autoconf-archive
+linux-atm iproute2
+ca-certificates curl pacman-mirrorlist archlinux-keyring archlinux32-keyring
+pacman
 "
-
-#~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
-
-# python executes and fails in testing. Why can't i switch off
-# testing?
-# 0:01:27 load avg: 1.07 [ 24/406] test_asynchat, test hangs forever!
-
-#~ util-linux: systemd, python
 
 # TODO: redo make with guile
 # guile, guile2_0: libtool fails to find gc (threading problem?),
@@ -83,17 +79,17 @@ sudo
 #libtool: install: error: relink `libgfortran.la' with the above command before installing it
 #make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
 
+# the ptyhon knot
+# python executes and fails in testing. Why can't i switch off
+# testing?
+# 0:01:27 load avg: 1.07 [ 24/406] test_asynchat, test hangs forever!
 
-#~ stage2:
-# 
-# git problem, not base of base-devel, but needed to checkout out via
-# https+git protocoll. For now using the stage2 one
-#
+#~ util-linux: systemd, python
+
 # libxml2: python2 and python as makedepends
 #~ libxslt: libxml2 libgcrypt python2
 #~ xmlto: libxslt docbook-xsl
 #~ asciidoc: python
-#~ git: python2 emacs libgnome-keyring xmlto asciidoc
 
 #~ util-linux:
 #~ pkg-config: glib2
@@ -101,26 +97,23 @@ sudo
 
 #~ libxslt: libxml2
 # ca-certificates: asciidoc, xsltproc,...
-#~ curl: ca-certificates
 
 #~ python: 
 
 #~ linux build full with mkinitcpio and modules
-
-
-#~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman     
-#~ <kbd> procps-ng <bison> <shadow>
-#~ <inetutils> <bc> <kmod> linux 
-#~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
+     
+#~  linux 
 #~ <libedit> openssh
 #~ make <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
 #~ <libunwind> <strace> gdb
 #~ "
 #~ #TODO after nasm: syslinux
 
+#~ iptables: libpcap 
+# libpcap: dbus libusbx
+
 # stage3 (from compute_dependencies.sh)
-#~ ca-certificates-cacert: ca-certificates-utils 
-#~ cryptsetup: device-mapper libgcrypt popt libutil-linux json-c argon2 
+#~ cryptsetup: device-mapper libgcrypt popt libutil-linux
 
 # ldns/unbound-cyrcle
 #~ ldns: openssl dnssec-anchors 
@@ -135,28 +128,27 @@ sudo
 # the systemd knot
 #~ libusb: glibc libsystemd 
 #~ usbutils: libusb hwids 
-#~ netctl: coreutils iproute2 openresolv systemd 
+#~ netctl: openresolv systemd 
 #~ openresolv: systemd 
 #~ pcmciautils: systemd 
 #~ procps-ng: libsystemd 
-#~ iptables: libpcap 
-#~ libpcap: libnl libusbx dbus 
+#~ libpcap: libusbx dbus 
 #  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
 #~ dbus: libsystemd expat 
 #~ dhcpcd: glibc sh udev libsystemd 
+# systemd: gperf intltool libxslt python-lxml quota-tools gnu-efi-libs meson
+#~ util-linux: systemd, python
 
 #~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
 
-#~ pacman: libarchive curl pacman-mirrorlist archlinux-keyring 
-
-# lvm2, devicemapper: systemd, thin-povisioning-tools
+# lvm2, device-mapper: systemd, thin-povisioning-tools
 #~ thin-provisioning-tools: expat gcc-libs libaio boost
 # boost: we can build a non-python version
+# cryptsetup: device-mapper
 
 #~ base cryptsetup
 #~ base device-mapper
 #~ base dhcpcd
-#~ base licenses
 #~ base lvm2
 #~ base netctl
 #~ base pcmciautils

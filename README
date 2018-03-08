@@ -209,8 +209,10 @@ su cross ./prepare_stage2_repo.sh
 # - libgcrypt without libsecret
 # - ldns unbound dnssec-anchors are all in a cyrcle
 
-# some packages are simply to hard to build:
+# some packages are simply to hard or important to build:
 # - libsecret: needs glib2 which is not buildable in stage3
+# - licenses: needs links, we don't care for stage3 as they will not
+#   go public in the end
 
 su cross ./prepare_stage3_repo.sh
 

@@ -1,2 +1,5 @@
 # no documentation
-sed -i "/makedepends=/s/'asciidoc'//" PKGBUILD
+sed -i "/makedepends=/s/asciidoc//" PKGBUILD
+sed -i "s/\(asciidoc.py\)/#\1/g" PKGBUILD
+sed -i "s/\(xsltproc\)/true; #\1/g" PKGBUILD
+sed -i "s@\(install -Dm644 update-ca-trust.8\)@#\1@" PKGBUILD

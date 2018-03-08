@@ -33,6 +33,9 @@ general bugs:
   error: no usable package repositories configured.
   installing and listing packages by hand works without problems.
   debug: unregistering database 'local'
+  => this goes away in stage3 after rebuilding pacman in stage3. This must
+     be investigated as this is a subtle pacman issue somewhere when being
+     cross-compiled!
 - some packages get build more than once in stage1 (linux-api-headers, pacman-mirrorlist)
 - make a wrapper for sed in DESCR, which is actually able to detect whether
   the patch was successful or not. Avoid hard to detect errors, when the
@@ -86,3 +89,7 @@ stage2 issues:
 stage 3 issues:
 - some packages don't install (also in stage 1): iana-etc, filesystem
 - can we build layers in parallel?
+- linux-atm, we should actually build the kernel first
+- pacman-key --refresh:
+  gpg: connecting dirmngr at '/etc/pacman.d/gnupg/S.dirmngr' failed: IPC connect call failed
+  gpg: keyserver refresh failed: No dirmngr

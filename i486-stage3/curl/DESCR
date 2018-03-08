@@ -1,0 +1,2 @@
+# no documentation
+sed -i "/makedepends=/s/asciidoc//" PKGBUILD
