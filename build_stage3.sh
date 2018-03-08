@@ -52,6 +52,7 @@ sysfsutils iputils
 vi
 which
 xfsprogs
+openldap
 "
 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
@@ -69,11 +70,8 @@ xfsprogs
 #~ gdb: python guile2.0
 # wait for posix threads, gcc toolchain rebuild
 
+# HERE TODO: libraries must be installed before the server overlays, why are they not?
 # openldap: 
-#/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lldap_r
-#collect2: error: ld returned 1 exit status
-#libtool: install: error: relink `accesslog.la' with the above command before installing it
-#make[2]: Leaving directory '/build/openldap/src/openldap-2.4.45/servers/slapd/overlays'
 
 # building toolchain (gcc): again, lobtool problems
 #/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
