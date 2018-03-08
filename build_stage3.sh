@@ -50,15 +50,21 @@ tcl sqlite libsasl chrpath unixodbc openldap
 krb5 libtirpc pam
 reiserfsprogs
 sysfsutils iputils
+s-nail
 vi
 which
 xfsprogs
+psmisc
 "
 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
 
-#~ iptables: glibc bash  libpcap 
-#~ libpcap: glibc libnl sh libusbx dbus 
+#~ iptables: libpcap 
+#~ libpcap: libnl libusbx dbus 
+
+# python executes and fails in testing. Why can't i switch off
+# testing?
+# 0:01:27 load avg: 1.07 [ 24/406] test_asynchat, test hangs forever!
 
 #~ util-linux: systemd, python
 
@@ -66,8 +72,10 @@ xfsprogs
 # guile, guile2_0: libtool fails to find gc (threading problem?),
 # --disable-threads in toolchain causes POSIX threads to be absent, we
 # wait for full toolchain to be around.
-
+# guile, posix thread missing in toolchain
+#~ make: glibc guile 
 #~ gdb: python guile2.0
+#~ guile2.0:  gc (with posix threads) 
 # wait for posix threads, gcc toolchain rebuild
 
 # building toolchain (gcc): again, lobtool problems
@@ -90,11 +98,13 @@ xfsprogs
 
 #~ util-linux:
 #~ pkg-config: glib2
+#~ pkg-config: glib2 
 
 #~ libxslt: libxml2
-#~ curl: ca-certificates krb5  
+# ca-certificates: asciidoc, xsltproc,...
+#~ curl: ca-certificates
 
-#~ python: expat bzip2 gdbm openssl libffi zlib 
+#~ python: 
 
 #~ linux build full with mkinitcpio and modules
 
@@ -115,26 +125,33 @@ xfsprogs
 #~ cryptsetup: device-mapper libgcrypt popt libutil-linux json-c argon2 
 #~ dbus: libsystemd expat 
 #~ dhcpcd: glibc sh udev libsystemd 
-#~ glib2: pcre libffi libutil-linux zlib 
-#~ guile2.0: gmp libltdl ncurses texinfo libunistring gc libffi 
+
+
+# ldns/unbound-cyrcle
 #~ ldns: openssl dnssec-anchors 
 #~ dnssec-anchors: unbound
+#~ unbound: ldns
+#~ openssh: ldns 
+
+# the glib2 knot
+#~ glib2: libutil-linux 
 #~ libsecret: glib2 libgcrypt 
+
+# the systemd knot
 #~ libusb: glibc libsystemd 
-#~ make: glibc guile 
-#~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
-#~ netctl: coreutils iproute2 openresolv systemd 
-#~ openresolv: bash 
-#~ openssh: krb5 openssl libedit ldns 
-#~ pacman: bash glibc libarchive curl gpgme pacman-mirrorlist archlinux-keyring 
-#~ pcmciautils: systemd 
-#~ pkg-config: glib2 
-#~ procps-ng: ncurses libsystemd 
-#~ psmisc: ncurses 
-#~ s-nail: openssl krb5 libidn 
-#~ sudo: glibc libgcrypt pam libldap 
-#~ thin-provisioning-tools: expat gcc-libs libaio 
 #~ usbutils: libusb hwids 
+#~ netctl: coreutils iproute2 openresolv systemd 
+#~ openresolv: systemd 
+#~ pcmciautils: systemd 
+#~ procps-ng: libsystemd 
+
+#~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
+
+#~ pacman: libarchive curl gpgme pacman-mirrorlist archlinux-keyring 
+#~ sudo: libgcrypt pam libldap 
+
+#~ thin-provisioning-tools: expat gcc-libs libaio boost
+# boost: we can build a non-python version
 
 #~ base cryptsetup
 #~ base device-mapper
@@ -143,8 +160,6 @@ xfsprogs
 #~ base lvm2
 #~ base netctl
 #~ base pcmciautils
-#~ base psmisc
-#~ base s-nail
 #~ base systemd-sysvcompat
 #~ base usbutils
 #~ base-devel sudo

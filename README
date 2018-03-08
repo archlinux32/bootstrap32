@@ -207,6 +207,7 @@ su cross ./prepare_stage2_repo.sh
 # complex packages:
 # - libsasl without openldap
 # - libgcrypt without libsecret
+# - ldns unbound dnssec-anchors are all in a cyrcle
 
 # some packages are simply to hard to build:
 # - libsecret: needs glib2 which is not buildable in stage3
@@ -216,5 +217,8 @@ su cross ./prepare_stage3_repo.sh
 # Build stage 3 on the target architecture and install it onto the
 # stage 1 system. Resulting artifacts get stored also back
 # in $STAGE3_BUILD.
+
+# Most things compile just fine with 64 MB RAM, binutils ld gold needs more
+# (we gave it 512 MB). s-nail needs much more (we gave it 2 GB).
 
 ./build_stage3.sh
