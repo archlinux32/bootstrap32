@@ -55,12 +55,11 @@ vi
 which
 xfsprogs
 psmisc
+gpgme
+sudo
 "
 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
-
-#~ iptables: libpcap 
-#~ libpcap: libnl libusbx dbus 
 
 # python executes and fails in testing. Why can't i switch off
 # testing?
@@ -108,7 +107,6 @@ psmisc
 
 #~ linux build full with mkinitcpio and modules
 
-#  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
 
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman     
 #~ <kbd> procps-ng <bison> <shadow>
@@ -123,9 +121,6 @@ psmisc
 # stage3 (from compute_dependencies.sh)
 #~ ca-certificates-cacert: ca-certificates-utils 
 #~ cryptsetup: device-mapper libgcrypt popt libutil-linux json-c argon2 
-#~ dbus: libsystemd expat 
-#~ dhcpcd: glibc sh udev libsystemd 
-
 
 # ldns/unbound-cyrcle
 #~ ldns: openssl dnssec-anchors 
@@ -144,12 +139,17 @@ psmisc
 #~ openresolv: systemd 
 #~ pcmciautils: systemd 
 #~ procps-ng: libsystemd 
+#~ iptables: libpcap 
+#~ libpcap: libnl libusbx dbus 
+#  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
+#~ dbus: libsystemd expat 
+#~ dhcpcd: glibc sh udev libsystemd 
 
 #~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
 
-#~ pacman: libarchive curl gpgme pacman-mirrorlist archlinux-keyring 
-#~ sudo: libgcrypt pam libldap 
+#~ pacman: libarchive curl pacman-mirrorlist archlinux-keyring 
 
+# lvm2, devicemapper: systemd, thin-povisioning-tools
 #~ thin-provisioning-tools: expat gcc-libs libaio boost
 # boost: we can build a non-python version
 
@@ -162,7 +162,6 @@ psmisc
 #~ base pcmciautils
 #~ base systemd-sysvcompat
 #~ base usbutils
-#~ base-devel sudo
 #~ base-devel systemd
 
 for p in $PACKAGES; do

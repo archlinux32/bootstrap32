@@ -1,0 +1,17 @@
+# we only build the library
+sed -i 's/pkgname=.*/pkgname=(gpgme)/' PKGBUILD
+
+# no python
+sed -i "/makedepends=/s/'python'//" PKGBUILD
+sed -i "/makedepends=/s/'python2'//" PKGBUILD
+
+# no Qt library
+sed -i "/makedepends=/s/'qt5-base'//" PKGBUILD
+
+# no bindings
+sed -i "/makedepends=/s/'swig'//" PKGBUILD
+
+# disable language bindings support and don't move around
+# things we do not build
+sed -i 's@./configure@./configure --enable-languages=no@' PKGBUILD
+sed -i '/# split qgpgme/,/^}/ {/# split qgpgme/n;/^}/!{s/\(.*\)/#\1/g}}' PKGBUILD  
