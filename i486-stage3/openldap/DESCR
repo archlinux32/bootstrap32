@@ -1,6 +1,11 @@
 # FS#57749: relink against missing libraries in split package
 sed -i 's/for dir in clients servers/for dir in libraries clients servers/' PKGBUILD
-sed -i '/usr\/share\/man\/man5\/slapo-lastbind.5/ a rm -rf ${pkgdir}/usr/{lib,include,man3}' PKGBUILD
+# ldap.conf comes in package 'libldap', also include, libs and devel man
+# => remove them in 'openldap' package
+sed -i '/usr\/share\/man\/man5\/slapo-lastbind.5/ a \
+	rm -rf ${pkgdir}/etc/openldap/ldap.conf \
+	rm -rf ${pkgdir}/usr/{lib,include,man3} \
+' PKGBUILD
 
 # we actually need only libldap, but installing openldap doesn't harm us
 ADDITIONAL_INSTALL_PACKAGE=libldap

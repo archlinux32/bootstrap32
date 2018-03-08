@@ -133,12 +133,13 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'		
 			# TODO: broken [temp] repo
-			#pacman --noconfirm -Syy $PACKAGE
-			pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
-			if test $ADDITIONAL_INSTALL_PACKAGE != ""; then
-				#pacman --noconfirm -Syy $ADDITIONAL_INSTALL_PACKAGE
-				pacman --noconfirm -U /packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
-			fi		
+			if test \"$ADDITIONAL_INSTALL_PACKAGE\" != \"\"; then
+				#pacman --noconfirm -Syy $PACKAGE $ADDITIONAL_INSTALL_PACKAGE
+				pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz /packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+			else
+				#pacman --noconfirm -Syy $PACKAGE
+				pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+			fi
 		'"
 		
 		# copy packages from target machine and replace our local version with it

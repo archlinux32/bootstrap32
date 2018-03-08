@@ -122,9 +122,10 @@ if test "$(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" 
 	
 		# install into chroot via pacman
 		
-		sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
 		if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
-			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$ADDITIONAL_INSTALL_PACKAGE"
+			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE" "$ADDITIONAL_INSTALL_PACKAGE"
+		else
+			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
 		fi
 
 		# optionally install into cross-compiler sysroot with bsdtar

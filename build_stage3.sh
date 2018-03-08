@@ -14,7 +14,7 @@ ncurses readline bash joe
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
 autoconf automake perl-error pcre2 git libtool
-zlib pambase cracklib flex pam libcap coreutils
+zlib pambase cracklib flex libcap coreutils
 e2fsprogs expat bzip2 lz4 xz pcre less gzip
 tar libarchive
 icu
@@ -46,13 +46,13 @@ npth
 popt logrotate
 hwids pciutils
 keyutils
-tcl sqlite libsasl chrpath unixodbc
+tcl sqlite libsasl chrpath unixodbc openldap
+krb5 libtirpc pam
 reiserfsprogs
 sysfsutils iputils
 vi
 which
 xfsprogs
-openldap
 "
 
 #~ <net-tools> <libmnl> <libnfnetlink> iptables iproute2
@@ -69,9 +69,6 @@ openldap
 
 #~ gdb: python guile2.0
 # wait for posix threads, gcc toolchain rebuild
-
-# HERE TODO: libraries must be installed before the server overlays, why are they not?
-# openldap: 
 
 # building toolchain (gcc): again, lobtool problems
 #/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
@@ -90,11 +87,6 @@ openldap
 #~ xmlto: libxslt docbook-xsl
 #~ asciidoc: python
 #~ git: python2 emacs libgnome-keyring xmlto asciidoc
-#~
-#~ libldap: libsasl
-#~ krb5: e2fsprogs libldap keyutils
-#~ keyutils: glibc sh  
-#~ libtirpc: krb5
 
 #~ util-linux:
 #~ pkg-config: glib2
@@ -128,7 +120,6 @@ openldap
 #~ ldns: openssl dnssec-anchors 
 #~ dnssec-anchors: unbound
 #~ libsecret: glib2 libgcrypt 
-#~ libtirpc: krb5 
 #~ libusb: glibc libsystemd 
 #~ make: glibc guile 
 #~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
