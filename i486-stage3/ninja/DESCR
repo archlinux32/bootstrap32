@@ -1,0 +1,3 @@
+# no emacs
+sed -i "/makedepends=/s/emacs-nox//" PKGBUILD
+sed -i "s/\(.*emacs.*\)/#\1/g" PKGBUILD

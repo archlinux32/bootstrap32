@@ -59,9 +59,20 @@ gpgme
 sudo
 autoconf-archive
 linux-atm iproute2
-ca-certificates curl pacman-mirrorlist archlinux-keyring archlinux32-keyring
+curl pacman-mirrorlist archlinux-keyring archlinux32-keyring
 pacman
+python quota-tools perl-xml-parser intltool
+re2c python2 ninja python-setuptools
+python-pip python2-pip
+meson
 "
+
+# meson needs python-setuptools, python-setuptools itself
+# can not be built from packages, so we need another shim
+# here.
+
+# gyp used for mozilla sub certs, continue to use shim?
+# ca-certificates-cacerts ca-certificates
 
 # TODO: redo make with guile
 # guile, guile2_0: libtool fails to find gc (threading problem?),
@@ -79,15 +90,10 @@ pacman
 #libtool: install: error: relink `libgfortran.la' with the above command before installing it
 #make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
 
-# the ptyhon knot
-# python executes and fails in testing. Why can't i switch off
-# testing?
-# 0:01:27 load avg: 1.07 [ 24/406] test_asynchat, test hangs forever!
-
 #~ util-linux: systemd, python
 
 # libxml2: python2 and python as makedepends
-#~ libxslt: libxml2 libgcrypt python2
+#~ libxslt: libxml2 python2
 #~ xmlto: libxslt docbook-xsl
 #~ asciidoc: python
 
@@ -95,10 +101,6 @@ pacman
 #~ pkg-config: glib2
 #~ pkg-config: glib2 
 
-#~ libxslt: libxml2
-# ca-certificates: asciidoc, xsltproc,...
-
-#~ python: 
 
 #~ linux build full with mkinitcpio and modules
      
@@ -113,7 +115,7 @@ pacman
 # libpcap: dbus libusbx
 
 # stage3 (from compute_dependencies.sh)
-#~ cryptsetup: device-mapper libgcrypt popt libutil-linux
+#~ cryptsetup: device-mapper popt libutil-linux
 
 # ldns/unbound-cyrcle
 #~ ldns: openssl dnssec-anchors 
@@ -123,7 +125,7 @@ pacman
 
 # the glib2 knot
 #~ glib2: libutil-linux 
-#~ libsecret: glib2 libgcrypt 
+#~ libsecret: glib2 
 
 # the systemd knot
 #~ libusb: glibc libsystemd 
@@ -133,10 +135,9 @@ pacman
 #~ pcmciautils: systemd 
 #~ procps-ng: libsystemd 
 #~ libpcap: libusbx dbus 
-#  systemd: libgcrypt libmicrohttpd libxslt python-lxml quota-tools gnu-efi-libs meson
+#  systemd:  libxslt python-lxml  gnu-efi-libs meson
 #~ dbus: libsystemd expat 
 #~ dhcpcd: glibc sh udev libsystemd 
-# systemd: gperf intltool libxslt python-lxml quota-tools gnu-efi-libs meson
 #~ util-linux: systemd, python
 
 #~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 

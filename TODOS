@@ -26,16 +26,6 @@ general bugs:
   in build_stage1_package.sh
 - when uninstalling pacman in the chroot, you must rename pacman.pacsave
   back to pacman.conf as it is used for building packages
-- pacman has some issues with the sync databases (pacman -Syyu results
-  in):
-  debug: returning error 6 from _alpm_db_register_sync : wrong or NULL argument passed
-  error: could not register 'temp' database (wrong or NULL argument passed)
-  error: no usable package repositories configured.
-  installing and listing packages by hand works without problems.
-  debug: unregistering database 'local'
-  => this goes away in stage3 after rebuilding pacman in stage3. This must
-     be investigated as this is a subtle pacman issue somewhere when being
-     cross-compiled!
 - some packages get build more than once in stage1 (linux-api-headers, pacman-mirrorlist)
 - make a wrapper for sed in DESCR, which is actually able to detect whether
   the patch was successful or not. Avoid hard to detect errors, when the
