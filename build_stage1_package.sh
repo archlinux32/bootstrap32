@@ -121,11 +121,15 @@ if test "$(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" 
 		repo-add $STAGE1_CHROOT/packages/$TARGET_CPU/temp.db.tar.gz $STAGE1_CHROOT/packages/$TARGET_CPU/*pkg.tar.xz
 	
 		# install into chroot via pacman
+
+		if test "$FORCE_INSTALL"; then
+			FORCE="--force"
+		fi
 		
 		if test "x$ADDITIONAL_INSTALL_PACKAGE" != "x"; then
-			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE" "$ADDITIONAL_INSTALL_PACKAGE"
+			sudo pacman $FORCE --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE" "$ADDITIONAL_INSTALL_PACKAGE"
 		else
-			sudo pacman --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
+			sudo pacman $FORCE --noconfirm --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" -Syy "$PACKAGE"
 		fi
 
 		# optionally install into cross-compiler sysroot with bsdtar

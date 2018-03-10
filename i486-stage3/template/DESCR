@@ -18,3 +18,7 @@ NOPARALLEL_BUILD=0
 # some packages generate additional package files to install
 # (for example util-linux also has a libutil-linux)
 ADDITIONAL_INSTALL_PACKAGE=
+
+# FORCE_INSTALL = 0 | 1
+# per default packages should not be forced.
+FORCE_INSTALL=1

@@ -34,6 +34,8 @@ general bugs:
   be dealt with not by copy pasting code
 - maybe we should not simply overwrite packages with the same version numbers,
   have something like build/stage numbers as in Archlinux32.
+- Missing dependencies errors on host when doing makepkg -o, ugly, but it
+  works nevertheless
     
 stage1 issues:
   - stage1: cdrom installs keyrings without having a gpg binary
@@ -83,3 +85,7 @@ stage 3 issues:
 - pacman-key --refresh:
   gpg: connecting dirmngr at '/etc/pacman.d/gnupg/S.dirmngr' failed: IPC connect call failed
   gpg: keyserver refresh failed: No dirmngr
+- libtool relink during installation issues in toolchain (libquadmath)
+- python-pip-bootstrap for starting with setuptools and pip and wheel, they conflict
+  with the vanilla packages, so we have to force to overwrite the shimmed files.
+  

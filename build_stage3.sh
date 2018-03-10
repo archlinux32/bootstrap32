@@ -61,9 +61,11 @@ autoconf-archive
 linux-atm iproute2
 curl pacman-mirrorlist archlinux-keyring archlinux32-keyring
 pacman
+wget
 python quota-tools perl-xml-parser intltool
-re2c python2 ninja python-setuptools
-python-pip python2-pip
+re2c python2 ninja
+python-pip-bootstrap python-pip
+python-pyparsing python-packaging python-appdirs python-six python-setuptools
 meson
 "
 
@@ -90,6 +92,8 @@ meson
 #libtool: install: error: relink `libgfortran.la' with the above command before installing it
 #make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
 
+# systemd: cryptsetup python-lxml gnu-efi-libs
+
 #~ util-linux: systemd, python
 
 # libxml2: python2 and python as makedepends
@@ -100,7 +104,6 @@ meson
 #~ util-linux:
 #~ pkg-config: glib2
 #~ pkg-config: glib2 
-
 
 #~ linux build full with mkinitcpio and modules
      
@@ -126,6 +129,8 @@ meson
 # the glib2 knot
 #~ glib2: libutil-linux 
 #~ libsecret: glib2 
+# glib2 needs dbus shared-mime-info
+# shared-mime-info needs glib2 :-)
 
 # the systemd knot
 #~ libusb: glibc libsystemd 

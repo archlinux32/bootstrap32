@@ -226,3 +226,11 @@ su cross ./prepare_stage3_repo.sh
 # (we gave it 512 MB). s-nail needs much more (we gave it 2 GB).
 
 ./build_stage3.sh
+
+#########
+# STAGE 4
+#########
+
+# Use stage 3 to build base and base-devel again. In this phase we try to
+# use vanilla PKGBUILDs as much as possible, also building documentation
+# and do all the testing.

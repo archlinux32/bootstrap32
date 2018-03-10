@@ -1,0 +1,6 @@
+# shim to bootstrap python pip, bootstrap, wheel
+
+FETCH_METHOD="yaourt"
+
+ADDITIONAL_INSTALL_PACKAGE=python2-pip-bootstrap
+

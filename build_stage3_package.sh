@@ -131,14 +131,18 @@ if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		
 		# install onto stage 1 system via pacman
 
+		if test "$FORCE_INSTALL"; then
+			FORCE="--force"
+		fi
+		
 		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'		
 			# TODO: broken [temp] repo
 			if test \"$ADDITIONAL_INSTALL_PACKAGE\" != \"\"; then
-				#pacman --noconfirm -Syy $PACKAGE $ADDITIONAL_INSTALL_PACKAGE
-				pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz /packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
+				#pacman $FORCE --noconfirm -Syy $PACKAGE $ADDITIONAL_INSTALL_PACKAGE
+				pacman $FORCE --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz /packages/$TARGET_CPU/$ADDITIONAL_INSTALL_PACKAGE-*.pkg.tar.xz
 			else
-				#pacman --noconfirm -Syy $PACKAGE
-				pacman --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
+				#pacman $FORCE --noconfirm -Syy $PACKAGE
+				pacman $FORCE --noconfirm -U /packages/$TARGET_CPU/$PACKAGE-*.pkg.tar.xz
 			fi
 		'"
 		

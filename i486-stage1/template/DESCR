@@ -26,3 +26,7 @@ SYSROOT_INSTALL=0
 # (for example util-linux also has a libutil-linux)
 # Note: SYSROOT_INSTALL respects this too
 ADDITIONAL_INSTALL_PACKAGE=
+
+# FORCE_INSTALL = 0 | 1
+# per default packages should not be forced.
+FORCE_INSTALL=1

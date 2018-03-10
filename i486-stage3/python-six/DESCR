@@ -1,0 +1,8 @@
+# we bootstrap via python-pip-bootstrap, so we can not depend on the
+# cycle introduced by low-level python modules
+sed -i "/makedepends=/s/'python-pip'//" PKGBUILD
+sed -i "/makedepends=/s/'python2-pip'//" PKGBUILD
+sed -i "/makedepends=/s/'python-setuptools'//" PKGBUILD
+sed -i "/makedepends=/s/'python2-setuptools'//" PKGBUILD
+
+ADDITIONAL_INSTALL_PACKAGE=python2-six
