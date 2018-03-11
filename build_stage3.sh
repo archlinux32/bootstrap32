@@ -73,6 +73,7 @@ mkinitcpio-busybox mkinitcpio
 glib2 pkg-config
 ldns openssh
 zip nspr gyp nss
+libaio boost
 "
 
 # gyp used for mozilla sub certs, continue to use shim?
@@ -105,28 +106,16 @@ zip nspr gyp nss
 #~ "
 #~ #TODO after nasm: syslinux
 
-# stage3 (from compute_dependencies.sh)
-#~ cryptsetup: device-mapper popt libutil-linux
-
-# ldns/unbound-cyrcle
-#~ dnssec-anchors: requires unbound
-#~ unbound: ldns
-
-# the systemd knot
-
 # lvm knot
 # lvm2, device-mapper: systemd, thin-povisioning-tools
 #~ thin-provisioning-tools: expat gcc-libs libaio boost
-# libaio
-# stack smashing and nostdlib?
-# compat-0_1.c:(.text+0xaf): undefined reference to `__stack_chk_fail_local'
-# boost: we can build a non-python version
-# cryptsetup: device-mapper
+# boost:  #  error "Threading support unavaliable: it has been explicitly disabled with BOOST_DISABLE_THREADS"
+# => now we really need the toolchain with POSIX threads
+#~ cryptsetup: device-mapper popt libutil-linux
 
 #~ base cryptsetup
 #~ base device-mapper
 #~ base lvm2
-#~ base 
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage3_package.sh" "$p" || exit 1
