@@ -1,0 +1,3 @@
+# no bluetooth, draws in glib2 in the end
+sed -i '/makedepends=/,/)/ s/bluez-libs//' PKGBUILD
+sed -i 's/--enable-bluetooth/--disable-bluetooth/' PKGBUILD

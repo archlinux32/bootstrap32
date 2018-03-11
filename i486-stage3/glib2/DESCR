@@ -1,0 +1,8 @@
+# no documentation
+sed -i "/makedepends=/s/gtk-doc//" PKGBUILD
+sed -i 's/--enable-gtk-doc//' PKGBUILD
+sed -i 's/\(mv gtk-doc\)/#\1/' PKGBUILD
+sed -i 's@\(mv.*usr/share/gtk-doc\)@#\1@' PKGBUILD
+
+# no shared-mime-info, break cycle as shared-mime-info needs glib2
+sed -i "/makedepends=/s/shared-mime-info//" PKGBUILD

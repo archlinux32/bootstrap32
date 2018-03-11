@@ -18,7 +18,7 @@ PACKAGE=$1
 
 if test "$(find "$STAGE3_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
 	echo "Building package $PACKAGE."
-		
+
 	cd $STAGE3_BUILD || exit 1
 	
 	# clean up old build

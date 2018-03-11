@@ -67,11 +67,19 @@ re2c python2 ninja
 python-pip-bootstrap python-pip
 python-pyparsing python-packaging python-appdirs python-six python-setuptools
 meson
-gperf systemd dbus
+gperf systemd dbus libusb usbutils libpcap iptables util-linux
+procps-ng pcmciautils openresolv netctl dhcpcd
+mkinitcpio-busybox mkinitcpio
+glib2 pkg-config
+ldns openssh
+zip nspr gyp nss
 "
 
 # gyp used for mozilla sub certs, continue to use shim?
 # ca-certificates-cacerts ca-certificates
+# nss:
+# gyp fails with:
+# ImportError: This platform lacks a functioning sem_open implementation, therefore, the required synchronization primitives needed will not function, see issue 3770.
 
 # TODO: redo make with guile
 # guile, guile2_0: libtool fails to find gc (threading problem?),
@@ -89,74 +97,36 @@ gperf systemd dbus
 #libtool: install: error: relink `libgfortran.la' with the above command before installing it
 #make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
 
-# systemd: cryptsetup python-lxml gnu-efi-libs
-
-#~ util-linux: systemd, python
-
-# libxml2: python2 and python as makedepends
-#~ libxslt: libxml2 python2
-#~ xmlto: libxslt docbook-xsl
-#~ asciidoc: python
-
-#~ util-linux:
-#~ pkg-config: glib2
-#~ pkg-config: glib2 
-
 #~ linux build full with mkinitcpio and modules
-#~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
      
 #~  linux 
-#~ <libedit> openssh
 #~ make <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
 #~ <libunwind> <strace> gdb
 #~ "
 #~ #TODO after nasm: syslinux
 
-#~ iptables: libpcap 
-# libpcap: dbus libusbx
-
 # stage3 (from compute_dependencies.sh)
 #~ cryptsetup: device-mapper popt libutil-linux
 
 # ldns/unbound-cyrcle
-#~ ldns: openssl dnssec-anchors libpcal
-#~ dnssec-anchors: unbound
+#~ dnssec-anchors: requires unbound
 #~ unbound: ldns
-#~ openssh: ldns 
-
-# the glib2 knot
-#~ glib2: libutil-linux 
-#~ libsecret: glib2 
-# glib2 needs dbus shared-mime-info
-# shared-mime-info needs glib2 :-)
 
 # the systemd knot
-#~ libusb: glibc libsystemd 
-#~ usbutils: libusb hwids 
-#~ netctl: openresolv systemd 
-#~ openresolv: systemd 
-#~ pcmciautils: systemd 
-#~ procps-ng: libsystemd 
-#~ libpcap: libusbx dbus 
-#  systemd:  libxslt python-lxml  gnu-efi-libs meson
-#~ dbus: libsystemd expat 
-#~ dhcpcd: glibc sh udev libsystemd 
-#~ util-linux: systemd, python
 
+# lvm knot
 # lvm2, device-mapper: systemd, thin-povisioning-tools
 #~ thin-provisioning-tools: expat gcc-libs libaio boost
+# libaio
+# stack smashing and nostdlib?
+# compat-0_1.c:(.text+0xaf): undefined reference to `__stack_chk_fail_local'
 # boost: we can build a non-python version
 # cryptsetup: device-mapper
 
 #~ base cryptsetup
 #~ base device-mapper
-#~ base dhcpcd
 #~ base lvm2
-#~ base netctl
-#~ base pcmciautils
-#~ base systemd-sysvcompat
-#~ base usbutils
-#~ base-devel systemd
+#~ base 
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage3_package.sh" "$p" || exit 1

@@ -210,12 +210,15 @@ su cross ./prepare_stage2_repo.sh
 # - ldns unbound dnssec-anchors are all in a cyrcle
 # - ca-certificates-mozilla needs gyp which need ninja which has
 #   a download location only verifiable by the very same certificates :-)
+# - dbus without systemd (because of a cyrcle), same goes for cryptsetup
+# - glib2 without shared-mime-info
 
 # some packages are simply to hard or important to build:
-# - libsecret: needs glib2 which is not buildable in stage3
 # - licenses: needs links, we don't care for stage3 as they will not
 #   go public in the end
-# - dbus without systemd (because of a cyrcle), same goes for cryptsetup
+# - libsecret, calls gtkdocize in autogen.sh
+# - systemd-sysvcompat: should be optional, I don't see why this should
+#   be in base
 
 # systemd: goal is to have a libsystemd we can link against, but stage 3
 # will not have a running systemd init system!

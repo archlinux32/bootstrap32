@@ -1,0 +1,6 @@
+# no documentation
+sed -i "/depends=/s/xmlto//" PKGBUILD
+sed -i "/depends=/s/docbook-xsl//" PKGBUILD
+sed -i 's/\(xmlto.*\)/#\1/g' PKGBUILD
+
+ADDITIONAL_INSTALL_PACKAGE=ca-certificates-mozilla

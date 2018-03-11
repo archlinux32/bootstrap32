@@ -1,0 +1,2 @@
+# break the cycly via ldns, unbound
+sed -i "/depends=/s/'dnssec-anchors'//" PKGBUILD
