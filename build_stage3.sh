@@ -92,6 +92,13 @@ libaio boost
 #~ guile2.0:  gc (with posix threads) 
 # wait for posix threads, gcc toolchain rebuild
 
+# lvm knot
+# lvm2, device-mapper: systemd, thin-povisioning-tools
+#~ thin-provisioning-tools: expat gcc-libs libaio boost
+# boost:  #  error "Threading support unavaliable: it has been explicitly disabled with BOOST_DISABLE_THREADS"
+# => now we really need the toolchain with POSIX threads
+#~ cryptsetup: device-mapper popt libutil-linux
+
 # building toolchain (gcc): again, lobtool problems
 #/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
 #collect2: error: ld returned 1 exit status
@@ -105,13 +112,6 @@ libaio boost
 #~ <libunwind> <strace> gdb
 #~ "
 #~ #TODO after nasm: syslinux
-
-# lvm knot
-# lvm2, device-mapper: systemd, thin-povisioning-tools
-#~ thin-provisioning-tools: expat gcc-libs libaio boost
-# boost:  #  error "Threading support unavaliable: it has been explicitly disabled with BOOST_DISABLE_THREADS"
-# => now we really need the toolchain with POSIX threads
-#~ cryptsetup: device-mapper popt libutil-linux
 
 #~ base cryptsetup
 #~ base device-mapper
