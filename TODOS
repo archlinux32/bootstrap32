@@ -36,6 +36,8 @@ general bugs:
   have something like build/stage numbers as in Archlinux32.
 - Missing dependencies errors on host when doing makepkg -o, ugly, but it
   works nevertheless
+- introduce a '-package' along to '(+)package' to delete a package at a
+  given place (e.g. a shim)
     
 stage1 issues:
   - stage1: cdrom installs keyrings without having a gpg binary

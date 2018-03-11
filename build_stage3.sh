@@ -67,11 +67,8 @@ re2c python2 ninja
 python-pip-bootstrap python-pip
 python-pyparsing python-packaging python-appdirs python-six python-setuptools
 meson
+gperf systemd dbus
 "
-
-# meson needs python-setuptools, python-setuptools itself
-# can not be built from packages, so we need another shim
-# here.
 
 # gyp used for mozilla sub certs, continue to use shim?
 # ca-certificates-cacerts ca-certificates
@@ -106,6 +103,7 @@ meson
 #~ pkg-config: glib2 
 
 #~ linux build full with mkinitcpio and modules
+#~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
      
 #~  linux 
 #~ <libedit> openssh
@@ -121,7 +119,7 @@ meson
 #~ cryptsetup: device-mapper popt libutil-linux
 
 # ldns/unbound-cyrcle
-#~ ldns: openssl dnssec-anchors 
+#~ ldns: openssl dnssec-anchors libpcal
 #~ dnssec-anchors: unbound
 #~ unbound: ldns
 #~ openssh: ldns 
@@ -144,8 +142,6 @@ meson
 #~ dbus: libsystemd expat 
 #~ dhcpcd: glibc sh udev libsystemd 
 #~ util-linux: systemd, python
-
-#~ mkinitcpio: awk mkinitcpio-busybox kmod util-linux libarchive coreutils bash findutils grep filesystem gzip systemd 
 
 # lvm2, device-mapper: systemd, thin-povisioning-tools
 #~ thin-provisioning-tools: expat gcc-libs libaio boost

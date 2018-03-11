@@ -215,6 +215,10 @@ su cross ./prepare_stage2_repo.sh
 # - libsecret: needs glib2 which is not buildable in stage3
 # - licenses: needs links, we don't care for stage3 as they will not
 #   go public in the end
+# - dbus without systemd (because of a cyrcle), same goes for cryptsetup
+
+# systemd: goal is to have a libsystemd we can link against, but stage 3
+# will not have a running systemd init system!
 
 su cross ./prepare_stage3_repo.sh
 
@@ -234,3 +238,6 @@ su cross ./prepare_stage3_repo.sh
 # Use stage 3 to build base and base-devel again. In this phase we try to
 # use vanilla PKGBUILDs as much as possible, also building documentation
 # and do all the testing.
+
+# We also try to get a running systemd in this stage.
+

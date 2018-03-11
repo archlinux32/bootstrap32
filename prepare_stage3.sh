@@ -21,6 +21,9 @@ if test ! -d $STAGE3_BUILD; then
 	# stage 2, for now we just copy the vm from stage1 after building
 	# and installing all packages from stage 2 and use it as new build
 	# machine.
+
+	# systemd-journal group for systemd
+	getent group systemd-journal >/dev/null || groupadd -g 190 systemd-journal
 	
 	echo "Prepared the stage 3 build environment."
 fi
