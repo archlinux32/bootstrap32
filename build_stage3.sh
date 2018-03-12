@@ -99,12 +99,6 @@ libaio boost
 # => now we really need the toolchain with POSIX threads
 #~ cryptsetup: device-mapper popt libutil-linux
 
-# building toolchain (gcc): again, lobtool problems
-#/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
-#collect2: error: ld returned 1 exit status
-#libtool: install: error: relink `libgfortran.la' with the above command before installing it
-#make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
-
 #~ linux build full with mkinitcpio and modules
      
 #~  linux 
