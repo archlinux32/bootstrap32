@@ -3,4 +3,10 @@ sed -i "/depends=/s/xmlto//" PKGBUILD
 sed -i "/depends=/s/docbook-xsl//" PKGBUILD
 sed -i 's/\(xmlto.*\)/#\1/g' PKGBUILD
 
+# no SSE2 patch, see https://bugzilla.mozilla.org/show_bug.cgi?id=1400603
+# slighly adapted, original see 0001-freebl-Reorganize-AES-GCM-source-code-based-on-hw-sw.patch
+sed -i 's@source=(@source=(nss-3.35-freebl-Reorganize-AES-GCM-source-code-based-on-hw-sw.patch @' PKGBUILD
+sed -i "s@sha256sums=(@sha256sums=('45b7c06b1cafcd2f1099f44d4bcad1d0dd1751d19ce060dbcb4081257ecfc442' @" PKGBUILD
+sed -i '/patch -Np1/ a \  patch -Np1 -i ../nss-3.35-freebl-Reorganize-AES-GCM-source-code-based-on-hw-sw.patch' PKGBUILD
+
 ADDITIONAL_INSTALL_PACKAGE=ca-certificates-mozilla

@@ -27,7 +27,8 @@ check kbd bison shadow
 inetutils bc kmod
 net-tools libmnl
 libedit
-mpfr gawk libmpc binutils
+mpfr gawk libmpc binutils gcc glibc
+gc guile make guile2.0 gdb
 libatomic_ops gc
 libunwind strace
 argon2
@@ -74,6 +75,8 @@ glib2 pkg-config
 ldns openssh
 zip nspr gyp nss
 libaio boost
+thin-provisioning-tools lvm2
+nasm syslinux
 "
 
 # gyp used for mozilla sub certs, continue to use shim?
@@ -81,35 +84,17 @@ libaio boost
 # nss:
 # gyp fails with:
 # ImportError: This platform lacks a functioning sem_open implementation, therefore, the required synchronization primitives needed will not function, see issue 3770.
-
-# TODO: redo make with guile
-# guile, guile2_0: libtool fails to find gc (threading problem?),
-# --disable-threads in toolchain causes POSIX threads to be absent, we
-# wait for full toolchain to be around.
-# guile, posix thread missing in toolchain
-#~ make: glibc guile 
-#~ gdb: python guile2.0
-#~ guile2.0:  gc (with posix threads) 
-# wait for posix threads, gcc toolchain rebuild
-
-# lvm knot
-# lvm2, device-mapper: systemd, thin-povisioning-tools
-#~ thin-provisioning-tools: expat gcc-libs libaio boost
-# boost:  #  error "Threading support unavaliable: it has been explicitly disabled with BOOST_DISABLE_THREADS"
-# => now we really need the toolchain with POSIX threads
-#~ cryptsetup: device-mapper popt libutil-linux
+# => recompile python2 with a shm filesystem!
+#   File "/usr/lib/python2.7/subprocess.py", line 186, in check_call
+#    raise CalledProcessError(retcode, cmd)
+# subprocess.CalledProcessError: Command '['/build/nss/src/nss-3.35/dist/Release/bin/shlibsign', '-v', '-i', '/build/nss/src/nss-3.35/dist/Release/lib/libfreebl3.so']' returned non-zero exit status -11
+# => https://groups.google.com/forum/#!searchin/mozilla.dev.platform/2fa%7Csort:relevance/mozilla.dev.platform/eemHHhf3lBM/k9cyMceyAQAJ
+# => https://bugzilla.mozilla.org/show_bug.cgi?id=1400603
+# => https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=221466
+# patches make situation much worse!
 
 #~ linux build full with mkinitcpio and modules
-     
 #~  linux 
-#~ make <mpfr> <gawk> <libmpc> <binutils> <gcc> glibc
-#~ <libunwind> <strace> gdb
-#~ "
-#~ #TODO after nasm: syslinux
-
-#~ base cryptsetup
-#~ base device-mapper
-#~ base lvm2
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage3_package.sh" "$p" || exit 1

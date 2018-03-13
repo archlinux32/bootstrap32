@@ -55,6 +55,8 @@ mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 ln -s /proc/kcore /dev/core
 mount -t sysfs sys /sys
+mkdir /dev/shm
+mount -t tmpfs shm /dev/shm
 mount -o remount,rw /
 ip link set up dev eth0
 ip addr add ${STAGE1_MACHINE_IP}/24 dev eth0

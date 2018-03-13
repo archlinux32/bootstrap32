@@ -1,0 +1,9 @@
+# no documentation
+sed -i "/makedepends=/s/asciidoc//" PKGBUILD
+
+# no upx compression
+sed -i "/makedepends=/s/upx//" PKGBUILD
+
+# build BIOS version only for i486
+sed -i '/_targets/s/efi32//g' PKGBUILD
+sed -i '3!N; /prepare()/ a \  sed -i "/all_firmware :=/s/efi32 efi64//g" Makefile' PKGBUILD

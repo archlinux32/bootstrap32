@@ -1,0 +1,5 @@
+# install two packages: linux and linux-headers
+ADDITIONAL_INSTALL_PACKAGE=linux-headers
+
+# disable documentation
+sed -i "/depends=/s/xmlto//" PKGBUILD

@@ -19,3 +19,5 @@ sed -i 's/,gnat-style,gnat_rm,gnat_ugn//' PKGBUILD
 #make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
 #=> wrong link order: libgfortran requires libquadmath
 sed -i 's/libgfortran \\/libquadmath libgfortran \\/g' PKGBUILD
+
+ADDITIONAL_INSTALL_PACKAGE="gcc-libs gcc-fortran gcc-go gcc-objc"
