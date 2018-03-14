@@ -77,6 +77,7 @@ zip nspr gyp nss
 libaio boost
 thin-provisioning-tools lvm2
 nasm syslinux
+linux linux-firmware
 "
 
 # gyp used for mozilla sub certs, continue to use shim?
@@ -92,9 +93,6 @@ nasm syslinux
 # => https://bugzilla.mozilla.org/show_bug.cgi?id=1400603
 # => https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=221466
 # patches make situation much worse!
-
-#~ linux build full with mkinitcpio and modules
-#~  linux 
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage3_package.sh" "$p" || exit 1
