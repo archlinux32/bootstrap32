@@ -52,7 +52,7 @@ if test "$(pacman --config "$STAGE1_CHROOT/etc/pacman.conf" -r "$STAGE1_CHROOT" 
 			cp -a "$ARCHLINUX32_PACKAGES/core/$PACKAGE" .
 			;;
 		*)
-			print "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >&2
+			echo "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >&2
 			exit 1
 	esac
 			

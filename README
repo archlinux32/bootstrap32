@@ -219,6 +219,9 @@ su cross ./prepare_stage2_repo.sh
 # - libsecret, calls gtkdocize in autogen.sh
 # - systemd-sysvcompat: should be optional, I don't see why this should
 #   be in base
+# - nss: has big issues with hand-crafted assembler optimizations all
+#   over the place drawing in SSE2 as a requirement, used for
+#   building ca-certificates-mozilla only at the moment
 
 # systemd: goal is to have a libsystemd we can link against, but stage 3
 # will not have a running systemd init system!
@@ -226,7 +229,7 @@ su cross ./prepare_stage2_repo.sh
 su cross ./prepare_stage3_repo.sh
 
 # Build stage 3 on the target architecture and install it onto the
-# stage 1 system. Resulting artifacts get stored also back
+# stage 2 system. Resulting artifacts get stored also back
 # in $STAGE3_BUILD.
 
 # Most things compile just fine with 64 MB RAM, binutils ld gold needs more
@@ -242,5 +245,15 @@ su cross ./prepare_stage3_repo.sh
 # use vanilla PKGBUILDs as much as possible, also building documentation
 # and do all the testing.
 
+# We don't go to another build system for now till we can build the base
+# system without patched PKGBUILDs (at least not where not needed).
+
 # We also try to get a running systemd in this stage.
 
+su cross ./prepare_stage4_repo.sh
+
+# Build stage 4 on the target architecture and install it onto the
+# stage 3 system. Resulting artifacts get stored also back
+# in $STAGE4_BUILD.
+
+./build_stage4.sh

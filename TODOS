@@ -38,7 +38,9 @@ general bugs:
   works nevertheless
 - introduce a '-package' along to '(+)package' to delete a package at a
   given place (e.g. a shim)
-    
+- get rid of ADDITIONAL_PACKAGES, we actually parse pkgname and install
+  all mentioned packages directly
+  
 stage1 issues:
   - stage1: cdrom installs keyrings without having a gpg binary
   - 32 MB is not enough when installing packages => add a swap as first action!

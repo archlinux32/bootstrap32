@@ -3,7 +3,7 @@
 # shellcheck source=./default.conf
 . "./default.conf"
 
-# builds and installs one package for stage 2
+# builds and installs one package for stage 3
 
 if test "$(id -u)" = 0; then
 	sudo -u cross "$0" "$1"
@@ -14,23 +14,23 @@ PACKAGE=$1
 
 # draw in default values for build variables
 
-. "$SCRIPT_DIR/$TARGET_CPU-stage2/template/DESCR"
+. "$SCRIPT_DIR/$TARGET_CPU-stage4/template/DESCR"
 
-if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
+if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
 	echo "Building package $PACKAGE."
-		
-	cd $STAGE2_BUILD || exit 1
+
+	cd $STAGE4_BUILD || exit 1
 	
 	# clean up old build
 	
 	sudo rm -rf "$PACKAGE"
-	rm -f "$STAGE2_PACKAGES/$PACKAGE"-*pkg.tar.xz
+	rm -f "$STAGE4_PACKAGES/$PACKAGE"-*pkg.tar.xz
 	ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP rm -rf "/build/$PACKAGE"
 
 	# check out the package build information from the upstream git rep
 	# using asp (or from the AUR using yaourt)
 	
-	PACKAGE_DIR="$SCRIPT_DIR/$TARGET_CPU-stage2/$PACKAGE"
+	PACKAGE_DIR="$SCRIPT_DIR/$TARGET_CPU-stage4/$PACKAGE"
 	PACKAGE_CONF="$PACKAGE_DIR/DESCR"	
 	if test -f "$PACKAGE_CONF"; then
 		if test "$(grep -c FETCH_METHOD "$PACKAGE_CONF")" = 1; then
@@ -92,11 +92,11 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 	# makepkg is not doing that (see -e and -o options)
 	
 	makepkg --nobuild
-	rm -rf "$STAGE2_BUILD/$PACKAGE/src"
+	rm -rf "$STAGE4_BUILD/$PACKAGE/src"
 
 	# copy everything to the stage 1 machine
 	
-	scp -i $CROSS_HOME/.ssh/id_rsa -rC "$STAGE2_BUILD/$PACKAGE" build@$STAGE1_MACHINE_IP:/build/.
+	scp -i $CROSS_HOME/.ssh/id_rsa -rC "$STAGE4_BUILD/$PACKAGE" build@$STAGE1_MACHINE_IP:/build/.
 
 	# building the actual package
 
@@ -153,17 +153,17 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		tmp_dir=$(mktemp -d 'tmp.compute-dependencies.0.XXXXXXXXXX' --tmpdir)
 		trap 'rm -rf --one-file-system "${tmp_dir}"' EXIT
 		
-		cd $STAGE2_BUILD || exit 1
-		mv "$STAGE2_BUILD/$PACKAGE/$PACKAGE.log" "$tmp_dir"
-		cd "$STAGE2_BUILD" || exit 1
+		cd $STAGE4_BUILD || exit 1
+		mv "$STAGE4_BUILD/$PACKAGE/$PACKAGE.log" "$tmp_dir"
+		cd "$STAGE4_BUILD" || exit 1
 		rm -rf "$PACKAGE"
 		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && tar zcf $PACKAGE.tar.gz $PACKAGE/'"		
-		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE.tar.gz" "$STAGE2_BUILD/."
+		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE.tar.gz" "$STAGE4_BUILD/."
 		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && rm -f $PACKAGE.tar.gz'"		
 		tar zxf "$PACKAGE.tar.gz"
 		rm -f "$PACKAGE.tar.gz"
-		mv "$tmp_dir/$PACKAGE.log" "$STAGE2_BUILD/$PACKAGE/."
-		mv -vf "$STAGE2_BUILD/$PACKAGE/"*.pkg.tar.xz "$STAGE2_PACKAGES/."
+		mv "$tmp_dir/$PACKAGE.log" "$STAGE4_BUILD/$PACKAGE/."
+		mv -vf "$STAGE4_BUILD/$PACKAGE/"*.pkg.tar.xz "$STAGE4_PACKAGES/."
 
 		echo "Built package $PACKAGE."
 		
@@ -172,7 +172,7 @@ if test "$(find "$STAGE2_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		exit 1
 	fi
 
-	cd $STAGE2_BUILD || exit 1
+	cd $STAGE4_BUILD || exit 1
 
 else
 	echo "$PACKAGE exists."
