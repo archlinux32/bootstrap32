@@ -88,8 +88,11 @@ mkdir root/.ssh
 cp "$HOME/.ssh/id_rsa.pub" root/.ssh/authorized_keys
 
 # install a build user and build directory
+# tty group for coreutils
+# systemd-journal group for systemd
 cat >> etc/group <<EOF
 tty:x:5:
+systemd-journal:x:190:
 build:x:1001:
 EOF
 cat >> etc/passwd <<EOF
