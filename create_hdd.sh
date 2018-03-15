@@ -58,6 +58,8 @@ mount -t sysfs sys /sys
 mkdir /dev/shm
 mount -t tmpfs shm /dev/shm
 mount -o remount,rw /
+ip link set up dev lo
+ip addr add 127.0.0.1/8 dev lo
 ip link set up dev eth0
 ip addr add ${STAGE1_MACHINE_IP}/24 dev eth0
 ip route add default via 192.168.1.1 dev eth0
@@ -66,6 +68,11 @@ exec /usr/bin/bash
 EOF
 cat > etc/resolv.conf <<EOF
 nameserver 192.168.1.1
+EOF
+
+# have a host name for IPv4 loopback
+cat > etc/hosts <<EOF
+127.0.0.1       localhost.localdomain   localhost
 EOF
 
 # SSH confiuration: nobody user and host keys, keys for key based login
