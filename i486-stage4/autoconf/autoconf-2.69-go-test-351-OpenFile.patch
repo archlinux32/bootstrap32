@@ -1,0 +1,21 @@
+diff -rauN autoconf-2.69/lib/autoconf/go.m4 autoconf-2.69-go-test-351-OpenFile-patch/lib/autoconf/go.m4
+--- autoconf-2.69/lib/autoconf/go.m4	2012-01-21 14:46:39.000000000 +0100
++++ autoconf-2.69-go-test-351-OpenFile-patch/lib/autoconf/go.m4	2018-03-16 16:46:23.323273368 +0100
+@@ -61,7 +61,7 @@
+ # Produce source that performs I/O.
+ m4_define([_AC_LANG_IO_PROGRAM(Go)],
+ [AC_LANG_PROGRAM([import ( "fmt"; "os" )],
+-[f, err := os.Open("conftest.out", os.O_CREATE|os.O_WRONLY, 0777)
++[f, err := os.OpenFile("conftest.out", os.O_CREATE|os.O_WRONLY, 0777)
+  if err != nil {
+ 	fmt.Println(err)
+ 	os.Exit(1)
+@@ -107,7 +107,7 @@
+ 	"os"
+ )
+ ],
+-[f, err := os.Open("conftest.val", os.O_CREATE|os.O_WRONLY, 0777)
++[f, err := os.OpenFile("conftest.val", os.O_CREATE|os.O_WRONLY, 0777)
+  if err != nil {
+ 	os.Exit(1)
+  }
