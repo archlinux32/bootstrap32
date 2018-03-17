@@ -1,0 +1,5 @@
+# no vala
+sed -i "/checkdepends=/s/'vala'//" PKGBUILD
+
+# no java
+sed -i "/checkdepends=/s/'java-environment'//" PKGBUILD

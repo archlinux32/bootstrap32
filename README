@@ -250,6 +250,12 @@ su cross ./prepare_stage3_repo.sh
 
 # We also try to get a running systemd in this stage.
 
+# Ommitting the following in this stage:
+# - bootstrapping issues:
+#   - gcc-ada: needs a running ada to build
+#   - java-runtime: nedds another java-runtime to build
+#   - vala: needs another vala to build
+
 su cross ./prepare_stage4_repo.sh
 
 # Build stage 4 on the target architecture and install it onto the

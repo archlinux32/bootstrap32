@@ -5,7 +5,8 @@ sed -i "/checkdepends=(/s/checkdepends=('gcc-go' //" PKGBUILD
 #  38: autotools and whitespace in file names          FAILED (tools.at:1310)
 # => curiously not happending on this version!?
 
-# autoconf: 351 Go: https://lists.gnu.org/archive/html/bug-autoconf/2013-01/msg00000.html
+# autoconf: 351 Go: https://lists.gnu.org/archive/html/bug-autoconf/2013-01/msg00000.html,
+# see FS#57870
 sed -i 's@source=(@source=(autoconf-2.69-go-test-351-OpenFile.patch @' PKGBUILD
 sed -i "s@md5sums=(@md5sums=('a7e1e05d4372b2ef5fae29b59e677e7d' @" PKGBUILD
 sed -i '/patch -p1.*libtool/ a \  patch -Np1 -i "${srcdir}/autoconf-2.69-go-test-351-OpenFile.patch"' PKGBUILD

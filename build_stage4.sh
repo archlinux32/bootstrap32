@@ -11,16 +11,36 @@
 
 PACKAGES="iana-etc filesystem linux-api-headers tzdata
 ncurses readline bash joe nano vi
+libxml2 emacs-nox
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
-autoconf
+autoconf tcl expect dejagnu cscope automake
 "
+
+# automake:
+# Testsuite summary for GNU Automake 1.15.1
+# ============================================================================
+# TOTAL: 2901
+# PASS:  2767
+# SKIP:  85
+# XFAIL: 41
+# FAIL:  8
+# XPASS: 0
+# ERROR: 0
+# FAIL: t/instmany-python.sh
+# FAIL: t/py-compile-basic.sh
+# FAIL: t/py-compile-basedir.sh
+# FAIL: t/py-compile-destdir.sh
+# FAIL: t/py-compile-option-terminate.sh
+# FAIL: t/python3.sh
+# FAIL: t/python10.sh
+# FAIL: t/python12.sh
 
 #~ stage2:
 #~ PACKAGES="
 #~    
 #~     
-#~    automake perl-error pcre2 git libtool
+#~      perl-error pcre2 git libtool
 #~ zlib pambase cracklib libtirpc flex pam libcap coreutils
 #~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
 #~ tar libarchive curl
