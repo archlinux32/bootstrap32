@@ -111,6 +111,10 @@ cp "$HOME/.ssh/id_rsa.pub" build/.ssh/authorized_keys
 chown 1001:1001 build
 # default PAM rules expect a password to be set for su?
 echo 'build:xx' | chpasswd
+cat > build/.bashrc <<EOF
+export PATH=$PATH:/usr/bin/core_perl
+EOF
+chmod 0775 build/.bashrc
 
 # add some test programs to test the C and C++ compiler
 

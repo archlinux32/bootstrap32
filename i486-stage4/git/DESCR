@@ -1,2 +1,8 @@
-# no Gnome, draws in tons of things we don't want for a base system
+# no Gnome integration
 sed -i "/makedepends=/s/'libgnome-keyring'//" PKGBUILD
+sed -i "s@\(make -C contrib/credential/gnome-keyring\)@#\1@" PKGBUILD
+sed -i "/# gnome credentials helper/,/#/s/\(.*\)/#\1/" PKGBUILD
+
+# no libsecret in stage3 currently
+sed -i "s@\(make -C contrib/credential/libsecret\)@#\1@" PKGBUILD
+sed -i "/# libsecret credentials helper/,/#/s/\(.*\)/#\1/" PKGBUILD
