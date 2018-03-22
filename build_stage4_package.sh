@@ -102,7 +102,13 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 	echo "Building $PACKAGE on target.."
 	
-	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck'" > $PACKAGE.log 2>&1
+	if test "$SKIP_CHECK"; then
+		TESTING="--nocheck"
+	else
+		TESTING=""
+	fi
+	
+	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck $TESTING'" > $PACKAGE.log 2>&1
 	RES=$?
 	
 	tail "$PACKAGE.log"
