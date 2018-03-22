@@ -15,14 +15,16 @@ libxml2 emacs-nox
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
 autoconf tcl expect dejagnu cscope automake
+perl-test-pod perl-devel-symdump perl-pod-coverage
+perl-test-pod-coverage perl-error pcre2
+docbook-xml libxslt docbook-xsl xmlto asciidoc git
 "
-
 
 #~ stage2:
 #~ PACKAGES="
 #~    
 #~     
-#~      perl-error pcre2 git libtool
+#~        libtool
 #~ zlib pambase cracklib libtirpc flex pam libcap coreutils
 #~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
 #~ tar libarchive curl

@@ -102,7 +102,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 	echo "Building $PACKAGE on target.."
 	
-	if test "$SKIP_CHECK"; then
+	if test "$SKIP_CHECK" = "1"; then
 		TESTING="--nocheck"
 	else
 		TESTING=""
@@ -137,7 +137,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		
 		# install onto stage 1 system via pacman
 
-		if test "$FORCE_INSTALL"; then
+		if test "$FORCE_INSTALL" = "1"; then
 			FORCE="--force"
 		fi
 		

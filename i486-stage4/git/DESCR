@@ -1,0 +1,2 @@
+# no Gnome, draws in tons of things we don't want for a base system
+sed -i "/makedepends=/s/'libgnome-keyring'//" PKGBUILD
