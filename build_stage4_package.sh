@@ -108,7 +108,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		TESTING=""
 	fi
 	
-	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck $TESTING'" > $PACKAGE.log 2>&1
+	ssh -i $CROSS_HOME/.ssh/id_rsa build@$STAGE1_MACHINE_IP bash -l -c "'cd $PACKAGE && makepkg --skipchecksums --skippgpcheck $TESTING'" > $PACKAGE.log 2>&1
 	RES=$?
 	
 	tail "$PACKAGE.log"
@@ -119,7 +119,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 		# copy to our package folder in the first stage chroot
 		
-		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'
 			cd /build/$PACKAGE
 			rm -f ./*debug*.pkg.tar.xz
 			cp -v ./*.pkg.tar.xz /packages/$TARGET_CPU/.
@@ -128,7 +128,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		# redo the whole pacman cache and repo (always running into trouble
 		# there, packages seem to reappear in old versions)
 
-		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'
 #			rm -rf /var/cache/pacman/pkg/*
 #			rm -rf /packages/$TARGET_CPU/temp.db*
 #			rm -rf /packages/$TARGET_CPU/temp.files*
@@ -141,7 +141,7 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 			FORCE="--force"
 		fi
 		
-		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'		
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'		
 			# TODO: broken [temp] repo
 			if test \"$ADDITIONAL_INSTALL_PACKAGE\" != \"\"; then
 				#pacman $FORCE --noconfirm -Syy $PACKAGE $ADDITIONAL_INSTALL_PACKAGE
@@ -163,9 +163,9 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 		mv "$STAGE4_BUILD/$PACKAGE/$PACKAGE.log" "$tmp_dir"
 		cd "$STAGE4_BUILD" || exit 1
 		rm -rf "$PACKAGE"
-		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && tar zcf $PACKAGE.tar.gz $PACKAGE/'"		
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'cd /build && tar zcf $PACKAGE.tar.gz $PACKAGE/'"		
 		scp -i $CROSS_HOME/.ssh/id_rsa -rC build@$STAGE1_MACHINE_IP:/build/"$PACKAGE.tar.gz" "$STAGE4_BUILD/."
-		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -c "'cd /build && rm -f $PACKAGE.tar.gz'"		
+		ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'cd /build && rm -f $PACKAGE.tar.gz'"		
 		tar zxf "$PACKAGE.tar.gz"
 		rm -f "$PACKAGE.tar.gz"
 		mv "$tmp_dir/$PACKAGE.log" "$STAGE4_BUILD/$PACKAGE/."

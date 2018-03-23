@@ -1,0 +1,6 @@
+# pcre2 configure, overload CFLAGS and CXXFLAGS to avoid optimization
+# using MMX registers (default in gcc)
+sed -i 's@./configure@CFLAGS="-march=i486 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt" CXXFLAGS="-march=i486 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt" ./configure@' PKGBUILD
+
+# disable JIT, contains hard coded XMM registers
+sed -i 's/--enable-jit/--disable-jit/' PKGBUILD
