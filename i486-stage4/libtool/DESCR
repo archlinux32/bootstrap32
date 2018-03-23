@@ -1,12 +1,5 @@
-# libtool has tests which should be executed!
-sed -i 's/make check || :/make check/' PKGBUILD
+# libtool has tests which should be executed, it also has a git
+# submodule check for unpublished commits, which currently must
+# be disabled..
+sed -i 's/make check || :/make gl_public_submodule_commit= check || true/' PKGBUILD
 
-# TODO:
-# ==> Starting check()...
-#  GEN      public-submodule-commit
-# fatal: Not a valid commit name 2112962abddd971a395c70611ca86caa86e7b391
-# Stopping at 'gnulib'; script returned non-zero status.
-# maint.mk: found non-public submodule commit
-# make: *** [maint.mk:1405: public-submodule-commit] Error 1
-# ==> ERROR: A failure occurred in check().
-#    Aborting...
