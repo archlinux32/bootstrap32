@@ -1,0 +1,2 @@
+# no imlib2
+sed -i "/makedepends=/s/'imlib2'//" PKGBUILD

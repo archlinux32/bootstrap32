@@ -19,6 +19,8 @@ perl-test-pod perl-devel-symdump perl-pod-coverage
 perl-test-pod-coverage perl-error pcre2
 docbook-xml libxslt docbook-xsl xmlto asciidoc git
 libtool
+zlib pambase cracklib libtirpc flex gpm w3m pam
+libcap
 "
 
 #~ stage2:
@@ -26,7 +28,7 @@ libtool
 #~    
 #~     
 #~        
-#~ zlib pambase cracklib libtirpc flex pam libcap coreutils
+#~          coreutils
 #~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
 #~ tar libarchive curl
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
@@ -93,7 +95,6 @@ libtool
 #~ fakeroot
 #~ file
 #~ findutils
-#~ flex
 #~ gawk
 #~ gcc
 #~ gettext

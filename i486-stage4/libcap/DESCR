@@ -1,0 +1,4 @@
+# patching generated gperf output to include stddef.h for size_t
+sed -i 's@source=(@source=(libcap-gperf-stddef-size_t,patch @' PKGBUILD
+sed -i "s@md5sums=(@md5sums=('aa35545fc79f9113d4555d871cb7307d' @" PKGBUILD
+sed -i '/sed/ i \  patch -Np1 -i "${srcdir}/libcap-gperf-stddef-size_t,patch"' PKGBUILD
