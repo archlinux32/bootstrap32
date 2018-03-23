@@ -20,15 +20,11 @@ perl-test-pod-coverage perl-error pcre2
 docbook-xml libxslt docbook-xsl xmlto asciidoc git
 libtool
 zlib pambase cracklib libtirpc flex gpm w3m pam
-libcap
+libcap coreutils
 "
 
 #~ stage2:
 #~ PACKAGES="
-#~    
-#~     
-#~        
-#~          coreutils
 #~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
 #~ tar libarchive curl
 #~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
@@ -44,7 +40,6 @@ libcap
 
 # Archlinux base, base-devel groups
 #~ bzip2
-#~ coreutils
 #~ cryptsetup
 #~ device-mapper
 #~ dhcpcd

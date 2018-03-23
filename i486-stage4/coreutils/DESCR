@@ -1,0 +1,4 @@
+# tests are commented out
+sed -i 's/#make check/make check/g' PKGBUILD
+
+
