@@ -20,18 +20,29 @@ perl-test-pod-coverage perl-error pcre2
 docbook-xml libxslt docbook-xsl xmlto asciidoc git
 libtool
 zlib pambase cracklib libtirpc flex gpm w3m pam
-libcap coreutils
+libcap coreutils util-linux pkg-config e2fsprogs
+expat bzip2 lz4 xz pcre less gzip
+tar libarchive curl
+pacman-mirrorlist archlinux-keyring archlinux32-keyring
+sharutils perl-text-charwidth perl-text-wrapi18n 
+perl-term-readkey perl-sgmls
+perl-inc-latest perl-par-dist perl-sub-identify perl-super
+perl-module-build perl-test-mockmodule perl-archive-zip
+perl-mime-charset libdatrie libthai perl-unicode-linebreak
+po4a fakeroot fakechroot pacman
+elfutils sed texinfo grep findutils file diffutils ed patch
+kbd procps-ng bison shadow
+inetutils bc kmod linux
+which
 "
 
 #~ stage2:
 #~ PACKAGES="
-#~ util-linux pkg-config e2fsprogs expat bzip2 lz4 xz pcre less gzip
-#~ tar libarchive curl
-#~ pacman-mirrorlist archlinux-keyring archlinux32-keyring pacman
-#~ elfutils sed texinfo grep findutils file diffutils ed patch
-#~ fakeroot
-#~ kbd procps-ng bison shadow
-#~ inetutils bc kmod linux uinit nasm 
+#~            
+#~    
+#~           
+#~    
+#~      uinit nasm 
 #~ net-tools libmnl libnfnetlink iptables iproute2
 #~ libedit openssh
 #~ make mpfr gawk libmpc binutils gcc glibc
@@ -39,73 +50,40 @@ libcap coreutils
 #~ "
 
 # Archlinux base, base-devel groups
-#~ bzip2
 #~ cryptsetup
 #~ device-mapper
 #~ dhcpcd
-#~ diffutils
-#~ e2fsprogs
-#~ file
-#~ findutils
 #~ gawk
 #~ gcc-libs
-#~ gcc-libs
 #~ glibc
-#~ grep
-#~ gzip
-#~ inetutils
 #~ iproute2
 #~ iputils
 #~ jfsutils
-#~ less
 #~ licenses
-#~ linux
 #~ logrotate
 #~ lvm2
 #~ man-db
 #~ man-pages
 #~ mdadm
 #~ netctl
-#~ pacman
 #~ pciutils
 #~ pcmciautils
-#~ procps-ng
 #~ psmisc
 #~ reiserfsprogs
 #~ s-nail
-#~ sed
-#~ shadow
 #~ sysfsutils
 #~ systemd-sysvcompat
-#~ tar
-#~ texinfo
 #~ usbutils
-#~ util-linux
-#~ which
 #~ xfsprogs
 
-#~ automake
 #~ binutils
-#~ bison
-#~ fakeroot
-#~ file
-#~ findutils
 #~ gawk
 #~ gcc
-#~ gettext
-#~ grep
 #~ groff
-#~ gzip
 #~ make
 #~ pacman
-#~ patch
-#~ pkg-config
-#~ sed
 #~ sudo
 #~ systemd
-#~ texinfo
-#~ util-linux
-#~ which
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage4_package.sh" "$p" || exit 1

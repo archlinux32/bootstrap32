@@ -16,8 +16,8 @@ PACKAGE=$1
 
 . "$SCRIPT_DIR/$TARGET_CPU-stage4/template/DESCR"
 
-if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
-	echo "Building package $PACKAGE."
+#~ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
+	#~ echo "Building package $PACKAGE."
 
 	cd $STAGE4_BUILD || exit 1
 	
@@ -180,6 +180,6 @@ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l
 
 	cd $STAGE4_BUILD || exit 1
 
-else
-	echo "$PACKAGE exists."
-fi
+#~ else
+	#~ echo "$PACKAGE exists."
+#~ fi

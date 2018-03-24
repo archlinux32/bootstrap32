@@ -1,0 +1,2 @@
+# breaking the cycle with perl-archive-zip
+sed -i "/checkdepends=/s/'perl-archive-zip'//" PKGBUILD

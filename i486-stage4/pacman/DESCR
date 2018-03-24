@@ -1,0 +1,8 @@
+# craft a temporary i486 pacman.conf
+cp pacman.conf.i686 pacman.conf.i486
+
+# use the 486 config and not 686 one
+sed -i 's@pacman.conf.i686@pacman.conf.i486@' PKGBUILD
+
+# some more architecture patching
+sed -i 's@i686@i486@g' PKGBUILD

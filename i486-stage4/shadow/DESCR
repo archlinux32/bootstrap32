@@ -1,0 +1,14 @@
+# remove dependency on Gnome
+sed -i "/makedepends=/s/'gnome-doc-utils'//" PKGBUILD
+
+# building man pages needs xml2po, disable it
+sed -i 's@--enable-man@--disable-man@g' PKGBUILD
+sed -i '/find/,/-delete/{s/\(.*\)/#\1/g}' PKGBUILD
+sed -i '/rmdir/,/man8/{s/\(.*\)/#\1/g}' PKGBUILD
+# counterspells, yes I know, I'm bad with sed
+sed -i 's/^#}/}/' PKGBUILD
+# shadow: /usr/sbin exists in filesystem
+# revert last rmdir commenting of /usr/sbin removal
+sed -i 's@^# \+rmdir \+"$pkgdir/usr/sbin"@  rmdir "$pkgdir/usr/sbin"@' PKGBUILD
+
+sed -i '2!N; /prepare()/ a \  sed -i "/SUBDIRS/s/man//g" Makefile.am' PKGBUILD
