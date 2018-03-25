@@ -1,0 +1,14 @@
+#   Failed test 'not ok #tcp listen failed: Cannot assign requested address
+# '
+#   at ./t/testlib.pl line 39.
+# Tests were run but no plan was declared and done_testing() was not seen.
+# Looks like your test exited with 1 just after 1.
+#t/plain_upgrade_downgrade.t ....... 
+#Dubious, test returned 1 (wstat 256, 0x100)
+#Failed 1/1 subtests 
+#Bailout called.  Further testing stopped:  cannot listen on localhost: Cannot assign requested address
+#FAILED--Further testing stopped: cannot listen on localhost: Cannot assign requested address
+#make: *** [Makefile:880: test_dynamic] Error 255
+#==> ERROR: A failure occurred in check().
+#    Aborting...
+SKIP_CHECK=1

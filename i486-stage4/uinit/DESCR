@@ -1,0 +1,3 @@
+# uinit as temporary systemd replacement for PID 1, lives in the AUR
+FETCH_METHOD="yaourt"
+

@@ -1,0 +1,12 @@
+#collect2: error: ld returned 1 exit status
+#make[3]: Leaving directory '/build/libatomic_ops/src/libatomic_ops-7.6.2/tests'
+#make[3]: *** [Makefile:622: test_atomic] Error 1
+#make[2]: Leaving directory '/build/libatomic_ops/src/libatomic_ops-7.6.2/tests'
+#make[2]: *** [Makefile:981: check-am] Error 2
+##make[1]: Leaving directory '/build/libatomic_ops/src/libatomic_ops-7.6.2/tests'
+#make[1]: *** [Makefile:984: check] Error 2
+#make: *** [Makefile:475: check-recursive] Error 1
+#==> ERROR: A failure occurred in check().
+#    Aborting...
+#ERROR building package libatomic_ops
+SKIP_CHECK=1

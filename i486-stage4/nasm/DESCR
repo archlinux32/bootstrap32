@@ -1,0 +1,12 @@
+# remove all fonts and ghostscript (we don't build the manual)
+sed -i "/makedepends=/s/perl-font-ttf//" PKGBUILD
+sed -i "/makedepends=/s/perl-sort-versions//" PKGBUILD
+sed -i "/makedepends=/s/fontconfig//" PKGBUILD
+sed -i "/makedepends=/s/adobe-source-sans-pro-fonts//" PKGBUILD
+sed -i "/makedepends=/s/ttf-liberation//" PKGBUILD
+sed -i "/makedepends=/s/ghostscript//" PKGBUILD
+sed -i "s/\(make -C doc\)/#\1/" PKGBUILD
+
+# orginal download link unstable
+sed -i 's@http://www.nasm.us/pub/nasm/releasebuilds/${pkgver}/${pkgname}-${pkgver}.tar.xz@https://ftp.osuosl.org/pub/blfs/conglomeration/${pkgname}/${pkgname}-${pkgver}.tar.xz@' PKGBUILD
+

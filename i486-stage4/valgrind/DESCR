@@ -1,0 +1,2 @@
+# remove openmpi
+sed -i "/makedepends=/s/'openmpi'//" PKGBUILD

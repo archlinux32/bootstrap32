@@ -1,0 +1,2 @@
+# see https://bugs.archlinux.org/task/49287?project=5&string=ucl
+sed -i 's@./configure@CPPFLAGS="$CPPFLAGS -std=c90 -fPIC" ./configure@' PKGBUILD

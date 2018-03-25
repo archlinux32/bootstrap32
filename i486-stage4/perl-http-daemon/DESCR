@@ -1,0 +1,6 @@
+#Manifying 1 pod document
+#==> Starting check()...
+#PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+#Connection timed out    ...propagated at t/chunked.t line 150.
+# Looks like your test exited with 110 before it could output anything.
+SKIP_CHECK=1

@@ -16,8 +16,8 @@ PACKAGE=$1
 
 . "$SCRIPT_DIR/$TARGET_CPU-stage4/template/DESCR"
 
-#~ if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
-	#~ echo "Building package $PACKAGE."
+if test "$(find "$STAGE4_PACKAGES" -regex ".*/$PACKAGE-.*pkg\\.tar\\.xz" | wc -l)" = 0; then
+	echo "Building package $PACKAGE."
 
 	cd $STAGE4_BUILD || exit 1
 	
@@ -45,8 +45,12 @@ PACKAGE=$1
 			yaourt -G "$PACKAGE"
 			;;
 		"packages32")
-			# (we assume, we only take core packages)
-			cp -a "$ARCHLINUX32_PACKAGES/core/$PACKAGE" .
+			if test -d "$ARCHLINUX32_PACKAGES/extra/$PACKAGE"; then
+				cp -a "$ARCHLINUX32_PACKAGES/extra/$PACKAGE" .
+			fi
+			if test -d "$ARCHLINUX32_PACKAGES/core/$PACKAGE"; then
+				cp -a "$ARCHLINUX32_PACKAGES/core/$PACKAGE" .
+			fi
 			;;
 		*)
 			echo "ERROR: unknown FETCH_METHOD '$FETCH_METHOD'.." >&2
@@ -60,17 +64,21 @@ PACKAGE=$1
 
 	# if there is a packages32 diff-PKGBUILD, attach it at the end
 	# (we assume, we build only 'core' packages during stage1)
-	DIFF_PKGBUILD="$ARCHLINUX32_PACKAGES/core/$PACKAGE/PKGBUILD"
-	if test -f "$DIFF_PKGBUILD"; then
-		cat "$DIFF_PKGBUILD" >> PKGBUILD
-	fi
+	for repo in core extra community; do
+		DIFF_PKGBUILD="$ARCHLINUX32_PACKAGES/$repo/$PACKAGE/PKGBUILD"
+		if test -f "$DIFF_PKGBUILD"; then
+			cat "$DIFF_PKGBUILD" >> PKGBUILD
+		fi
+	done
 
 	# copy all other files from Archlinux32, if they exist
-	# (we assume, we only take core packages during stage1)
-	if test -f "$DIFF_PKGBUILD"; then
-		find "$ARCHLINUX32_PACKAGES/core/$PACKAGE"/* ! -name PKGBUILD \
-			-exec cp {} . \;
-	fi
+	for repo in core extra community; do
+		DIFF_PKGBUILD="$ARCHLINUX32_PACKAGES/$repo/$PACKAGE/PKGBUILD"
+		if test -f "$DIFF_PKGBUILD"; then
+			find "$ARCHLINUX32_PACKAGES/$repo/$PACKAGE"/* ! -name PKGBUILD \
+				-exec cp {} . \;
+		fi
+	done
 		
 	# source package descriptions, sets variables for this script
 	# and executes whatever is needed to build the package
@@ -180,6 +188,6 @@ PACKAGE=$1
 
 	cd $STAGE4_BUILD || exit 1
 
-#~ else
-	#~ echo "$PACKAGE exists."
-#~ fi
+else
+	echo "$PACKAGE exists."
+fi

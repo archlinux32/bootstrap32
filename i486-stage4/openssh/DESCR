@@ -1,0 +1,3 @@
+# run test connect.sh ...
+# FATAL: no sshd running on port 4242
+SKIP_CHECK=1

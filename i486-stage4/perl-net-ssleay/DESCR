@@ -1,0 +1,13 @@
+#Building perl-net-ssleay on target..
+#Could not find a port to bind to at t/local/06_tcpecho.t line 37.
+## Looks like your test exited with 99 just after 2.
+#t/local/06_tcpecho.t ................... 
+#Dubious, test returned 99 (wstat 25344, 0x6300)
+#Failed 4/4 subtests 
+#Bailout called.  Further testing stopped:  Could not find a port to bind to: Cannot assign requested address
+#FAILED--Further testing stopped: Could not find a port to bind to: Cannot assign requested address
+#make: *** [Makefile:977: test_dynamic] Error 255
+#==> ERROR: A failure occurred in check().
+#    Aborting...
+#ERROR building package perl-net-ssleay
+SKIP_CHECK=1
