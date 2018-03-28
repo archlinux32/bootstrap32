@@ -1,0 +1,8 @@
+# no python sphinx
+sed -i "/makedepends=/s/'python-sphinx'//" PKGBUILD
+sed -i "s/--sphinx-man//" PKGBUILD
+
+# no Gui
+sed -i "/makedepends=/s/'qt5-base'//" PKGBUILD
+sed -i "s/--qt-gui//" PKGBUILD
+

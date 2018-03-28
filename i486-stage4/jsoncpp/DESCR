@@ -1,0 +1,5 @@
+# no doxygen or graphviz (creates cycles and draws in far too manu libraries)
+sed -i "/makedepends=/s/'doxygen'//" PKGBUILD
+sed -i "/makedepends=/s/'graphviz'//" PKGBUILD
+sed -i '/python doxybuild.py/,/--with-dot/ s/\(.*\)/#\1/' PKGBUILD
+sed -i 's@\(cp -a dist/doxygen/jsoncpp-api-html\)@#\1@' PKGBUILD

@@ -1,0 +1,4 @@
+# no python sphinx
+sed -i "/makedepends=/s/'python-sphinx'//" PKGBUILD
+sed -i "s@\(make man.*\)@#\1@" PKGBUILD
+sed -i "/install.*libuv/,/libuv/ s/\(.*\)/#\1/" PKGBUILD

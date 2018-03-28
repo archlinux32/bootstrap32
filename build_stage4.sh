@@ -19,7 +19,16 @@ perl-test-pod perl-devel-symdump perl-pod-coverage
 perl-test-pod-coverage perl-error pcre2
 docbook-xml libxslt docbook-xsl xmlto asciidoc git
 libtool
-zlib pambase cracklib libtirpc flex gpm w3m pam
+zlib pambase cracklib libtirpc flex gpm w3m
+tcl sqlite postgresql
+doxygen graphviz
+jsoncpp 
+libuv rhash shared-mime-info
+cmake
+jemalloc lzo mariadb libsasl
+chrpath unixodbc openldap
+krb5 libtirpc
+pam
 libcap coreutils util-linux pkg-config e2fsprogs
 expat bzip2 lz4 xz pcre less gzip
 tar libarchive icu curl
@@ -48,19 +57,20 @@ net-tools libmnl libnfnetlink
 libedit openssh
 which
 libatomic_ops gc guile make guile2.0 gdb
+libunwind strace
 "
 
 #~ mpfr gawk libmpc binutils gcc glibc
 
 # =>
-#~ 
-#~  
+#~ libsasl
+#~  -> postgresql-libs
+  -> libmariadbclient
 
-#~ libunwind strace
-#~ argon2
+
+#~ cryptsetup: argon2 popt json-c libgcrypt
 #~ groff
 #~ jfsutils
-#~ json-c
 #~ libcap-ng
 #~ libnftnl
 #~ libidn2 libnghttp2 libpsl
@@ -73,8 +83,6 @@ libatomic_ops gc guile make guile2.0 gdb
 #~ popt logrotate
 #~ hwids pciutils
 #~ keyutils
-#~ tcl sqlite libsasl chrpath unixodbc openldap
-#~ krb5 libtirpc pam
 #~ reiserfsprogs
 #~ sysfsutils iputils
 #~ s-nail
@@ -104,18 +112,12 @@ libatomic_ops gc guile make guile2.0 gdb
 
 #~ stage2:
 #~ PACKAGES="
-#~            
-#~   again: linux, doesn't boot? 
 #~           
-#~    
-#~      
-#~ libedit openssh
 #~ make mpfr gawk libmpc binutils gcc glibc
-#~ libunwind strace gdb
 #~ "
 
 # Archlinux base, base-devel groups
-#~ argon2 cryptsetup
+#~ cryptsetup
 #~ device-mapper
 #~ dhcpcd
 #~ gawk
