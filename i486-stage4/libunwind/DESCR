@@ -1,0 +1,2 @@
+# no TeX for documentation
+sed -i "/makedepends=/s/'texlive-core'//" PKGBUILD

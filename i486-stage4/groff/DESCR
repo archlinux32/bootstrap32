@@ -1,0 +1,4 @@
+# no optional dependencies for gross, especially no dependency on X
+sed -i "/makedepends=/s/'netpbm'//" PKGBUILD
+sed -i "/makedepends=/s/'psutils'//" PKGBUILD
+sed -i "/makedepends=/s/'libxaw'//" PKGBUILD

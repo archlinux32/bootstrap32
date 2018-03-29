@@ -9,3 +9,6 @@ sed -i 's/cmake /cmake -DCONNECT_WITH_JDBC=0/' PKGBUILD
 sed -i 's@source=(@source=(mariadb-10.1.32-atomic.patch @' PKGBUILD
 sed -i "s@sha256sums=(@sha256sums=('194e43ca5468d4f4634f45eed6aaf08865c2d351fcc500696d4dc578fe94902e' @" PKGBUILD
 sed -i '/patch -Np1.*mroonga/ a \  patch -Np1 -i "${srcdir}/mariadb-10.1.32-atomic.patch"' PKGBUILD
+
+ADDITIONAL_INSTALL_PACKAGE=libmariadbclient
+

@@ -14,20 +14,19 @@ ncurses readline bash joe nano vi
 libxml2 emacs-nox
 attr acl m4 gmp gdbm db perl openssl
 libunistring gettext perl-locale-gettext help2man
-autoconf tcl expect dejagnu cscope automake
+autoconf autoconf-archive tcl expect dejagnu cscope automake
 perl-test-pod perl-devel-symdump perl-pod-coverage
 perl-test-pod-coverage perl-error pcre2
 docbook-xml libxslt docbook-xsl xmlto asciidoc git
 libtool
 zlib pambase cracklib libtirpc flex gpm w3m
 tcl sqlite postgresql
-doxygen graphviz
 jsoncpp 
 libuv rhash shared-mime-info
 cmake
 jemalloc lzo mariadb libsasl
 chrpath unixodbc openldap
-krb5 libtirpc
+keyutils krb5 libtirpc
 pam
 libcap coreutils util-linux pkg-config e2fsprogs
 expat bzip2 lz4 xz pcre less gzip
@@ -41,7 +40,7 @@ perl-http-date perl-encode-locale perl-lwp-mediatypes perl-test-needs
 perl-uri perl-io-html perl-try-tiny perl-http-message perl-lwp-mediatypes
 perl-http-daemon perl-io-socket-ssl
 wget
-libusb-compat pcsclite gnupg gpgme
+libusb-compat pcsclite npth gnupg gpgme
 pacman-mirrorlist archlinux-keyring archlinux32-keyring
 sharutils perl-text-charwidth perl-text-wrapi18n 
 perl-term-readkey perl-sgmls
@@ -52,103 +51,76 @@ po4a fakeroot fakechroot
 pacman
 elfutils sed texinfo grep findutils file diffutils ed patch
 check kbd procps-ng bison shadow
-inetutils bc kmod linux uinit nasm ucl upx syslinux
+mkinitcpio-busybox mkinitcpio
+inetutils bc hwids pciutils kmod linux linux-firmware
+uinit nasm ucl upx syslinux
 net-tools libmnl libnfnetlink
-libedit openssh
+libedit ldns openssh
 which
 libatomic_ops gc guile make guile2.0 gdb
 libunwind strace
+groff libseccomp man-db man-pages
+popt logrotate psmisc linux-atm iproute2 iputils sudo
+libcap-ng libidn2 libnghttp2 libpsl libpipeline libmicrohttpd libssh2
+argon2 json-c cryptsetup
+s-nail quota-tools perl-xml-parser intltool
+gperf
 "
 
 #~ mpfr gawk libmpc binutils gcc glibc
-
-# =>
-#~ libsasl
-#~  -> postgresql-libs
-  -> libmariadbclient
-
-
-#~ cryptsetup: argon2 popt json-c libgcrypt
-#~ groff
+#~ 
 #~ jfsutils
-#~ libcap-ng
-#~ libnftnl
-#~ libidn2 libnghttp2 libpsl
-#~ libpipeline libseccomp man-db man-pages
-#~ libmicrohttpd
-#~ libssh2
 #~ mdadm
-#~ nano
-#~ npth
-#~ popt logrotate
-#~ hwids pciutils
-#~ keyutils
 #~ reiserfsprogs
-#~ sysfsutils iputils
-#~ s-nail
-#~ vi
 #~ xfsprogs
-#~ psmisc
-#~ sudo
-#~ autoconf-archive
-#~ linux-atm iproute2
-#~ python quota-tools perl-xml-parser intltool
+#~ sysfsutils 
+
+#~ python 
 #~ re2c python2 ninja
 #~ python-pip-bootstrap python-pip
 #~ python-pyparsing python-packaging python-appdirs python-six python-setuptools
 #~ meson
-#~ gperf systemd dbus libusb usbutils libpcap iptables iproute2 util-linux
+
+#~ <gperf> systemd dbus libusb usbutils libpcap libnftnl iptables iproute2 util-linux
 #~ procps-ng pcmciautils openresolv netctl dhcpcd
-#~ mkinitcpio-busybox mkinitcpio
+
 #~ glib2 pkg-config
-#~ ldns openssh
+
 #~ zip nspr gyp nss
+
 #~ libaio boost
 #~ thin-provisioning-tools lvm2
-#~ nasm syslinux
-#~ linux linux-firmware
 #~ "
 
 
 #~ stage2:
 #~ PACKAGES="
 #~           
-#~ make mpfr gawk libmpc binutils gcc glibc
+#~ mpfr gawk libmpc binutils gcc glibc
 #~ "
 
 # Archlinux base, base-devel groups
-#~ cryptsetup
 #~ device-mapper
 #~ dhcpcd
 #~ gawk
 #~ gcc-libs
 #~ glibc
-#~ iproute2
-#~ iputils
+#~ 
 #~ jfsutils
 #~ licenses
-#~ logrotate
 #~ lvm2
-#~ man-db
-#~ man-pages
 #~ mdadm
 #~ netctl
-#~ pciutils
-#~ pcmciautils
-#~ psmisc
-#~ reiserfsprogs
-#~ s-nail
 #~ sysfsutils
 #~ systemd-sysvcompat
 #~ usbutils
+#~ pcmciautils
+#~ reiserfsprogs
 #~ xfsprogs
 
 #~ binutils
 #~ gawk
 #~ gcc
-#~ groff
-#~ make
-#~ sudo
 #~ systemd
 
 for p in $PACKAGES; do

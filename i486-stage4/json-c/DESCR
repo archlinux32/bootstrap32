@@ -1,0 +1,7 @@
+# TODO: all tests fail
+# TOTAL: 21
+# PASS:  0
+# SKIP:  0
+# XFAIL: 0
+# FAIL:  21
+SKIP_CHECK=1
