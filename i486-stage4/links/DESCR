@@ -1,0 +1,8 @@
+# no X11 or graphic libraries
+sed -i "/makedepends=/s/'libtiff'//" PKGBUILD
+sed -i "/makedepends=/s/'libpng'//" PKGBUILD
+sed -i "/makedepends=/s/'libxt'//" PKGBUILD
+sed -i "/makedepends=/s/'librsvg'//" PKGBUILD
+
+# disable xlinks (or rather, compile it the same way as links)
+sed -i 's/--enable-graphics --with-x --with-fb/--disable-graphics --without-x  --without-fb/' PKGBUILD

@@ -1,0 +1,4 @@
+# no openmpi, no numpy
+sed -i "/makedepends=/s/'openmpi'//" PKGBUILD
+sed -i "/makedepends=/s/'python-numpy'//" PKGBUILD
+sed -i "/makedepends=/s/'python2-numpy'//" PKGBUILD

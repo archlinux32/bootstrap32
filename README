@@ -263,3 +263,8 @@ su cross ./prepare_stage4_repo.sh
 # in $STAGE4_BUILD.
 
 ./build_stage4.sh
+
+# Some testing is impossible to do in stage4:
+# - some python modules are virtually untestable due to excessive dependencies
+#   e.g, python-packaging
+

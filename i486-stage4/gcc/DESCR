@@ -1,0 +1,23 @@
+# no doxygen documentation
+sed -i "/makedepends=/s/doxygen//" PKGBUILD
+sed -i 's/doc-man-doxygen//' PKGBUILD
+sed -i 's/doc-install-man//' PKGBUILD
+sed -i '/# make documentation/{n;s/make/#make/}' PKGBUILD
+sed -i '/# install the libstdc++ man pages/{n;s/make/#make/}' PKGBUILD
+
+# no ADA
+sed -i "/makedepends=/s/gcc-ada//" PKGBUILD
+sed -i '/pkgname/ s/gcc-ada//g' PKGBUILD
+sed -i '/enable-languages/ s/ada//g' PKGBUILD
+# rm "$pkgdir"/usr/share/info/{gccgo,gfortran,gnat-style,gnat_rm,gnat_ugn}.info
+sed -i 's/,gnat-style,gnat_rm,gnat_ugn//' PKGBUILD
+
+# building toolchain (gcc): again, lobtool problems
+#/usr/lib/gcc/i486-pc-linux-gnu/7.3.0/ld: cannot find -lquadmath
+#collect2: error: ld returned 1 exit status
+#libtool: install: error: relink `libgfortran.la' with the above command before installing it
+#make: Leaving directory '/build/gcc/src/gcc-build/i486-pc-linux-gnu/libgfortran'
+#=> wrong link order: libgfortran requires libquadmath
+sed -i 's/libgfortran \\/libquadmath libgfortran \\/g' PKGBUILD
+
+ADDITIONAL_INSTALL_PACKAGE="gcc-libs gcc-fortran gcc-go gcc-objc"

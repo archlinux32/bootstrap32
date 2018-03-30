@@ -50,7 +50,7 @@ perl-mime-charset libdatrie libthai perl-unicode-linebreak
 po4a fakeroot fakechroot
 pacman
 elfutils sed texinfo grep findutils file diffutils ed patch
-check kbd procps-ng bison shadow
+check kbd bison shadow
 mkinitcpio-busybox mkinitcpio
 inetutils bc hwids pciutils kmod linux linux-firmware
 uinit nasm ucl upx syslinux
@@ -60,68 +60,38 @@ which
 libatomic_ops gc guile make guile2.0 gdb
 libunwind strace
 groff libseccomp man-db man-pages
-popt logrotate psmisc linux-atm iproute2 iputils sudo
+popt logrotate psmisc linux-atm iputils sudo
 libcap-ng libidn2 libnghttp2 libpsl libpipeline libmicrohttpd libssh2
 argon2 json-c cryptsetup
 s-nail quota-tools perl-xml-parser intltool
-gperf
+gperf mdadm
+python re2c ninja python2
+python-pip python-pyparsing python-packaging python-appdirs python-six
+python-setuptools
+meson
+systemd dbus libusb usbutils
+libical alsa-lib bluez libpcap libnftnl iptables iproute2 util-linux
+procps-ng pcmciautils openresolv netctl dhcpcd
+desktop-file-utils glib2 pkg-config
+jfsutils reiserfsprogs xfsprogs sysfsutils
+libaio boost thin-provisioning-tools lvm2
+mpfr gawk libmpc binutils gcc
+links licenses
 "
 
-#~ mpfr gawk libmpc binutils gcc glibc
+#~     glibc
 #~ 
-#~ jfsutils
-#~ mdadm
-#~ reiserfsprogs
-#~ xfsprogs
-#~ sysfsutils 
-
-#~ python 
-#~ re2c python2 ninja
-#~ python-pip-bootstrap python-pip
-#~ python-pyparsing python-packaging python-appdirs python-six python-setuptools
-#~ meson
-
-#~ <gperf> systemd dbus libusb usbutils libpcap libnftnl iptables iproute2 util-linux
-#~ procps-ng pcmciautils openresolv netctl dhcpcd
-
-#~ glib2 pkg-config
 
 #~ zip nspr gyp nss
 
-#~ libaio boost
-#~ thin-provisioning-tools lvm2
-#~ "
 
-
-#~ stage2:
-#~ PACKAGES="
-#~           
-#~ mpfr gawk libmpc binutils gcc glibc
-#~ "
+#~   glibc
 
 # Archlinux base, base-devel groups
-#~ device-mapper
-#~ dhcpcd
-#~ gawk
 #~ gcc-libs
 #~ glibc
 #~ 
-#~ jfsutils
 #~ licenses
-#~ lvm2
-#~ mdadm
-#~ netctl
-#~ sysfsutils
-#~ systemd-sysvcompat
-#~ usbutils
-#~ pcmciautils
-#~ reiserfsprogs
-#~ xfsprogs
-
-#~ binutils
-#~ gawk
-#~ gcc
-#~ systemd
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage4_package.sh" "$p" || exit 1

@@ -1,0 +1,5 @@
+# no documentation
+sed -i "/makedepends=/s/docbook-xsl//" PKGBUILD
+sed -i "/makedepends=/s/yelp-tools//" PKGBUILD
+sed -i "/makedepends=/s/doxygen//" PKGBUILD
+sed -i "/makedepends=/s/graphviz//" PKGBUILD
