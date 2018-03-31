@@ -75,23 +75,13 @@ procps-ng pcmciautils openresolv netctl dhcpcd
 desktop-file-utils glib2 pkg-config
 jfsutils reiserfsprogs xfsprogs sysfsutils
 libaio boost thin-provisioning-tools lvm2
-mpfr gawk libmpc binutils gcc
+mpfr gawk libmpc binutils gcc glibc
 links licenses
+nbd mkinitcpio-nfs-utils mkinitcpio-nbd atftp
+zip nspr gyp
 "
 
-#~     glibc
-#~ 
-
-#~ zip nspr gyp nss
-
-
-#~   glibc
-
-# Archlinux base, base-devel groups
-#~ gcc-libs
-#~ glibc
-#~ 
-#~ licenses
+# nss still fails as in stage 3
 
 for p in $PACKAGES; do
 	"$SCRIPT_DIR/build_stage4_package.sh" "$p" || exit 1
