@@ -1,0 +1,3 @@
+# no developer documentation
+sed -i "/makedepends=/s/'doxygen'//" PKGBUILD
+sed -i "/makedepends=/s/'doxbook-xsl'//" PKGBUILD

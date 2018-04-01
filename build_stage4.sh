@@ -77,7 +77,8 @@ jfsutils reiserfsprogs xfsprogs sysfsutils
 libaio boost thin-provisioning-tools lvm2
 mpfr gawk libmpc binutils gcc glibc
 links licenses
-nbd mkinitcpio-nfs-utils mkinitcpio-nbd atftp
+nbd rpcbind ding-libs gssproxy nfs-utils
+mkinitcpio-nfs-utils mkinitcpio-nbd atftp
 zip nspr gyp
 "
 
