@@ -264,6 +264,10 @@ su cross ./prepare_stage4_repo.sh
 
 ./build_stage4.sh
 
+# Some software doesn't build
+# - nss: but we need it only to produce a mozilla-certificates-ca, so
+#   can also take the one from the host
+#
 # Some testing is impossible to do in stage4:
 # - some python modules are virtually untestable due to excessive dependencies
 #   e.g, python-packaging

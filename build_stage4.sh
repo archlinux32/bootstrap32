@@ -70,7 +70,8 @@ python-pip python-pyparsing python-packaging python-appdirs python-six
 python-setuptools
 meson
 systemd dbus libusb usbutils
-libical alsa-lib bluez libpcap libnftnl iptables iproute2 util-linux
+libical alsa-lib bluez libnl
+libpcap libnftnl iptables iproute2 util-linux
 procps-ng pcmciautils openresolv netctl dhcpcd
 desktop-file-utils glib2 pkg-config
 jfsutils reiserfsprogs xfsprogs sysfsutils

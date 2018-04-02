@@ -93,3 +93,5 @@ stage 3 issues:
 - python-pip-bootstrap for starting with setuptools and pip and wheel, they conflict
   with the vanilla packages, so we have to force to overwrite the shimmed files.
   
+stage 4 issues:
+- nss and generation of ca-certificates-mozilla
