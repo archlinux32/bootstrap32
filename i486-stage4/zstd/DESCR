@@ -1,0 +1,9 @@
+#*** zstd command line interface 32-bits v1.3.4, by Yann Collet ***
+#zstd: error 11 : Allocation error : not enough memory
+#zstd: /*stdin*\: unexpected end of file
+#Files tmp1 and tmp2 differ
+#make[1]: Leaving directory '/build/zstd/src/zstd-1.3.4/tests'
+#make[1]: *** [Makefile:307: zstd-playTests] Error 1
+#make: *** [Makefile:82: shortest] Error 2
+#==> ERROR: A failure occurred in check().
+SKIP_CHECK=1

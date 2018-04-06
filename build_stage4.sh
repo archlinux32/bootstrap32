@@ -81,6 +81,9 @@ links licenses
 nbd rpcbind ding-libs gssproxy nfs-utils
 mkinitcpio-nfs-utils mkinitcpio-nbd atftp
 zip nspr gyp
+arch-install-scripts
+lynx dosfstools gtest zstd btrfs-progs squashfs-tools
+libburn libisofs libisoburn archiso32-git
 "
 
 # nss still fails as in stage 3

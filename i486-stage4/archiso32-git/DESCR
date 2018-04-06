@@ -1,0 +1,3 @@
+# archiso32-git is a fork of archiso-git (on AUR) and using the archlinux32 archiso fork
+FETCH_METHOD="yaourt"
+
