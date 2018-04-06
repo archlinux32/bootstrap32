@@ -3,16 +3,28 @@
 # shellcheck source=./default.conf
 . "./default.conf"
 
-# builds a small ISO image for installing a stage 4 system:
-# it uses PXE to boot from a TFTP server (kernel and ramdisk),
-# then loads the ISO as NBD block device. This is for installation
-# on old machines with only very limited amount of RAM (currently
-# requires 64 MB minimal)
+# build the standard Archlinux 32 ISO with stage 4 packages, Check
+# if it works as NBD block device after bootig via (i)PXE and TFTP.
+# For machine with little RAM, no CD-ROM drive or just a 1.44MB floppy.
+# (requires 64 MB minimal currently)
 
 sudo rm -rf $STAGE4_ISOLINUX
 
 # copy chroot to ISOlinux dir
 mkdir $STAGE4_ISOLINUX
+
+# TODO: change to ISOLINUX dir
+
+DOLLAR='\$'
+ssh -i $CROSS_HOME/.ssh/id_rsa root@$STAGE1_MACHINE_IP bash -l -c "'		
+	cat >/etc/pacman.d/mirrorlist32 <<EOF
+Server = http://archlinux32.andreasbaumann.cc/${DOLLAR}arch/${DOLLAR}repo
+EOF
+'"
+
+exit 0
+
+
 sudo cp -a $STAGE4_CHROOT/{bin,boot,dev,etc,home,lib,mnt,opt,proc,root,run,sbin,srv,sys,tmp,usr,var} $STAGE4_ISOLINUX/.
 sudo chown -R cross:cross $STAGE4_ISOLINUX/.
 cd $STAGE4_ISOLINUX || exit 1

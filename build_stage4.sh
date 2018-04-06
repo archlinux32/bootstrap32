@@ -83,7 +83,10 @@ mkinitcpio-nfs-utils mkinitcpio-nbd atftp
 zip nspr gyp
 arch-install-scripts
 lynx dosfstools gtest zstd btrfs-progs squashfs-tools
-libburn libisofs libisoburn archiso32-git
+libburn libisofs libisoburn
+haveged intel-ucode memtest86+ zsh dhclient
+perl-file-slurp gnu-efi-libs sbsigntools efitools
+archiso32-git
 "
 
 # nss still fails as in stage 3
