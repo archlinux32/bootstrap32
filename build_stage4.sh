@@ -84,9 +84,10 @@ zip nspr gyp
 arch-install-scripts
 lynx dosfstools gtest zstd btrfs-progs squashfs-tools
 libburn libisofs libisoburn
-haveged intel-ucode memtest86+ zsh dhclient
+haveged intel-ucode memtest86+ zsh dhcp
 perl-file-slurp gnu-efi-libs sbsigntools efitools
 archiso32-git
+asp32
 "
 
 # nss still fails as in stage 3

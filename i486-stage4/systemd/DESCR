@@ -2,14 +2,9 @@
 # automatically, sort of counteracts the idea of security..
 sed -i 's/\(_validate_tag || return\)/#\1/' PKGBUILD
 
-# no documentation
+# no documentation (at least nothing but manpages)
 sed -i '/makedepends=/,/)/ s/docbook-xsl//' PKGBUILD
-sed -i '/makedepends=/,/)/ s/libxslt//' PKGBUILD
 sed -i '/makedepends=/,/)/ s/python-lxml//' PKGBUILD
-sed -i 's/\(rm.*man8\)/#\1/' PKGBUILD
-
-# we don't need systemd-sysvcompat
-#sed -i "/pkgname=/,/)/ s/'systemd-sysvcompat'//" PKGBUILD
 
 # break cyclic dependency with cryptsetup and dbus
 #sed -i '/makedepends=/,/)/ s/cryptsetup//' PKGBUILD
