@@ -87,7 +87,7 @@ libburn libisofs libisoburn
 haveged intel-ucode memtest86+ zsh dhcp
 perl-file-slurp gnu-efi-libs sbsigntools efitools
 archiso32-git
-asp32
+oniguruma jq asp
 "
 
 # nss still fails as in stage 3
