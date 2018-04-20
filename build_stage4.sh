@@ -88,6 +88,8 @@ haveged intel-ucode memtest86+ zsh dhcp
 perl-file-slurp gnu-efi-libs sbsigntools efitools
 archiso32-git
 oniguruma jq asp rsync
+pyalpm python-pyelftools
+namcap
 "
 
 # nss still fails as in stage 3
